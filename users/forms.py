@@ -9,6 +9,7 @@ class RegistrationForm(forms.Form):
     phone_number = forms.CharField(max_length=15)
     password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
+    referralcode =forms.CharField(max_length=100,required=False)
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -16,13 +17,6 @@ class RegistrationForm(forms.Form):
             raise forms.ValidationError("This email is already in use. Please try another one.")
         return email
 
-    def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        confirm_password = cleaned_data.get("confirm_password")
-
-        if password and confirm_password and password != confirm_password:
-            raise forms.ValidationError("Passwords do not match.")
     
     def clean_first_name(self):
         first_name = self.cleaned_data.get('first_name')
@@ -37,6 +31,13 @@ class RegistrationForm(forms.Form):
         if len(phone) != 10:
             raise forms.ValidationError("Phone number must be 10 digits long.")
         return phone
+    
+    def clean_referralcode(self):
+        referralcode = self.cleaned_data.get('referralcode')
+        if referralcode:
+            if not (referralcode.isalnum() and len(referralcode)==6):
+                raise forms.ValidationError("Invalid referral code")
+        return referralcode
 
     def clean(self):
         cleaned_data = super().clean()

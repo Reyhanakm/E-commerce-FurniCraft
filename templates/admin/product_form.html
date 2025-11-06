@@ -1,0 +1,216 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}{{ form.instance.id|yesno:"Edit Product,Add Product" }}{% endblock %}
+{% block content %}
+
+<h2>{{ form.instance.id|yesno:"Edit Product,Add Product" }}</h2>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <!-- Product fields -->
+    <h3>Product Details</h3>
+    {{ form.as_p }}
+
+    <hr>
+
+    <!-- Variants formset -->
+    <h3>Product Variants</h3>
+    {{ variant_formset.management_form }}
+    <div id="variant-forms-container">
+        {% for vform in variant_formset %}
+        <div class="variant-form" style="margin-bottom:20px; padding:10px; border:1px solid #ccc; border-radius:8px;">
+            {{ vform.as_p }}
+            <button type="button" class="removeVariantBtn"
+                    style="background-color:#dc3545;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">
+                Remove
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    <button type="button" id="addVariantBtn"
+            style="background-color:#198754;color:white;border:none;padding:8px 15px;border-radius:5px;margin-top:10px;">
+        + Add More Variant
+    </button>
+
+    <hr>
+
+    <!-- Cloudinary Upload -->
+    <h3>Upload Product Images (min 3)</h3>
+    <button type="button" id="upload_widget" class="btn">Upload Images</button>
+    <div id="uploaded-images" style="margin-top: 15px; display:flex; flex-wrap:wrap;"></div>
+    <div id="hidden-inputs"></div>
+
+    <br><br>
+    <button type="submit">Save Product</button>
+</form>
+
+<!-- Cloudinary JS -->
+<script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+
+<script>
+// Cloudinary upload widget with cropping
+const uploadWidget = cloudinary.createUploadWidget({
+    cloudName: 'dcaevmkgg',    
+    uploadPreset: 'product_preset',   //  unsigned preset
+    multiple: true,
+    cropping: true,
+    croppingAspectRatio: 1,
+    showSkipCropButton: false,
+    maxFiles: 10,
+    folder: 'furnicraft_products',
+    sources: ['local', 'camera']
+}, (error, result) => {
+    if (!error && result && result.event === "success") {
+        const uploadedContainer = document.getElementById("uploaded-images");
+        const hiddenInputs = document.getElementById("hidden-inputs");
+
+        // Show preview
+        const img = document.createElement("img");
+        img.src = result.info.secure_url;
+        img.width = 150;
+        img.style.margin = "8px";
+        img.style.borderRadius = "10px";
+        img.style.boxShadow = "0 0 5px rgba(0,0,0,0.3)";
+        uploadedContainer.appendChild(img);
+
+        // Add hidden input for Django
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "images";
+        input.value = result.info.secure_url;
+        hiddenInputs.appendChild(input);
+        console.log("Added hidden input:", input.value);  
+
+    }
+});
+
+document.getElementById("upload_widget").addEventListener("click", function(){
+    uploadWidget.open();
+}, false);
+
+// Prevent submission if less than 3 images
+document.querySelector("form").addEventListener("submit", function(e) {
+    const count = document.querySelectorAll('input[name="images"]').length;
+    if (count < 3) {
+        e.preventDefault();
+        alert("Please upload at least 3 images.");
+    }
+});
+
+// Dynamic variant add/remove logic
+document.addEventListener("DOMContentLoaded", function () {
+    const addBtn = document.getElementById("addVariantBtn");
+    const totalForms = document.querySelector('#id_variants-TOTAL_FORMS');
+    const container = document.getElementById("variant-forms-container");
+
+    addBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const formCount = parseInt(totalForms.value);
+        const firstForm = container.querySelector(".variant-form");
+        if (!firstForm) return;
+
+        const newForm = firstForm.cloneNode(true);
+        newForm.querySelectorAll("input, textarea, select").forEach(input => input.value = "");
+        newForm.innerHTML = newForm.innerHTML.replaceAll(
+            new RegExp(`variants-(\\d+)-`, "g"),
+            `variants-${formCount}-`
+        );
+        container.appendChild(newForm);
+        totalForms.value = formCount + 1;
+    });
+
+    container.addEventListener("click", function (e) {
+        if (e.target.classList.contains("removeVariantBtn")) {
+            e.preventDefault();
+            const allForms = container.querySelectorAll(".variant-form");
+            if (allForms.length > 1) {
+                e.target.closest(".variant-form").remove();
+                totalForms.value = allForms.length - 1;
+            } else {
+                alert("At least one variant is required.");
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}
+
+
+
+
+
+
+{% comment %} {% extends 'admin/base_admin.html' %}
+{% block title %}{{ form.instance.id|yesno:"Edit Product,Add Product" }}{% endblock %}
+{% block content %}
+
+<h2>{{ form.instance.id|yesno:"Edit Product,Add Product" }}</h2>
+
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Product fields -->
+    <h3>Product Details</h3>
+    {{ form.as_p }}
+
+    <hr>
+
+    <!--  Variants formset -->
+    <h3>Product Variants</h3>
+    {{ variant_formset.management_form }}
+
+    <table>
+        {% for vform in variant_formset %}
+        <tr>
+            <td>{{ vform.as_p }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <button type="button" id="addVariantBtn">+ Add More Variant</button>
+
+    <hr>
+
+    <!-- Images -->
+    <h3>Upload Product Images (min 3)</h3>
+    <input type="file" name="images" multiple required>
+
+    <br><br>
+    <button type="submit">Save Product</button>
+</form>
+
+<!-- JS to clone variant forms -->
+<script>
+document.getElementById("addVariantBtn").addEventListener("click", function() {
+    let formCount = document.getElementById("id_variants-TOTAL_FORMS");
+    let currentCount = parseInt(formCount.value);
+
+    // clone first form
+    let newForm = document.querySelectorAll("[id^='variants-0']")[0].parentNode.cloneNode(true);
+
+    // update form index
+    newForm.innerHTML = newForm.innerHTML.replace(/variants-0/g, "variants-" + currentCount);
+
+    formCount.value = currentCount + 1;
+    this.insertAdjacentHTML("beforebegin", newForm.innerHTML);
+});
+</script>
+
+
+
+<form method="POST">
+        {% csrf_token %}
+            {% if form.errors %}
+            <ul>
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            </ul>
+            {% endif %}
+        </form>
+
+{% endblock %} {% endcomment %}

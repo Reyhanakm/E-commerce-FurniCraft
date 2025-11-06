@@ -1,0 +1,14 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}{{ form.instance.id|yesno:"Edit Category,Add Category" }}{% endblock %}
+{% block content %}
+
+<h2>{{ form.instance.id|yesno:"Edit Category,Add Category" }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Save</button>
+  <a href="{% url 'admin_category_list' %}">Cancel</a>
+</form>
+
+{% endblock %}

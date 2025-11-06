@@ -1,0 +1,21 @@
+{% extends 'admin/base_admin.html' %}
+
+
+{% block content %}
+{% load static %}
+    <script src="{% static 'common/js/live_search.js' %}"></script>
+
+<input type="text"
+       name="q"
+       placeholder="Search users..."
+       data-live-search-url="/admin_app/users/"
+       data-live-search-target="table tbody">
+
+<table>
+  <tbody>
+    {% include 'admin_app/_user_rows.html' %}
+  </tbody>
+</table>
+{% endblock content %}
+    
+

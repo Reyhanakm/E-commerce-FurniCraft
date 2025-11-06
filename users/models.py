@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser,PermissionsMixin,BaseUserManager
 from django.utils import timezone
-import uuid
-from datetime import timedelta
 from django.conf import settings
 
 class UserManager(BaseUserManager):
@@ -27,7 +25,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     email = models.EmailField(unique= True,max_length= 100)
     phone_number = models.CharField(max_length=15,blank= True, null= True)
     referralcode = models.CharField(max_length=50,blank=True,null= True)
-    refferdby = models.IntegerField(blank= True,null= True)
+    referredby = models.ForeignKey('self',on_delete=models.SET_NULL,blank= True,null= True,related_name='referrals')
 
     is_admin = models.BooleanField(default= False)
     is_staff = models.BooleanField(default= False)
@@ -61,14 +59,3 @@ class UserAddress(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.house}"
     
-class EmailOTP(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
-    otp = models.CharField(max_length=6)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def is_expired(self):
-        # valid for 5 minutes
-        return timezone.now() > self.created_at + timedelta(minutes=5)
-    
-    def __str__(self):
-        return f"{self.user.email} -{self.otp}"

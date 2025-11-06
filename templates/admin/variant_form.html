@@ -1,0 +1,14 @@
+
+{% block title %}{{ vform.instance.id|yesno:"Edit Variant,Add Variant" }}{% endblock %}
+{% block content %}
+
+<h2>{{ vform.instance.id|yesno:"Edit Variant,Add Variant" }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  {{ vform.as_p }}
+  <button type="submit">Save</button>
+  <a href="{% url 'admin_product_list' %}">Cancel</a>
+</form>
+
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'admin/base_admin.html' %}
+{% block content %}
+<h2>Product Management</h2>
+
+{% comment %} <form method="get">
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Search products...">
+    <button type="submit">Search</button>
+
+    {% if search_query %}
+        <button type="submit" name="clear" value="1">Clear</button>
+    {% endif %}
+</form> {% endcomment %}
+
+<form method="get" action="">
+  <input type="text" name="q" value="{{ search_query }}" placeholder="Search Products...">
+  <button type="submit">Search</button>
+  {% if search_query %}
+    <a href="{% url 'admin_product_list' %}">Clear</a>
+  {% endif %}
+</form>
+<br>
+
+
+<a href="{% url 'add_product' %}" class="btn">+ Add New Product</a>
+<br>
+<br>
+<table border="1" cellpadding="6">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      {% comment %} <th>Status</th> {% endcomment %}
+      <th>Created At</th>
+      <th>Deleted</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for pdt in products %}
+      <tr>
+        <td>{{ pdt.id }}</td>
+        <td>{{ pdt.name }}</td>
+        {% comment %} <td>{{ pdt.status|yesno:"Active,Inactive" }}</td> {% endcomment %}
+        <td>{{ pdt.created_at }}</td>
+        <td>{{ pdt.is_deleted}}</td>
+        <td>
+          <a href="{% url 'edit_product' pdt.id %}">Edit</a> |
+          <a href="{% url 'delete_product' pdt.id %}"
+             onclick="return confirm('Delete {{ pdt.name }}?');">Delete</a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">No products found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div>
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Previous</a>
+  {% endif %}
+
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Next</a>
+  {% endif %}
+</div>
+{% endblock %}
+
+

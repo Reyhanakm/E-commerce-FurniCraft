@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+    {% comment %} <link rel="stylesheet" href="{% static 'css/admin.css' %}"> {% endcomment %}
+</head>
+<body>
+
+<header>
+  <h1>Admin Dashboard</h1>
+  <nav>
+    <a href="{% url 'admin_category_list' %}">Categories</a>
+    <a href="{% url 'admin_product_list' %}">Products</a>
+    {% comment %} <a href="{% url 'user_list' %}">Users</a> {% endcomment %}
+  </nav>
+</header>
+    <a href="{% url 'admin_logout' %}">Logout</a>
+      {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        
+          
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer>
+  <p>&copy; {{ year }} FurniCraft Admin</p>
+</footer>
+
+</body>
+</html>

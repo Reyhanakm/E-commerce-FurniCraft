@@ -1,3 +1,8 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block content %}
+    
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,17 +12,36 @@
 </head>
 <body>
     <h2>Register</h2>
-    <form action="" method='POST'>
-        {% csrf_token %}
-        <input type="text" name="first_name" placeholder="First name" required>
-        <input type="text" name="last_name" placeholder= "Last name" required>
-         <input type="text" name="email" placeholder="email" required>
-         <input type="password" name= "password" placeholder="password" required>
-         <button type="submit">Register</button>
-    </form>
+    
+                
+        <label>First Name</label>
+        <input type="text" name="first_name"> <br><br>
 
-    {% for message in messages %}
-    <p>{{message}}</p>
-    {% endfor %}
+        <label>Last Name</label>
+        <input type="text" name="last_name"><br><br>
+
+        <label>Email</label>
+        <input type="email" name="email"><br><br>
+
+        <label>Phone Number</label>
+        <input type="text" name="phone_number"><br><br>
+
+        <label>Password</label>
+        <input type="password" name="password"><br><br>
+
+        <label>Confirm Password</label>
+        <input type="password" name="confirm_password"><br><br>
+
+        <label>Referralcode(Optional)</label>
+        <input type="text" name="Referralcode"><br><br>
+
+        <button type="submit">Register</button>
+       
+       <a href="{% url 'user_login' %}">Sign in</a>
+
+    <a href="{% provider_login_url 'google' process='signup' %}">
+    <button type="button">Sign up with Google</button>
+    </a>
 </body>
 </html>
+{% endblock content %}
