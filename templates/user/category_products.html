@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Products | FurniCraft{% endblock title %}
+    
+
+{% block content %}
+{% include 'components/messages.html'%}
+
+{% for product in products %}
+ {{product.name}}
+ {{images}}
+    
+{% endblock content %}
+    
+

@@ -1,13 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dashboard| FurniCraft</title>
-</head>
-<body>
-    <h2> Welcome {{request.user.first_name }}!</h2>
-    <p>This is your admin dashboard.</p>
-    <a href="{% url 'admin_logout' %}">Logout</a>
-</body>
-</html>
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Dashboard | FurniCraft{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <h2 class="text-2xl font-semibold mb-2">Welcome {{ request.user.first_name }}!</h2>
+    <p class="text-gray-600 mb-4">This is your admin dashboard.</p>
+</div>
+{% endblock %}

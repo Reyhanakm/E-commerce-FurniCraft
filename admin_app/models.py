@@ -4,11 +4,9 @@ from cloudinary.models import CloudinaryField
 class CategoryManager(models.Manager):
 
     def get_queryset(self):
-        # Always exclude deleted categories by default
         return super().get_queryset().filter(is_deleted=False)
 
     def all_with_deleted(self):
-        # Return all categories (including deleted)
         return super().get_queryset()
 
     def active(self):
@@ -37,6 +35,7 @@ class CategoryManager(models.Manager):
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    image = models.CharField(max_length=500,blank=True,null=True)
     status = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
 
@@ -48,6 +47,7 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
     
 class ProductManager(models.Manager):
     def get_queryset(self):
@@ -175,6 +175,22 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.product.name}"
+    
+    def save(self, *args, **kwargs):
+        """
+        Automatically handle primary image logic:
+        - If this is the first image, set it as primary.
+        - If marked as primary, remove primary flag from others.
+        """
+        if self.is_primary:
+            # Make sure only one image per product is primary
+            ProductImage.objects.filter(product=self.product, is_primary=True).exclude(pk=self.pk).update(is_primary=False)
+        else:
+            # Automatically mark the first image as primary if none exist
+            if not ProductImage.objects.filter(product=self.product, is_primary=True).exclude(pk=self.pk).exists():
+                self.is_primary = True
+
+        super().save(*args, **kwargs)
     
     
 

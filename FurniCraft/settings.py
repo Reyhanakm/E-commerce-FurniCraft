@@ -85,6 +85,12 @@ CACHES = {
     }
 }
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_CACHE_ALIAS = "default"
+SESSION_COOKIE_AGE = 1200  # 20 minutes 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True
+
 
 TEMPLATES = [
     {
@@ -100,6 +106,16 @@ TEMPLATES = [
         },
     },
 ]
+from django.contrib.messages import constants as messages
+
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+}
 
 WSGI_APPLICATION = 'FurniCraft.wsgi.application'
 
@@ -185,6 +201,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'none'  
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 
 LOGIN_URL ='user_login'
@@ -195,6 +212,8 @@ LOGIN_REDIRECT_URL = 'home'
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = config('STATIC_URL', default='/static/')
+STATICFILES_DIRS = [ BASE_DIR / "static" ]
+
 
 MEDIA_URL = config('MEDIA_URL', default='/media/')
 
