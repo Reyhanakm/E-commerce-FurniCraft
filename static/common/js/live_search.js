@@ -39,10 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           })
           .catch(err => {
-            if (err.name === 'AbortError') return; // ignore aborted requests
+            if (err.name === 'AbortError') return; 
             console.error('Live search error:', err);
           });
-      }, 400);
+      }, 250);
     });
   });
 });

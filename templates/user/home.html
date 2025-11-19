@@ -1,68 +1,8 @@
+{% extends "user/navbar_footer.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FurniCraft - Premium Furniture Store</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-</head>
-<body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-[#F1EEDC] shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center space-x-8">
-                    <a href="{% url 'home' %}" class="bg-[#F1EEDC] px-6 py-3 rounded border border-[#D6D1B1]">
-                        <span class="text-[#6D6A42] font-bold text-xl">FurniCraft</span>
-                    </a>
-                    <div class="hidden md:flex space-x-8">
-                        <a href="{% url 'home' %}" class="text-black font-medium border-b-2 border-black">Home</a>
-                        <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">Contact</a>
-                        <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">About</a>
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-6">
-                    <div class="relative hidden lg:block">
-                        <input type="text" placeholder="What are you looking for?" 
-                               class="pl-4 pr-10 py-2 border border-[#D6D1B1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#6D6A42] w-72">
-                        <button class="absolute right-2 top-2.5">
-                            <i class="fas fa-search text-gray-400"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="flex items-center space-x-5">
-                        <a href="#" class="text-gray-700 hover:text-amber-700 relative">
-                            <i class="far fa-heart text-2xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-700 hover:text-amber-700 relative">
-                            <i class="fas fa-shopping-cart text-2xl"></i>
-                        </a>
-                        {% if user.is_authenticated %}
-                            <div class="relative group">
-                                <button class="flex items-center space-x-2 text-gray-700 hover:text-amber-700">
-                                    <i class="far fa-user-circle text-2xl"></i>
-                                </button>
-                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
-                                    <a href="{% url 'user_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
-                                </div>
-                            </div>
-                        {% else %}
-                            <a href="{% url 'user_login' %}" class="text-gray-700 hover:text-amber-700">
-                                <i class="far fa-user text-2xl"></i>
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
 
+{% block content %}
+    
     <!-- Hero Banner -->
     <section class="bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -149,7 +89,7 @@
 
             <!-- View All Button -->
             <div class="text-center mt-12">
-                <a href="#" class="inline-block bg-[#8D6E63] text-white px-12 py-3 rounded hover:bg-[#5D4037] transition-colors font-semibold">
+                <a href="{% url 'products' %}" class="inline-block bg-[#8D6E63] text-white px-12 py-3 rounded hover:bg-[#5D4037] transition-colors font-semibold">
                     View All Products
                 </a>
             </div>
@@ -185,65 +125,4 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-black text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
-                <div>
-                    <h3 class="font-bold text-xl mb-4">FurniCraft</h3>
-                    <p class="text-gray-400 mb-4">Subscribe</p>
-                    <p class="text-sm text-gray-400 mb-4">Get 10% off your first order</p>
-                    <div class="flex">
-                        <input type="email" placeholder="Enter your email" 
-                               class="bg-black border border-white px-4 py-2 rounded-l flex-1 text-sm focus:outline-none">
-                        <button class="bg-white text-black px-4 py-2 rounded-r hover:bg-gray-200">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="font-bold mb-4">Support</h3>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li>111 Bijoy sarani, Dhaka,<br>DH 1515, Bangladesh.</li>
-                        <li>exclusive@gmail.com</li>
-                        <li>+88015-88888-9999</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-bold mb-4">Account</h3>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white">My Account</a></li>
-                        <li><a href="{% url 'user_login' %}" class="hover:text-white">Login / Register</a></li>
-                        <li><a href="#" class="hover:text-white">Cart</a></li>
-                        <li><a href="#" class="hover:text-white">Wishlist</a></li>
-                        <li><a href="#" class="hover:text-white">Shop</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-bold mb-4">Quick Link</h3>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-white">Terms Of Use</a></li>
-                        <li><a href="#" class="hover:text-white">FAQ</a></li>
-                        <li><a href="#" class="hover:text-white">Contact</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-bold mb-4">Download App</h3>
-                    <p class="text-xs text-gray-400 mb-4">Save $3 with App New User Only</p>
-                    <div class="flex space-x-4 mb-4">
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f text-xl"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter text-xl"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram text-xl"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in text-xl"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
-                <p>&copy; 2025 FurniCraft. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
-    
+   {% endblock content %}

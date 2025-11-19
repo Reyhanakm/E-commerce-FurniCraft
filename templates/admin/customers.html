@@ -48,7 +48,7 @@
     <tbody class="text-gray-700">
       {% for customer in customers %}
       <tr class="border-b hover:bg-gray-50">
-        <td class="px-4 py-3">{{ forloop.counter }}</td>
+        <td class="px-4 py-3">{{ forloop.counter0|add:page_obj.start_index  }}</td>
         <td class="px-4 py-3">{{ customer.first_name }}</td>
         <td class="px-4 py-3">{{ customer.last_name }}</td>
         <td class="px-4 py-3">{{ customer.email }}</td>
@@ -76,26 +76,7 @@
 </div>
 
 <!-- Pagination -->
-<div class="flex justify-center items-center mt-6 space-x-2">
-  {% if customers.has_previous %}
-    <a href="?page={{ customers.previous_page_number }}&q={{ search_query }}&filter={{ filter_status }}"
-       class="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100">‹</a>
-  {% endif %}
-
-  {% for num in customers.paginator.page_range %}
-    {% if customers.number == num %}
-      <span class="px-3 py-1 border rounded-md bg-gray-200">{{ num }}</span>
-    {% else %}
-      <a href="?page={{ num }}&q={{ search_query }}&filter={{ filter_status }}"
-         class="px-3 py-1 border rounded-md hover:bg-gray-100">{{ num }}</a>
-    {% endif %}
-  {% endfor %}
-
-  {% if customers.has_next %}
-    <a href="?page={{ customers.next_page_number }}&q={{ search_query }}&filter={{ filter_status }}"
-       class="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100">›</a>
-  {% endif %}
-</div>
+{% include 'pagination.html' %}
 {% endblock %}
 
 {% block extra_scripts %}

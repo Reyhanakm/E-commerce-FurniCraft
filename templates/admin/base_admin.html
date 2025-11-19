@@ -7,10 +7,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}FurniCraft Admin{% endblock %}</title>
 
-  <!-- Tailwind -->
+
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   {% block extra_head %}{% endblock %}
@@ -37,23 +36,23 @@
       <a href="{% url 'admin_logout' %}" class="block text-gray-700 hover:text-black mt-10">Logout</a>
     </aside>
 
-    <!-- Main Section -->
     <main class="flex-1 p-8">
       {% block content %}{% endblock %}
     </main>
   </div>
 
-  <!-- Toast container (reusable across pages) -->
+  <!-- Toast container -->
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+  {% include 'components/loading_overlay.html' %}
 
-  <!-- Global JS functions for AJAX, Toast & Confirm -->
+  <!-- functions for AJAX, Toast & Confirm -->
   <script>
     // Get CSRF token for all AJAX calls
     function getCSRFToken() {
       return document.cookie.split('; ').find(r => r.startsWith('csrftoken='))?.split('=')[1];
     }
 
-    // Reusable Toast Function
+    // Toast Function
     const toastColors = {
       success: 'bg-green-600',
       error: 'bg-red-600',
@@ -62,7 +61,7 @@
       neutral: 'bg-gray-700'
     };
 
-    function showToast(message, type = 'success', duration = 2500) {
+    function showToast(message, type = 'success', duration = 2000) {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       toast.textContent = message;
@@ -75,7 +74,7 @@
       }, duration);
     }
 
-    // SweetAlert confirmation (generic)
+    // SweetAlert confirmation
     function confirmAction(message, confirmText, callback, color = '#b82d2d') {
       Swal.fire({
         title: message,
@@ -87,7 +86,7 @@
         cancelButtonColor: '#6b7280',
       }).then((result) => {
         if (result.isConfirmed) {
-          callback(); // execute passed function
+          callback(); 
         }
       });
     }
@@ -135,7 +134,15 @@ function openImageModal({
     },
   });
 }
+function showLoader() {
+    document.getElementById("globalLoadingOverlay").classList.remove("hidden");
+}
+
+function hideLoader() {
+    document.getElementById("globalLoadingOverlay").classList.add("hidden");
+}
 </script>
+
 </body>
 {% if request.user.is_authenticated %}
   {% include 'components/messages.html' %}

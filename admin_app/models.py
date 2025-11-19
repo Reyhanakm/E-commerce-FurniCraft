@@ -119,7 +119,7 @@ class VariantManager(models.Manager):
         return None
 
 class ProductVariant(models.Model):
-    product=models.ForeignKey(Product,on_delete=models.CASCADE,related_name='product_variants')
+    product=models.ForeignKey(Product,on_delete=models.CASCADE,related_name='variants')
     material_type=models.CharField(max_length=150,null=False)
     regular_price=models.DecimalField(max_digits=10,decimal_places=2)
     sales_price=models.DecimalField(max_digits=10,decimal_places=2)

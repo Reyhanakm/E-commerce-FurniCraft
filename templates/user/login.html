@@ -1,34 +1,8 @@
+{% extends "base.html" %}
 {% load socialaccount %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - FurniCraft</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <a href="{% url 'home' %}" class="bg-yellow-100 px-4 py-2 rounded">
-                        <span class="text-gray-800 font-semibold">FurniCraft</span>
-                    </a>
-                </div>
-                <div class="hidden md:flex space-x-8">
-                    <a href="{% url 'home' %}" class="text-gray-700 hover:text-gray-900">Home</a>
-                    <a href="#" class="text-gray-700 hover:text-gray-900">Contact</a>
-                    <a href="#" class="text-gray-700 hover:text-gray-900">About</a>
-                    <a href="{% url 'user_register' %}" class="text-gray-700 hover:text-gray-900">Sign Up</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
+   
+   {% block content %}
     <!-- Main Content -->
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-5xl w-full bg-white rounded-lg shadow-lg overflow-hidden">
@@ -66,28 +40,34 @@
                         </div>
                     {% endif %}
 
-                    <form method="POST" action="{% url 'user_login' %}" class="space-y-6">
-                        {% csrf_token %}
-                        
-                        <div>
-                            <input type="email" name="email" required
-                                   class="w-full px-4 py-3 border-b border-gray-300 focus:border-blue-400 focus:outline-none transition-colors"
-                                   placeholder="Email">
-                        </div>
+                     <form method="POST" class="space-y-6" novalidate>
+                    {% csrf_token %}
 
-                        <div>
-                            <input type="password" name="password" required
-                                   class="w-full px-4 py-3 border-b border-gray-300 focus:border-blue-400 focus:outline-none transition-colors"
-                                   placeholder="Password">
-                        </div>
+                    <!-- Email -->
+                    {% include "components/auth_field.html" with field=form.email %}
 
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                <label for="remember" class="ml-2 block text-sm text-gray-700">Remember me</label>
-                            </div>
-                            <a href="{% url 'forgot_password' %}" class="text-sm text-red-400 hover:text-red-500">Forgot password?</a>
+                    <!-- Password + eye toggle -->
+                    {% include "components/auth_field.html" with field=form.password %}
+
+                    <!-- Login Error -->
+                    {% if form.non_field_errors %}
+                        {% for err in form.non_field_errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ err }}</p>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="remember" name="remember"
+                                class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                            <label for="remember" class="ml-2 text-sm text-gray-700">Remember me</label>
                         </div>
+                        <a href="{% url 'forgot_password' %}"
+                        class="text-sm text-red-400 hover:text-red-500">Forgot password?</a>
+                    </div>
+
+
+
 
                         <button type="submit" 
                                 class="w-full bg-red-400 hover:bg-red-500 text-white font-semibold py-3 px-4 rounded transition-colors">
@@ -115,13 +95,4 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-black text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center text-sm text-gray-400">
-                <p>&copy; Copyright FurniCraft 2025. All rights reserved</p>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
+{% endblock content %}

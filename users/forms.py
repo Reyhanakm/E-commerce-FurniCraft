@@ -7,8 +7,8 @@ class RegistrationForm(forms.Form):
     last_name = forms.CharField(max_length=100)
     email = forms.EmailField(max_length=100)
     phone_number = forms.CharField(max_length=15)
-    password = forms.CharField(widget=forms.PasswordInput)
-    confirm_password = forms.CharField(widget=forms.PasswordInput)
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'id':'id_password'}))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'id':'id_confirm_password'}))
     referralcode =forms.CharField(max_length=100,required=False)
 
     def clean_email(self):
@@ -61,3 +61,54 @@ class RegistrationForm(forms.Form):
                 raise forms.ValidationError("Password must include at least one special character (@, $, !, etc.)")
 
         return cleaned_data
+
+
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'Enter your email',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent'
+        })
+    )
+
+
+class ResetPasswordVerifyForm(forms.Form):
+    otp = forms.CharField(
+        max_length=6,
+        widget=forms.TextInput(attrs={
+            'placeholder': '000000',
+            'maxlength': '6',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-center text-2xl tracking-widest'
+        })
+    )
+
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'id': 'new_password',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500'
+        })
+    )
+
+    confirm_new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'id': 'confirm_new_password',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500'
+        })
+    )
+
+
+class LoginForm(forms.Form):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'Email',
+            'class': 'w-full px-4 py-3 border-b border-gray-300 focus:border-blue-400 transition-colors'
+        })
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Password',
+            'class': 'w-full px-4 py-3 pr-12 border-b border-gray-300 focus:border-blue-400 transition-colors',
+            'id': 'login_password'
+        })
+    )
+

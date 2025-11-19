@@ -1,4 +1,82 @@
+{% extends 'base.html' %}
 
+{% block content %}
+
+<div class="flex justify-center items-center min-h-[70vh] bg-gray-50 px-4">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-8 border border-[#D6D1B1]">
+
+        <!-- Title -->
+        <h2 class="text-3xl font-bold text-[#6D6A42] text-center mb-6">
+            Verify Your OTP
+        </h2>
+
+        <!-- OTP Form -->
+        <form method="POST" action="{% url 'verify_otp' %}">
+            {% csrf_token %}
+            <input type="hidden" name="email" value="{{ email }}">
+
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Enter the 6-digit OTP sent to your email
+            </label>
+
+            <input 
+                type="text"
+                name="otp"
+                maxlength="6"
+                placeholder="Enter OTP"
+                required
+                class="w-full border border-[#D6D1B1] rounded-lg px-4 py-3 focus:ring-2 
+                       focus:ring-[#6D6A42] focus:outline-none mb-4 text-gray-700"
+            >
+
+            <button 
+                type="submit"
+                class="w-full bg-[#8D6E63] text-white py-3 rounded-lg font-semibold 
+                       hover:bg-[#5D4037] transition"
+            >
+                Verify OTP
+            </button>
+        </form>
+
+        <!-- Countdown -->
+        <p id="timer" class="text-center text-gray-600 mt-5">
+            Resend OTP in <span id="countdown" class="font-bold">60</span>s
+        </p>
+
+        <!-- Resend Button -->
+        <a id="resendBtn" 
+           href="{% url 'resend_otp' %}" 
+           class="hidden text-center block mt-5 text-[#8D6E63] font-semibold hover:underline">
+           Resend OTP
+        </a>
+
+    </div>
+</div>
+
+<!-- OTP Timer Script -->
+<script>
+let seconds = 60;
+let countdownEl = document.getElementById("countdown");
+let resendBtn = document.getElementById("resendBtn");
+let timerEl = document.getElementById("timer");
+
+let timer = setInterval(function() {
+    seconds--;
+    countdownEl.textContent = seconds;
+
+    if (seconds <= 0) {
+        clearInterval(timer);
+        timerEl.style.display = "none";
+        resendBtn.classList.remove("hidden");
+    }
+}, 1000);
+</script>
+
+{% endblock %}
+
+
+
+{% comment %} 
 {% extends 'base.html' %}
 
 {% block content %}
@@ -33,4 +111,4 @@ let timer = setInterval(function() {
   }
 }, 1000);
 </script>
-{% endblock content %}
+{% endblock content %} {% endcomment %}

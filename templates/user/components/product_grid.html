@@ -1,0 +1,52 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="product-container">
+
+    {% for p in products %}
+    <div class="bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden">
+
+        <!-- Product image -->
+        {% with image=p.images.all.0 %}
+            {% if image %}
+                <img src="{{ image.image.url }}" class="h-56 w-full object-cover">
+            {% else %}
+                <img src="https://via.placeholder.com/300" class="h-56 w-full object-cover">
+            {% endif %}
+        {% endwith %}
+
+        <div class="p-4 space-y-2">
+            
+            <!-- Product name -->
+            <h3 class="font-semibold text-lg text-gray-800">{{ p.name }}</h3>
+
+            <!-- Material Types -->
+            <div class="flex flex-wrap gap-2">
+                {% for v in p.variants.all %}
+                    <span class="px-3 py-1 text-xs rounded-full bg-gray-100 border border-gray-300 text-gray-700">
+                        {{ v.material_type }}
+                    </span>
+                {% endfor %}
+            </div>
+
+            <!-- Price -->
+            {% with v=p.variants.all.0 %}
+                {% if v %}
+                    <p class="text-[#D8C6C0] font-bold text-lg">₹{{ v.sales_price }}</p>
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="p-4 pt-0">
+            <a href="#" 
+               class="block text-center bg-[#D8C6C0] hover:bg-[#C8B4AD] text-gray-800 py-2 rounded-lg transition">
+                View Details
+            </a>
+        </div>
+
+    </div>
+    {% empty %}
+        <p class="col-span-full text-gray-600 text-center">
+            No products found.
+        </p>
+    {% endfor %}
+
+</div>
+

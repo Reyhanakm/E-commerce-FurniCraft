@@ -10,74 +10,27 @@
     {{ form.instance.id|yesno:"Edit Variant,Add Variant" }}
   </h1>
 
-  <form method="post" class="space-y-6">
+  <form method="post" class="space-y-6" novalidate>
     {% csrf_token %}
 
     <!-- Variant Details Card -->
     <div class="bg-white shadow-sm rounded-md p-6">
       <h2 class="text-lg font-medium text-gray-800 mb-4">Variant Details</h2>
-      
       <div class="grid grid-cols-2 gap-4">
-        <!-- Material Type -->
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Material Type</label>
-          {{ form.material_type }}
-          {% if form.material_tyFor Product: Rebco Cot
-
-pe.errors %}
-            <p class="text-sm text-red-600 mt-1">{{ form.material_type.errors.0 }}</p>
-          {% endif %}
-        </div>
-
-        <!-- Stock -->
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Stock</label>
-          {{ form.stock }}
-          {% if form.stock.errors %}
-            <p class="text-sm text-red-600 mt-1">{{ form.stock.errors.0 }}</p>
-          {% endif %}
-        </div>
-
-        <!-- Regular Price -->
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Regular Price</label>
-          {{ form.regular_price }}
-          {% if form.regular_price.errors %}
-            <p class="text-sm text-red-600 mt-1">{{ form.regular_price.errors.0 }}</p>
-          {% endif %}
-        </div>
-
-        <!-- Sales Price -->
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Sales Price</label>
-          {{ form.sales_price }}
-          {% if form.sales_price.errors %}
-            <p class="text-sm text-red-600 mt-1">{{ form.sales_price.errors.0 }}</p>
-          {% endif %}
-        </div>
-
-        <!-- Description -->
-        <div class="col-span-2">
-          <label class="block text-gray-700 font-medium mb-1">Description</label>
-          {{ form.description }}
-          {% if form.description.errors %}
-            <p class="text-sm text-red-600 mt-1">{{ form.description.errors.0 }}</p>
-          {% endif %}
-        </div>
-
-        <!-- is_deleted (only shown if field exists) -->
-        {% if form.is_deleted %}
-        <div class="col-span-2 flex items-center space-x-2 mt-4">
-          {{ form.is_deleted }}
-          <label class="text-gray-700 font-medium">Mark as Deleted</label>
-        </div>
-        {% endif %}
+          {% for field in form %}
+              <div class="
+                  {% if field.name == 'description' or field.name == 'is_deleted' %}
+                      col-span-2
+                  {% endif %}
+              ">
+                  {% include 'components/form_field.html' with field=field %}
+              </div>
+          {% endfor %}
       </div>
-    </div>
 
     <!-- Save / Cancel Buttons -->
     <div class="flex justify-end gap-3">
-      <a href="{% url 'admin_product_list' %}"
+      <a href="{% url 'admin_variant_list' product.id %}"
          class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</a>
       <button type="submit"
               class="px-6 py-2 bg-[#b82d2d] text-white rounded-md hover:bg-[#a22727] transition">

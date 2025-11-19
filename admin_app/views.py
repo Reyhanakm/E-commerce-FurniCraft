@@ -19,11 +19,9 @@ from .models import Category,Product,ProductVariant,ProductImage
 from .forms import CategoryForm,ProductForm,ProductVariantForm,ProductImageForm
 
 
-
-
 def admin_login(request):
     if request.method == 'POST':
-        email = request.POST.get('email')# Create your views here.
+        email = request.POST.get('email')
         password = request.POST.get('password')
         user = authenticate(request,email=email,password=password)
         if user is not None:
@@ -67,12 +65,13 @@ def customer_list(request):
     elif filter_status == 'unblocked':
         customers = customers.filter(is_blocked=False)
 
-    paginator = Paginator(customers, 6)
+    paginator = Paginator(customers, 8)
     page = request.GET.get('page')
-    customers = paginator.get_page(page)
+    page_obj = paginator.get_page(page)
 
     return render(request, 'admin/customers.html', {
-        'customers': customers,
+        'page_obj': page_obj,
+        'customers':page_obj.object_list,
         'search_query': search_query,
         'filter_status': filter_status
     })
@@ -95,9 +94,16 @@ def admin_category_list(request):
     categories = Category.objects.all_with_deleted().order_by('-created_at')
 
 
-    paginator = Paginator(categories, 10)  # 10 per page
+    paginator = Paginator(categories, 8)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    params = request.GET.copy()
+
+    if "page" in params:
+        params.pop("page")  
+    querystring = params.urlencode()
+
 
     primary_images = {}
     for cat in page_obj:
@@ -115,6 +121,8 @@ def admin_category_list(request):
     context = {
         'page_obj': page_obj,
         'primary_images':primary_images,
+        "querystring": querystring,
+
     }
 
     return render(request,'admin/category_list.html',context)
@@ -182,18 +190,17 @@ def restore_category(request, id):
     return JsonResponse({'success': False, 'message': 'Category not found or already active'})
 
 
-# VariantFormSet= inlineformset_factory(Product,ProductVariant,form=ProductVariantForm,extra=1,can_delete=True)
 
 @login_required(login_url='admin_login')
 def admin_product_list(request):
-    # Clear search query param
+
     if request.GET.get('clear'):
         return redirect('admin_product_list')
     
-    # Search query
+   
     search_query = request.GET.get('q', '').strip()
 
-    # Fetch products (including deleted)
+    
     products = Product.objects.all_with_deleted().prefetch_related(
         Prefetch('images', queryset=ProductImage.objects.order_by('-is_primary', '-created_at'))
     ).order_by('-created_at')
@@ -202,12 +209,18 @@ def admin_product_list(request):
     if search_query:
         products = products.filter(Q(name__icontains=search_query))
 
-    # Pagination
-    paginator = Paginator(products, 10)
+
+    paginator = Paginator(products, 8)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Build dict of primary images for easy lookup in template
+    params = request.GET.copy()
+    if "page" in params:
+        params.pop("page")
+    clean_querystring = params.urlencode()
+
+
+
     primary_images = {}
     for product in page_obj:
         primary_image = product.images.filter(is_primary=True).first() or product.images.first()
@@ -216,12 +229,14 @@ def admin_product_list(request):
         else:
             primary_images[product.id] = None
 
-    # Context
+
     context = {
         'page_obj': page_obj,
         'products': page_obj.object_list,
         'search_query': search_query,
         'primary_images': primary_images, 
+        "querystring": clean_querystring,
+
     }
 
     return render(request, 'admin/product_list.html', context)
@@ -258,7 +273,7 @@ def add_product(request):
 
 @login_required(login_url='admin_login')
 def edit_product(request, id):
-    """Edit existing product details and manage images."""
+
     product = get_object_or_404(Product.objects.all_with_deleted(), id=id)
 
     if request.method == 'POST':
@@ -318,7 +333,7 @@ def edit_product(request, id):
 
 @login_required(login_url='admin_login')
 def delete_product(request, id):
-    """Soft delete a product."""
+
     product = Product.objects.soft_delete(id)
 
     if not product:
@@ -341,27 +356,33 @@ def restore_product(request, id):
 
 @login_required(login_url='admin_login')
 def variant_list(request, product_id):
-    """Show all variants for a specific product with search, filter & pagination."""
+
     product = get_object_or_404(Product, id=product_id)
     search_query = request.GET.get('q', '').strip()
     filter_status = request.GET.get('filter', '')
 
-    # Start from all variants for this product (including deleted)
+
     variants = ProductVariant.objects.all_with_deleted().filter(product=product)
 
-    # Search by material type
+
     if search_query:
         variants = variants.filter(material_type__icontains=search_query) 
-    # Filter by status
+
     if filter_status == 'active':
         variants = variants.filter(is_deleted=False)
     elif filter_status == 'deleted':
         variants = variants.filter(is_deleted=True)
 
-    # Pagination
-    paginator = Paginator(variants.order_by('-created_at'), 10)
+
+    paginator = Paginator(variants.order_by('-created_at'), 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    params = request.GET.copy()
+    if "page" in params:
+        params.pop("page")
+    clean_querystring = params.urlencode()
+
 
     return render(request, 'admin/variant_list.html', {
         'variants': page_obj,
@@ -369,6 +390,8 @@ def variant_list(request, product_id):
         'product': product,
         'search_query': search_query,
         'filter_status': filter_status,
+        "querystring": clean_querystring,
+
     })
 
 @login_required(login_url='admin_login')
@@ -394,7 +417,6 @@ def add_variant(request, product_id):
 
 @login_required(login_url='admin_login')
 def edit_variant(request, id):
-    """Edit existing variant (including deleted ones)."""
     variant = get_object_or_404(ProductVariant.objects.all_with_deleted(), id=id)
     product = variant.product  # for redirect and context
 
@@ -415,7 +437,6 @@ def edit_variant(request, id):
 
 @login_required(login_url='admin_login')
 def delete_variant(request, id):
-    """Soft delete a variant."""
     variant = ProductVariant.objects.soft_delete(id)
     if variant:
         messages.success(request, f"Variant '{variant.material_type}' deleted successfully.")
@@ -427,7 +448,6 @@ def delete_variant(request, id):
 @login_required(login_url='admin_login')
 @require_POST
 def restore_variant(request, id):
-    """Restore a soft-deleted variant."""
     variant = ProductVariant.objects.restore(id)
     if variant:
         return JsonResponse({'success': True})

@@ -71,6 +71,7 @@ class ProductForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not show_deleted:
             self.fields['is_deleted'].widget=forms.HiddenInput()
+            self.fields['is_deleted'].label=""
 
     def clean_name(self):
         name = self.cleaned_data['name'].strip()
@@ -87,16 +88,21 @@ class ProductForm(forms.ModelForm):
 class ProductVariantForm(forms.ModelForm):
     class Meta:
         model = ProductVariant
-        fields = ['material_type', 'description', 'regular_price', 'sales_price', 'stock', 'is_deleted']
+        fields = ['material_type', 'stock', 'regular_price', 'sales_price', 'description', 'is_deleted']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+            'is_deleted': forms.CheckboxInput(attrs={
+                    'class': 'h-4 w-4 text-[#b82d2d] border-gray-300 rounded focus:ring-[#b82d2d]'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         show_deleted = kwargs.pop('show_deleted', False)
         super().__init__(*args, **kwargs)
+
         if not show_deleted:
             self.fields['is_deleted'].widget=forms.HiddenInput()
+            self.fields['is_deleted'].label=""
 
     def clean_material_type(self):
         material_type = self.cleaned_data['material_type'].strip()

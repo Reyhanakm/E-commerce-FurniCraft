@@ -7,9 +7,28 @@
     <title>{% block title %}FurniCraft{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-50">
+     <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="bg-yellow-100 px-4 py-2 rounded">
+                        <span class="text-gray-800 font-semibold">FurniCraft</span>
+                    </a>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="{% url 'home' %}" class="text-gray-700 hover:text-gray-900">Home</a>
+                    <a href="#" class="text-gray-700 hover:text-gray-900">Contact</a>
+                    <a href="#" class="text-gray-700 hover:text-gray-900">About</a>
+                    <a href="{% url 'user_register' %}" class="text-gray-700 hover:text-gray-900">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </nav>
     {% if messages %}
         <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
             {% for message in messages %}
@@ -28,7 +47,7 @@
         </div>
     {% endif %}
 
-    <form method="POST">
+    {% comment %} <form method="POST">
         {% csrf_token %}
         
         {% if form.errors %}
@@ -49,7 +68,7 @@
                     </div>
                 </div>
             </div>
-        {% endif %}
+        {% endif %} {% endcomment %}
         
         {% block content %}
         {% endblock content %}
@@ -73,7 +92,6 @@
         }
     </style>
 
-         <!-- Toast container (reusable across pages) -->
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
 
   <!-- Global JS functions for AJAX, Toast & Confirm -->
@@ -83,7 +101,6 @@
       return document.cookie.split('; ').find(r => r.startsWith('csrftoken='))?.split('=')[1];
     }
 
-    // Reusable Toast Function
     const toastColors = {
       success: 'bg-green-600',
       error: 'bg-red-600',
@@ -119,9 +136,21 @@
                 }
             });
         }, 5000);
-    </script>
 
-    
+   
+        function togglePassword(inputId, iconId) {
+            const passInput = document.getElementById(inputId);
+            const eyeIcon = document.getElementById(iconId);
+
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                eyeIcon.classList.replace("fa-eye-slash", "fa-eye");
+            } else {
+                passInput.type = "password";
+                eyeIcon.classList.replace("fa-eye", "fa-eye-slash");
+            }
+        }
+</script>    
 </body>
 </html>
                 

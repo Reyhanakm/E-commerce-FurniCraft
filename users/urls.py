@@ -14,10 +14,13 @@ urlpatterns = [
     # OTP Verification
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
+
     
     # Password Reset
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('reset-password-verify/', views.reset_password_verify, name='reset_password_verify'),
     
-    path('category-prodcuts/<int:id>/', views.category_products, name='category_products'),
+    path('category_products/<int:id>/', views.category_products, name='category_products'),
+    path('products/',views.products,name='products'),
+    path('product_details/<int:id>/',views.product_details,name='product_details')
 ]

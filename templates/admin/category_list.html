@@ -57,7 +57,7 @@
     <tbody class="text-gray-700">
       {% for cat in page_obj %}
       <tr class="border-b hover:bg-gray-50">
-        <td class="px-4 py-3">{{ forloop.counter }}</td>
+        <td class="px-4 py-3">{{ forloop.counter0|add:page_obj.start_index  }}</td>
         <td class="px-4 py-3">{{ cat.name }}</td>
         {% comment %} <td class="px-4 py-3 w-14 h-14 object-cover rounded-md cursor-pointer"
         >{{cat.image}}</td> {% endcomment %}
@@ -153,6 +153,7 @@
     </form>
   </div>
 </div>
+{% include 'pagination.html'%}
 {% endblock %}
 
 {% block extra_scripts %}
