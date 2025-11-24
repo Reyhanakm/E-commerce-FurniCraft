@@ -2,8 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Home
-    path('', views.home, name='home'),
+    path('', views.landing, name='landing'),
+  
+    path('home/', views.home, name='home'),
 
     
     # Authentication
@@ -20,7 +21,4 @@ urlpatterns = [
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('reset-password-verify/', views.reset_password_verify, name='reset_password_verify'),
     
-    path('category_products/<int:id>/', views.category_products, name='category_products'),
-    path('products/',views.products,name='products'),
-    path('product_details/<int:id>/',views.product_details,name='product_details')
 ]

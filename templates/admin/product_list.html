@@ -62,7 +62,6 @@
               <img src="{{ primary_images|get_item:pdt.id }}" alt="{{ pdt.name }}"
               class="w-14 h-14 object-cover rounded-md border hover:scale-105 transition-transform duration-200 cursor-pointer"
               >
-              {% comment %} onclick="openImageModal('{{ primary_images.pdt.id }}')" {% endcomment %}
         {% else %}
       <div class="w-14 h-14 bg-gray-100 flex items-center justify-center text-gray-400 text-sm border rounded-md">
         N/A
@@ -86,16 +85,6 @@
           </a>
         </td>
 
-        <!-- Edit / Delete -->
-        {% comment %} <td class="px-4 py-3 space-x-2">
-          <a href="{% url 'edit_product' pdt.id %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>
-          <span>|</span>
-          <a href="{% url 'delete_product' pdt.id %}"
-             onclick="confirmDelete('{{ pdt.id }}', '{{ pdt.name }}'); return false;"
-             class="text-red-600 hover:text-red-800 font-medium">
-             Delete
-          </a>
-        </td> {% endcomment %}
           <td class="px-4 py-3 text-center">
           {% if pdt.is_deleted %}
             <button type="button"

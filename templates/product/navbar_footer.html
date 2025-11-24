@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FurniCraft - Premium Furniture Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     
 </head>
@@ -29,17 +30,9 @@
                         <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">About</a>
                     </div>
                 </div>
-                
-                <div class="flex items-center space-x-6">
-                    <div class="relative hidden lg:block">
-                        <input type="text" placeholder="What are you looking for?" 
-                               class="pl-4 pr-10 py-2 border border-[#D6D1B1] rounded-md focus:outline-none focus:ring-2 focus:ring-[#6D6A42] w-72">
-                        <button class="absolute right-2 top-2.5">
-                            <i class="fas fa-search text-gray-400"></i>
-                        </button>
-                    </div>
                     
                     <div class="flex items-center space-x-5">
+                        {{user.first_name}}
                         <a href="#" class="text-gray-700 hover:text-amber-700 relative">
                             <i class="far fa-heart text-2xl"></i>
                         </a>
@@ -47,11 +40,13 @@
                             <i class="fas fa-shopping-cart text-2xl"></i>
                         </a>
                         {% if user.is_authenticated %}
+
+
                             <div class="relative group inline-block">
                                 <button class="flex items-center space-x-2 text-gray-700 hover:text-[#0E0E0E]">
                                     <i class="far fa-user-circle text-2xl"></i>
                                 </button>
-                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
+                                <div class="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block hover:block">
                                     <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a>
                                     <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
                                     <a href="{% url 'user_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
@@ -68,12 +63,13 @@
         </div>
     </nav>
 
-
+    {% include "components/messages.html"%}
     <main class="flex-1">
         {% block content %}
         {% endblock content %}
     </main>
-        
+     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
  <!-- Footer -->
     <footer class="bg-black text-white py-12">
        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -133,6 +129,12 @@
             </div>
         </div>
     </footer>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+{% block script %}
+    
+{% endblock script %}
+    
 </body>
 </html>
     

@@ -1,8 +1,8 @@
-{% extends "user/navbar_footer.html" %}
+{% extends "product/navbar_footer.html" %}
 {% load static %}
 
 {% block content %}
-    
+    {% include 'components/messages.html'%}
     <!-- Hero Banner -->
     <section class="bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -88,39 +88,10 @@
             </div>
 
             <!-- View All Button -->
-            <div class="text-center mt-12">
+            <div class="text-center mt-12 mb-20">
                 <a href="{% url 'products' %}" class="inline-block bg-[#8D6E63] text-white px-12 py-3 rounded hover:bg-[#5D4037] transition-colors font-semibold">
                     View All Products
                 </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="bg-white py-16 border-t">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div class="mx-auto h-20 w-20 rounded-full bg-gray-800 border-8 border-gray-300 flex items-center justify-center mb-6">
-                        <i class="fas fa-shipping-fast text-white text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">FREE AND FAST DELIVERY</h3>
-                    <p class="text-gray-600">Free delivery for all orders over $140</p>
-                </div>
-                <div class="text-center">
-                    <div class="mx-auto h-20 w-20 rounded-full bg-gray-800 border-8 border-gray-300 flex items-center justify-center mb-6">
-                        <i class="fas fa-headset text-white text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">24/7 CUSTOMER SERVICE</h3>
-                    <p class="text-gray-600">Friendly 24/7 customer support</p>
-                </div>
-                <div class="text-center">
-                    <div class="mx-auto h-20 w-20 rounded-full bg-gray-800 border-8 border-gray-300 flex items-center justify-center mb-6">
-                        <i class="fas fa-shield-alt text-white text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">MONEY BACK GUARANTEE</h3>
-                    <p class="text-gray-600">We return money within 30 days</p>
-                </div>
             </div>
         </div>
     </section>

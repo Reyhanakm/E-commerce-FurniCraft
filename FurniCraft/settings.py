@@ -58,6 +58,7 @@ INSTALLED_APPS = [
 
     'users',
     'admin_app',
+    'product',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -87,7 +88,7 @@ CACHES = {
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_CACHE_ALIAS = "default"
-SESSION_COOKIE_AGE = 1200  # 20 minutes 
+SESSION_COOKIE_AGE = 1500  # 30 minutes 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 

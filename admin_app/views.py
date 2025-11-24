@@ -9,14 +9,11 @@ from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q,Prefetch
-from django.forms import inlineformset_factory
 from cloudinary.utils import cloudinary_url
 
-
-
 from users.models import User,UserManager
-from .models import Category,Product,ProductVariant,ProductImage
-from .forms import CategoryForm,ProductForm,ProductVariantForm,ProductImageForm
+from product.models import Category,Product,ProductVariant,ProductImage
+from product.forms import CategoryForm,ProductForm,ProductVariantForm,ProductImageForm
 
 
 def admin_login(request):
@@ -75,6 +72,7 @@ def customer_list(request):
         'search_query': search_query,
         'filter_status': filter_status
     })
+
 @login_required(login_url='admin_login')
 def toggle_block_status(request, customer_id):
     if request.method=='POST':
@@ -91,8 +89,12 @@ def toggle_block_status(request, customer_id):
 
 @login_required(login_url='admin_login')
 def admin_category_list(request):
+    search_query=request.GET.get('q','')
+
     categories = Category.objects.all_with_deleted().order_by('-created_at')
 
+    if search_query:
+        categories = categories.filter(Q(name__icontains=search_query))
 
     paginator = Paginator(categories, 8)  
     page_number = request.GET.get('page')
@@ -120,6 +122,7 @@ def admin_category_list(request):
 
     context = {
         'page_obj': page_obj,
+        'search_query': search_query,
         'primary_images':primary_images,
         "querystring": querystring,
 
@@ -205,7 +208,6 @@ def admin_product_list(request):
         Prefetch('images', queryset=ProductImage.objects.order_by('-is_primary', '-created_at'))
     ).order_by('-created_at')
 
-    # Apply search filter if present
     if search_query:
         products = products.filter(Q(name__icontains=search_query))
 
@@ -291,7 +293,7 @@ def edit_product(request, id):
         if form.is_valid():
             form.save()
 
-            # Handle images
+            # Handles existing images
             existing_images = [
                 img.image.url
                 for img in ProductImage.objects.filter(product=product)
