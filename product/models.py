@@ -32,7 +32,7 @@ class CategoryManager(models.Manager):
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    image = models.CharField(max_length=500,blank=True,null=True)
+    image = models.CharField(max_length=500,unique=True)
     status = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
 

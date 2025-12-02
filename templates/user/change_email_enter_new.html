@@ -1,0 +1,29 @@
+<h3 class="text-lg font-semibold text-gray-800 mb-4">Enter New Email</h3>
+<p class="text-gray-600 text-sm mb-4">
+    Current email verified successfully. Please enter your new email address.
+</p>
+
+<form method="POST"
+      hx-post="{% url 'change_email_enter_new' %}" 
+      hx-target="#emailModalContent" 
+      hx-swap="innerHTML">
+    {% csrf_token %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="p-2 my-2 text-sm text-red-700 bg-red-100 rounded-lg">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <label class="block text-sm text-gray-600 mb-1">New Email</label>
+    <input type="email" name="new_email" required
+           class="w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-[#A89289] focus:outline-none">
+
+    <div class="flex justify-end gap-3 mt-6">
+        <button type="button" onclick="closeEmailModal()" class="text-gray-600">Cancel</button>
+        <button type="submit"
+                class="px-5 py-2 bg-[#A89289] hover:bg-[#8f7a73] text-white rounded-md transition">
+            Continue
+        </button>
+    </div>
+</form>

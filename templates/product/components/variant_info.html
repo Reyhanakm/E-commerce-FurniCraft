@@ -3,7 +3,6 @@
     <p class="text-4xl font-bold text-[#A89289]">
         ₹{{ variant.sales_price }}
     </p>
-
     {% if variant.regular_price %}
         <p class="text-xl text-gray-500 line-through">
             ₹{{ variant.regular_price }}
@@ -13,6 +12,7 @@
         </span>
     {% endif %}
 </div>
+    <p class="text-lg ms-4 text-gray-600">(Inclusive of all taxes)</p>
 
 <!-- Offers Section -->
 <div class="mb-4 pt-3 border-t border-[#D8C6C0]">
@@ -27,7 +27,7 @@
 
 <!-- Stock Section -->
 <div class="pt-4 border-t border-[#D8C6C0]">
-    {% if variant.stock == 0 %}
+    {% comment %} {% if variant.stock == 0 %}
         <div class="flex items-center gap-2">
             <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
             <span class="text-sm font-semibold text-red-700">Out of Stock</span>
@@ -46,9 +46,54 @@
                 {% endif %}
             </span>
         </div>
+    {% endif %} {% endcomment %}
+    {% comment %} <form 
+    hx-post="{% url 'add_cart_product' product.id %}"
+    hx-swap="none"
+>
+    <button type="submit"
+        class="w-full bg-[#A89289] hover:bg-[#8f7a73] 
+               text-white font-semibold py-3 rounded-xl
+               transition-all duration-200 shadow-sm 
+               hover:shadow-md active:scale-95">
+        <i class="fas fa-shopping-cart mr-2"></i>
+        Add to Cart
+    </button>
+</form> {% endcomment %}
+        {% if variant.stock > 0 %}
+        <div class= "flex">
+        <form 
+            hx-post="{% url 'add_cart_variant' variant.id %}"
+            hx-swap="none"
+            class="w-full"
+        >
+            {% csrf_token %}
+            <input type="hidden" name="variant_id" value="{{ variant.id }}">
+            <input type="hidden" name="quantity" id="qty-input" value="1">
+
+            <button type="submit"
+                class="w-full bg-[#A89289] text-white py-4 rounded-xl text-lg font-semibold
+                    hover:bg-[#8f7a73] transition-all duration-200 shadow-lg hover:shadow-xl
+                    active:scale-95 mb-4">
+                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+            </button>
+        </form>
+
+    <button class="text-[#A89289] text-2xl mb-3 hover:text-[#8f7a73] transition-all duration-200">
+        <i class="fas fa-heart ms-3"></i>
+    </button>
+
+    {% else %}
+    <button disabled class="w-full bg-gray-400 text-white py-4 rounded-xl text-lg font-semibold cursor-not-allowed mb-4">
+        <i class="fas fa-ban mr-2"></i>Out of Stock
+    </button>
+    <button disabled class="text-[#A89289] text-2xl">
+        <i class="fas fa-heart"></i>
+    </button>
     {% endif %}
 </div>
-
+    </div>
+{% comment %} 
 <div class="mb-8">
         <h3 class="text-lg font-semibold text-gray-800 mb-3">Quantity</h3>
         <div class="flex items-center border-2 border-gray-300 rounded-lg w-fit">
@@ -56,8 +101,8 @@
             <input type="number" id="quantity" value="1" class="rounded text-center border-0 outline-none font-semibold transition" min="1" max="{{ variant.stock }}">
             <button onclick="increaseQty()" class="px-4 py-2 text-gray-600 hover:text-[#A89289] font-bold transition">+</button>
         </div>
-    </div>
-<!-- Add to Cart Button -->
+    </div> {% endcomment %}
+{% comment %} <!-- Add to Cart Button -->
     <div class="flex gap-3 justify-center item-center">{% if variant.stock > 0 %}
         <button onclick="addToCart()" class="w-full bg-[#A89289] text-white py-4 rounded-xl text-lg font-semibold
                         hover:bg-[#8f7a73] transition-all duration-200 shadow-lg hover:shadow-xl
@@ -77,5 +122,5 @@
                         <i class="fas fa-heart"></i>
                         </button>
 
-    {% endif %}</div>
+    {% endif %}</div> {% endcomment %}
     

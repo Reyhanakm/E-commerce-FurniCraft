@@ -6,7 +6,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from users.models import User
-import random
 from django.core.cache import cache
 import json
 from users.decorators import block_check
@@ -27,7 +26,7 @@ def category_products(request,id):
 @never_cache
 @login_required(login_url="/login")
 def products(request):    
-    products=Product.objects.annotate(min_price=Min('variants__sales_price')).prefetch_related(
+    products=Product.objects.filter(category__is_deleted=False).annotate(min_price=Min('variants__sales_price')).prefetch_related(
         Prefetch('images',queryset=ProductImage.objects.order_by('id')),
         Prefetch('variants',queryset=ProductVariant.objects.order_by('id')))
     

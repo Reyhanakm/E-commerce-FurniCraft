@@ -1,0 +1,308 @@
+{% extends "admin/base_admin.html" %}
+{% load static %}
+
+{% block title %}Banner Management{% endblock %}
+
+{% block content %}
+
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-semibold text-gray-800">Banner Management</h1>
+</div>
+
+{# ---------- ADD / EDIT BANNER FORM ---------- #}
+<div class="bg-white shadow-sm rounded-md p-6 mb-8">
+
+  {% if edit_form %}
+    <h2 class="text-xl font-semibold mb-4">Edit Banner</h2>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      {{ edit_form.non_field_errors }}
+
+      {% include "components/form_field.html" with field=edit_form.name %}
+      {% include "components/form_field.html" with field=edit_form.status %}
+      {% include "components/form_field.html" with field=edit_form.image %}
+
+      <div class="bg-gray-50 border rounded-md p-4 mt-4">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">Banner Image</h3>
+
+        <button type="button" id="uploadWidgetBtn"
+                class="bg-[#b82d2d] hover:bg-[#a22727] text-white px-4 py-2 rounded-md">
+          Upload Banner
+        </button>
+
+        <div id="bannerPreview" class="mt-4">
+          {% if edit_form.instance.image %}
+            <img src="https://res.cloudinary.com/dcaevmkgg/image/upload/f_auto,q_auto,w_1600,h_450,c_fill/{{ edit_form.instance.image }}"
+                 class="w-full rounded-md border shadow-sm">
+          {% endif %}
+        </div>
+
+        {% if edit_form.image.errors %}
+          {% for error in edit_form.image.errors %}
+            <p class="text-red-600 text-sm mt-2">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <div class="flex justify-end gap-3 mt-4">
+        <a href="{% url 'banner_page' %}"
+           class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+          Cancel
+        </a>
+        <button type="submit"
+                class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+          Save Changes
+        </button>
+      </div>
+    </form>
+
+  {% else %}
+    <h2 class="text-xl font-semibold mb-4">Add Banner</h2>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      {{ add_form.non_field_errors }}
+
+      {% include "components/form_field.html" with field=add_form.name %}
+      {% include "components/form_field.html" with field=add_form.status %}
+      {% include "components/form_field.html" with field=add_form.image %}
+
+      <div class="bg-gray-50 border rounded-md p-4 mt-4">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">Banner Image</h3>
+
+        <button type="button" id="uploadWidgetBtn"
+                class="bg-[#b82d2d] hover:bg-[#a22727] text-white px-4 py-2 rounded-md">
+          Upload Banner
+        </button>
+
+        <div id="bannerPreview" class="mt-4">
+          {% if add_form.instance.image %}
+            <img src="https://res.cloudinary.com/dcaevmkgg/image/upload/f_auto,q_auto,w_600,h_200,c_fill/${result.info.public_id}.jpg"
+     class="rounded-md border shadow-sm" />
+
+          {% endif %}
+        </div>
+
+        {% if add_form.image.errors %}
+          {% for error in add_form.image.errors %}
+            <p class="text-red-600 text-sm mt-2">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <div class="flex justify-end gap-3 mt-4">
+        <button type="submit"
+                class="px-6 py-2 bg-[#b82d2d] text-white rounded-md hover:bg-[#a22727] transition">
+          + Add Banner
+        </button>
+      </div>
+    </form>
+  {% endif %}
+
+</div>
+
+{# ---------- BANNER LIST ---------- #}
+<div class="bg-white shadow-sm rounded-md p-6">
+  <h2 class="text-xl font-semibold mb-4">Existing Banners</h2>
+
+  {% for b in banners %}
+    <div class="border rounded-md p-4 mb-6 bg-gray-50 hover:bg-gray-100 transition">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="font-semibold text-lg">{{ b.name }}</p>
+
+          {% if b.image %}
+          <div class="w-100 h-100">
+              <img src="https://res.cloudinary.com/dcaevmkgg/image/upload/f_auto,q_auto,w_400,h_200,c_fill/{{ b.image }}.jpg"
+                class="w-[400px] h-[200px] object-cover rounded-md border mt-3 shadow-sm">
+          </div>
+            
+          {% else %}
+            <div class="w-64 h-24 bg-gray-200 flex items-center justify-center rounded-md mt-3">
+              <span class="text-gray-500 text-sm">No Image</span>
+            </div>
+          {% endif %}
+
+          <p class="mt-2 text-sm">
+            Status:
+            {% if b.status %}
+              <span class="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">Active</span>
+            {% else %}
+              <span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">Inactive</span>
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="text-right">
+          <a href="{% url 'edit_banner' b.id %}"
+             class="text-blue-600 hover:text-blue-800 font-medium mr-4">
+            Edit
+          </a>
+
+          <a href="{% url 'delete_banner' b.id %}"
+             class="text-red-600 hover:text-red-800 font-medium"
+             onclick="return confirm('Delete this banner?');">
+            Delete
+          </a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <p class="text-gray-500 text-center py-6">No banners added yet.</p>
+  {% endfor %}
+</div>
+
+<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+<script>
+  const imageField = document.getElementById("id_image");
+  const preview = document.getElementById("bannerPreview");
+
+  if (imageField) {
+    const widget = cloudinary.createUploadWidget({
+        cloudName: "dcaevmkgg",
+        uploadPreset: "product_preset",
+        folder: "furnicraft_banners",
+
+        cropping: true,
+        croppingAspectRatio: 16 / 4.5,
+        croppingCoordinatesMode: "custom", 
+
+        multiple: false,
+      },
+      (resultError, result) => {
+        if (!resultError && result && result.event === "success") {
+
+          imageField.value = result.info.public_id;
+
+          preview.innerHTML = `
+            <img src="https://res.cloudinary.com/dcaevmkgg/image/upload/f_auto,q_auto,w_600,h_200,c_fill/${result.info.public_id}.jpg"
+                class="rounded-md border shadow-sm" />
+          `;
+
+
+          if (typeof showToast === "function") {
+            showToast("Banner uploaded successfully!", "success");
+          }
+        }
+      }
+    );
+
+    const btn = document.getElementById("uploadWidgetBtn");
+    if (btn) btn.onclick = () => widget.open();
+  }
+</script>
+
+
+{% endblock %}
+
+
+
+{% comment %} {% extends 'admin/base_admin.html' %}
+
+{% block content %}
+
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-semibold text-gray-800">Banner Management</h1>
+</div>
+
+<!-- Add Banner Card -->
+<div class="bg-white shadow-sm rounded-md p-6 mb-8">
+
+  <h2 class="text-xl font-semibold mb-4">Add Banner</h2>
+
+  <form method="POST" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+    {{ add_form.as_p }}
+    <div>
+<button id="upload_widget" type="button"
+                class="bg-[#b82d2d] hover:bg-[#a22727] text-white px-4 py-2 rounded-md">
+          Upload Images
+        </button>
+              <input type="file" id="fileInput" accept="image/*" class="hidden">
+
+    </div>
+
+    <button class="bg-[#b82d2d] text-white px-4 py-2 rounded-md hover:bg-[#a22727] transition-all duration-200">
+      + Add Banner
+    </button>
+  </form>
+</div>
+
+<!-- Banner List Section -->
+<div class="bg-white shadow-sm rounded-md p-6">
+
+  <h2 class="text-xl font-semibold mb-4">Existing Banners</h2>
+
+  {% for b in banners %}
+  <div class="border rounded-md p-4 mb-6 bg-gray-50 hover:bg-gray-100 transition">
+
+    <div class="flex justify-between items-start">
+
+      <!-- Banner Details -->
+      <div>
+        <p class="font-semibold text-lg">{{ b.name }}</p>
+        {% if b.image %}
+        <img src="{{ b.image.url }}" 
+             class="w-48 h-auto rounded-md border mt-3 shadow-sm">
+        {% else %}
+        <div class="w-48 h-28 bg-gray-200 flex items-center justify-center rounded-md mt-3">
+          <span class="text-gray-500 text-sm">No Image</span>
+        </div>
+        {% endif %}
+
+        <p class="mt-2 text-sm">
+          Status: 
+          {% if b.status %}
+            <span class="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">Active</span>
+          {% else %}
+            <span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">Inactive</span>
+          {% endif %}
+        </p>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="text-right">
+        <a href="{% url 'edit_banner' b.id %}" 
+           class="text-blue-600 hover:text-blue-800 font-medium mr-4">
+          Edit
+        </a>
+
+        <a href="{% url 'delete_banner' b.id %}"
+           class="text-red-600 hover:text-red-800 font-medium"
+           onclick="return confirm('Delete this banner?');">
+          Delete
+        </a>
+      </div>
+
+    </div>
+
+    <!-- INLINE EDIT FORM -->
+    {% if edit_id == b.id %}
+    <div class="mt-6 border-t pt-4">
+      <h3 class="text-lg font-semibold mb-3">Edit Banner</h3>
+
+      <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        {{ edit_form.as_p }}
+
+        <button class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+          Save Changes
+        </button>
+
+        <a href="{% url 'banner_page' %}" 
+           class="ml-3 text-gray-600 hover:text-gray-800">
+          Cancel
+        </a>
+      </form>
+    </div>
+    {% endif %}
+
+  </div>
+
+  {% empty %}
+  <p class="text-gray-500 text-center py-6">No banners added yet.</p>
+  {% endfor %}
+
+</div>
+
+{% endblock %} {% endcomment %}

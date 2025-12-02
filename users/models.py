@@ -9,7 +9,7 @@ class UserManager(BaseUserManager):
             raise ValueError("User must have an email adddress!")
         email= self.normalize_email(email)
         user= self.model(email=email,**extra_fields)
-        user.set_password(password) #hashes the password
+        user.set_password(password) #hashes password
         user.save(using=self._db)
         return user
     def create_superuser(self,email,password=None,**extra_fields):
@@ -26,6 +26,8 @@ class User(AbstractBaseUser,PermissionsMixin):
     phone_number = models.CharField(max_length=15,blank= True, null= True)
     referralcode = models.CharField(max_length=50,blank=True,null= True)
     referredby = models.ForeignKey('self',on_delete=models.SET_NULL,blank= True,null= True,related_name='referrals')
+
+    image = models.ImageField(upload_to="profile_images/",default='default-user.png',null=True,blank=True)
 
     is_admin = models.BooleanField(default= False)
     is_staff = models.BooleanField(default= False)
@@ -58,6 +60,13 @@ class UserAddress(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.house}"
+    def __str__(self):
+        return f"{self.full_name} - {self.city}, {self.zip_code}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'is_default'], condition=models.Q(is_default=True), name='unique_default_address'),
+]
 
 
     

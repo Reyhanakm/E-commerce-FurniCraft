@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
-
 {% block content %}
-
 <div class="flex justify-center items-center min-h-[70vh] bg-gray-50 px-4">
     <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-8 border border-[#D6D1B1]">
 
@@ -74,41 +72,3 @@ let timer = setInterval(function() {
 
 {% endblock %}
 
-
-
-{% comment %} 
-{% extends 'base.html' %}
-
-{% block content %}
-  
-  
-<h2>Verify Your OTP</h2>
-
-<form method="POST" action="{% url 'verify_otp' %}">
-    {% csrf_token %}
-    <input type="hidden" name="email" value="{{ email }}">
-    <div>
-      <input type="text" name="otp" placeholder="Enter OTP" required>
-      <button type="submit">Verify</button>
-    </div>
-</form>
-<p id="timer">Resend OTP in <span id="countdown">60</span>s</p>
-<a id="resendBtn" href="{% url 'resend_otp' %}" style="display:none;">Resend OTP</a>
-
-<script>
-let seconds = 60;
-let countdownEl = document.getElementById("countdown");
-let resendBtn = document.getElementById("resendBtn");
-let timerEl = document.getElementById("timer");
-
-let timer = setInterval(function() {
-  seconds--;
-  countdownEl.textContent = seconds;
-  if (seconds <= 0) {
-    clearInterval(timer);
-    timerEl.style.display = "none";
-    resendBtn.style.display = "inline";
-  }
-}, 1000);
-</script>
-{% endblock content %} {% endcomment %}

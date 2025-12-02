@@ -25,6 +25,8 @@ class CategoryForm(forms.ModelForm):
         show_deleted = kwargs.pop('show_deleted', False)
         super().__init__(*args, **kwargs)
         self.fields['image'].widget = forms.HiddenInput()
+        self.fields["image"].required = True
+
 
         if not show_deleted:
             self.fields['is_deleted'].widget = forms.HiddenInput()
@@ -40,7 +42,20 @@ class CategoryForm(forms.ModelForm):
             raise forms.ValidationError("Category name cannot contain only special characters.")
         if name.isdigit():
             raise forms.ValidationError("Category name cannot contain only digits.")
+        
+        name=name.title()
+
+        if Category.objects.filter(name__iexact=name).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError("Category name already exists.")
+        
         return name
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+
+        if not self.instance.id or not image:
+            raise forms.ValidationError("Category image is required.")
+        
+        return image
 
 
 class ProductForm(forms.ModelForm):
@@ -73,7 +88,20 @@ class ProductForm(forms.ModelForm):
             raise forms.ValidationError("Product name should contain only letters, digits, and spaces.")
         if name.isdigit():
             raise forms.ValidationError("Product name cannot contain only digits.")
+        
+        name = name.title()
+        if Product.objects.filter(name__iexact=name).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError("Product name already exists.")
+
         return name
+    
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+
+        if not self.instance.id and not image:
+            raise forms.ValidationError("Product images is required.")
+
+        return image
 
 
 class ProductVariantForm(forms.ModelForm):
@@ -103,7 +131,17 @@ class ProductVariantForm(forms.ModelForm):
             raise forms.ValidationError("Material type should contain only letters, digits, and spaces.")
         if material_type.isdigit():
             raise forms.ValidationError("Material type cannot contain only digits.")
-        return material_type
+        
+        material_type = material_type.title()
+
+        if ProductVariant.objects.filter(
+            product=self.instance.product,
+            material_type__iexact=material_type
+        ).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError("Variant with this material type already exists for this product.")
+
+
+        return material_type.title()
 
     def clean_regular_price(self):
         price = self.cleaned_data['regular_price']

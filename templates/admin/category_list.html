@@ -29,10 +29,7 @@
       </div>
       <button type="submit" class="bg-[#b82d2d] text-white px-4 py-2 rounded-md">Search</button>
     </form>
-{% comment %} 
-    <button id="openAddModal" class="bg-[#b82d2d] text-white px-4 py-2 rounded-md hover:bg-[#a22727] transition">
-      + Add Category
-    </button> {% endcomment %}
+
      <a href="{% url 'add_category' %}"
        class="bg-[#b82d2d] text-white px-4 py-2 rounded-md hover:bg-[#a22727] transition">
       + Add Category
@@ -59,14 +56,12 @@
       <tr class="border-b hover:bg-gray-50">
         <td class="px-4 py-3">{{ forloop.counter0|add:page_obj.start_index  }}</td>
         <td class="px-4 py-3">{{ cat.name }}</td>
-        {% comment %} <td class="px-4 py-3 w-14 h-14 object-cover rounded-md cursor-pointer"
-        >{{cat.image}}</td> {% endcomment %}
+     
         <td class="px-4 py-3">
         {% if primary_images|get_item:cat.id %}
               <img src="{{ primary_images|get_item:cat.id }}" alt="{{ cat.name }}"
               class="w-14 h-14 object-cover rounded-md border hover:scale-105 transition-transform duration-200 cursor-pointer"
               >
-              {% comment %} onclick="openImageModal('{{ primary_images.pdt.id }}')" {% endcomment %}
         {% else %}
       <div class="w-14 h-14 bg-gray-100 flex items-center justify-center text-gray-400 text-sm border rounded-md">
         N/A
@@ -90,11 +85,7 @@
     Restore
   </button>
 {% else %}
-  {% comment %} <button type="button"
-          onclick="openModal('Edit Category', {{ cat.id }}, '{{ cat.name }}', {{ cat.is_deleted|yesno:'true,false' }})"
-          class="text-blue-600 hover:text-blue-800 font-medium mr-2">
-    Edit
-  </button> {% endcomment %}
+
   <a href="{% url 'edit_category' cat.id %}"
    class="text-blue-600 hover:text-blue-800 font-medium mr-2">
    Edit
@@ -107,16 +98,6 @@
   </button>
 {% endif %}
 
-          {% comment %} <button type="button"
-          onclick="openModal('Edit Category', {{ cat.id }}, '{{ cat.name }}', {{ cat.is_deleted|yesno:'true,false' }})"
-          class="text-blue-600 hover:text-blue-800 font-medium mr-2">
-          Edit
-        </button>
-          <button 
-             onclick="confirmDelete('{% url 'delete_category' cat.id %}', '{{ cat.name }}')" 
-             class="text-red-600 hover:text-red-800 font-medium">
-             Delete
-          </button> {% endcomment %}
         </td>
       </tr>
       {% empty %}
@@ -163,29 +144,6 @@
   const cancelBtn = document.getElementById("cancelModal");
   const form = document.getElementById("categoryForm");
 
-  // Open modal
-  function openModal(title, id = null, name = '', isDeleted = false) {
-    document.getElementById("modalTitle").textContent = title;
-    modal.classList.remove("hidden");
-    document.body.classList.add("overflow-hidden");
-
-    if (id) {
-      document.getElementById("catId").value = id;
-      document.getElementById("catName").value = name;
-      document.getElementById("isDeletedField").classList.remove("hidden");
-      document.getElementById("catDeleted").checked = isDeleted;
-    } else {
-      form.reset();
-      document.getElementById("catId").value = "";
-      document.getElementById("isDeletedField").classList.add("hidden");
-    }
-  }
-
-  openBtn.addEventListener("click", () => openModal("Add Category"));
-  cancelBtn.addEventListener("click", () => {
-    modal.classList.add("hidden");
-    document.body.classList.remove("overflow-hidden");
-  });
 
   function confirmRestore(url, name) {
   confirmAction(`Restore category "${name}"?`, "Yes, Restore", () => {

@@ -32,13 +32,21 @@
                 </div>
                     
                     <div class="flex items-center space-x-5">
-                        {{user.first_name}}
                         <a href="#" class="text-gray-700 hover:text-amber-700 relative">
                             <i class="far fa-heart text-2xl"></i>
                         </a>
-                        <a href="#" class="text-gray-700 hover:text-amber-700 relative">
+                        
+                        <a href="{% url 'cart_page'%}" class="text-gray-700 hover:text-amber-700 relative">
                             <i class="fas fa-shopping-cart text-2xl"></i>
+                            
+                            <span id="cart-badge"
+                                hx-get="{% url 'cart_count' %}"
+                                hx-trigger="update-cart from:body, load"
+                                hx-swap="innerHTML"
+                                class="absolute -top-1 -right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-[#F1EEDC]">
+                                </span>
                         </a>
+
                         {% if user.is_authenticated %}
 
 
@@ -47,7 +55,7 @@
                                     <i class="far fa-user-circle text-2xl"></i>
                                 </button>
                                 <div class="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block hover:block">
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a>
+                                    <a href="{% url 'my_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a>
                                     <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
                                     <a href="{% url 'user_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
                                 </div>
@@ -75,56 +83,47 @@
        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div class="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
                  <div>
-                   <h3 class="font-bold text-xl mb-4">FurniCraft</h3>
-                    <p class="text-gray-400 mb-4">Subscribe</p> 
-                    <p class="text-sm text-gray-400 mb-4">Get 10% off your first order</p>
-                    <div class="flex">
-                        <input type="email" placeholder="Enter your email" 
-                               class="bg-black border border-white px-4 py-2 rounded-l flex-1 text-sm focus:outline-none">
-                        <button class="bg-white text-black px-4 py-2 rounded-r hover:bg-gray-200">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
+                    <h3 class="font-bold text-xl mb-4">FurniCraft</h3>
+                    <p class="text-gray-400">Your destination for premium furniture</p>
                 </div>
-                <div> 
-                    <h3 class="font-bold mb-4">Support</h3>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li>111 Bijoy sarani, Dhaka,<br>DH 1515, Bangladesh.</li>
-                        <li>exclusive@gmail.com</li>
-                        <li>+88015-88888-9999</li>
-                    </ul>
-                </div> 
                 <div>
-                    <h3 class="font-bold mb-4">Account</h3>
-                    <ul class="space-y-2 text-sm text-gray-400">
+                    <h4 class="font-bold mb-4">Shop</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white">All Products</a></li>
+                        <li><a href="#" class="hover:text-white">Living Room</a></li>
+                        <li><a href="#" class="hover:text-white">Bedroom</a></li>
+                        <li><a href="#" class="hover:text-white">Dining</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Customer</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
                         <li><a href="#" class="hover:text-white">My Account</a></li>
-                        <li><a href="{% url 'user_login' %}" class="hover:text-white">Login / Register</a></li>
-                        <li><a href="#" class="hover:text-white">Cart</a></li>
+                        <li><a href="#" class="hover:text-white">Orders</a></li>
+                        <li><a href="#" class="hover:text-white">Returns</a></li>
                         <li><a href="#" class="hover:text-white">Wishlist</a></li>
-                        <li><a href="#" class="hover:text-white">Shop</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold mb-4">Quick Link</h3>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-white">Terms Of Use</a></li>
-                        <li><a href="#" class="hover:text-white">FAQ</a></li>
-                        <li><a href="#" class="hover:text-white">Contact</a></li>
+                    <h4 class="font-bold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white">FAQs</a></li>
+                        <li><a href="#" class="hover:text-white">Shipping</a></li>
+                        <li><a href="#" class="hover:text-white">Privacy</a></li>
                     </ul>
                 </div>
-                <div>
-                    <h3 class="font-bold mb-4">Download App</h3>
-                    <p class="text-xs text-gray-400 mb-4">Save $3 with App New User Only</p>
-                    <div class="flex space-x-4 mb-4">
+               <div>
+                    <h4 class="font-bold mb-4">Follow Us</h4>
+                    <div class="flex gap-4">
                         <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f text-xl"></i></a>
                         <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter text-xl"></i></a>
                         <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram text-xl"></i></a>
                         <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in text-xl"></i></a>
-                    </div> 
+                    </div>
                 </div>
-            </div> 
-            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
                 <p>&copy; 2025 FurniCraft. All rights reserved.</p>
             </div>
         </div>
@@ -134,7 +133,130 @@
 {% block script %}
     
 {% endblock script %}
+
+<style>
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+        }
+    </style>
+
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+
+ <script>
     
+    document.body.addEventListener('htmx:configRequest', (event) => {
+    const token = document.cookie
+      .split('; ')
+      .find(r => r.startsWith('csrftoken='))?.split('=')[1];
+
+    if (token) {
+        event.detail.headers['X-CSRFToken'] = token;
+    }
+    });
+
+    const toastColors = {
+      success: 'bg-green-600',
+      error: 'bg-red-600',
+      warning: 'bg-yellow-500',
+      info: 'bg-blue-600',
+      neutral: 'bg-gray-700'
+    };
+
+    function showToast(message, type = 'success', duration = 2500) {
+      const container = document.getElementById('toast-container');
+      container.innerHTML = "";
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.className = `transform translate-x-full opacity-0 transition-all duration-500 ease-out text-white px-4 py-2 rounded-lg shadow-lg ${toastColors[type] || toastColors.neutral}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+      setTimeout(() => {
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => toast.remove(), 500);
+      }, duration);
+    }
+    </script>
+
+{% block extrascripts %}{% endblock %}
+    
+<script>
+    document.body.addEventListener('htmx:beforeSwap', function(evt) {
+    if (evt.detail.xhr.status === 302) {
+        evt.detail.shouldSwap = false;
+        
+        window.location.href = evt.detail.xhr.getResponseHeader('Location');
+    }
+});
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('[class*="bg-red-50"], [class*="bg-green-50"], [class*="bg-yellow-50"], [class*="bg-blue-50"]').forEach(el => {
+                if (el.parentElement && el.parentElement.classList.contains('fixed')) {
+                    el.style.transition = 'opacity 0.5s';
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 500);
+                }
+            });
+        }, 5000); 
+        // HTMX backend support
+        document.body.addEventListener("toast", e => showToast(e.detail.message));
+</script>    
 </body>
 </html>
-    
+                
+
+{% comment %} <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+<style>
+.toast {
+    padding: 10px 16px;
+    background: #333;
+    color: #fff;
+    border-radius: 8px;
+    animation: fadeSlide 0.4s ease;
+}
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+</style>
+
+
+<script>
+ 
+    document.body.addEventListener('htmx:configRequest', (event) => {
+    const token = document.cookie
+      .split('; ')
+      .find(r => r.startsWith('csrftoken='))?.split('=')[1];
+
+    if (token) {
+        event.detail.headers['X-CSRFToken'] = token;
+    }
+});
+
+
+function showToast(msg) {
+    const box = document.getElementById("toast-container");
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    box.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+}
+
+// HTMX backend support
+document.body.addEventListener("toast", e => showToast(e.detail.message));
+</script>
+
+     
+</body>
+</html>
+     {% endcomment %}

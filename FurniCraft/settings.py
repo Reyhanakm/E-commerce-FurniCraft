@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'users',
     'admin_app',
     'product',
+    'commerce',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -198,9 +199,8 @@ USE_TZ = True
 
 #  Allauth Configuration
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_LOGIN_METHODS = {"email"}             
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"] 
 ACCOUNT_EMAIL_VERIFICATION = 'none'  
 SOCIALACCOUNT_LOGIN_ON_GET = True
 

@@ -1,0 +1,75 @@
+
+<h2 class="text-lg font-medium text-gray-900 mb-6">Order Summary</h2>
+
+<div class="space-y-4 mb-6 pb-6 border-b-2 border-gray-200">
+    <div class="flex justify-between items-center">
+        <span class="text-gray-600">Subtotal:</span>
+        <span class="font-bold text-gray-800">₹{{ subtotal|floatformat:2 }}</span>
+    </div>
+
+    <div class="flex justify-between items-center">
+        <span class="text-gray-600">Shipping:</span>
+        {% if shipping_cost == 0 %}
+            <span class="font-bold text-green-600">Free</span>
+        {% else %}
+            <span class="font-bold text-gray-800">₹{{ shipping_cost|floatformat:2 }}</span>
+        {% endif %}
+    </div>
+
+    <div class="flex justify-between items-center">
+        <span class="text-gray-600">Discount:</span>
+        <span class="font-bold text-red-600">-₹{{ discount|floatformat:2 }}</span>
+    </div>
+</div>
+
+<div class="flex justify-between items-center mb-8">
+    <span class="text-xl font-bold text-gray-900">Total:</span>
+    <span class="text-3xl font-bold text-[#A89289]">₹{{ total|floatformat:2 }}</span>
+</div>
+
+<button class="w-full bg-[#A89289] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#8f7a73] shadow-lg transition-all transform hover:-translate-y-1">
+    Checkout Now
+</button>
+
+<a href="{% url 'products' %}" class="block mt-4 text-center text-sm text-gray-500 hover:text-[#A89289]">
+    or Continue Shopping
+</a>
+{% comment %} 
+<div class="space-y-4 mb-6 pb-6 border-b-2 border-gray-200">
+
+    <!-- Subtotal -->
+    <div class="flex justify-between items-center">
+        <span class="text-gray-700 font-medium">Subtotal:</span>
+        <span class="font-bold text-gray-800">₹{{ subtotal|floatformat:2 }}</span>
+    </div>
+
+    <!-- Shipping -->
+    <div class="flex justify-between items-center">
+        <span class="text-gray-700 font-medium">Shipping:</span>
+        {% if shipping_cost == 0 %}
+            <span class="font-bold text-green-600">Free</span>
+        {% else %}
+            <span class="font-bold text-gray-800">₹{{ shipping_cost|floatformat:2 }}</span>
+        {% endif %}
+    </div>
+
+    <!-- Discount -->
+    <div class="flex justify-between items-center">
+        <span class="text-gray-700 font-medium">Discount:</span>
+        <span class="font-bold text-red-600">-₹{{ discount|floatformat:2 }}</span>
+    </div>
+
+</div>
+
+<!-- TOTAL -->
+<div class="flex justify-between items-center mb-8 pb-6 border-b-2 border-gray-200">
+    <span class="text-xl font-bold text-gray-800">Total:</span>
+    <span class="text-3xl font-bold text-[#A89289]">₹{{ total|floatformat:2 }}</span>
+</div>
+
+<!-- SHOP MORE -->
+<a href="{% url 'products' %}" 
+   class="w-full py-3 border-2 border-[#A89289] text-[#A89289] font-bold rounded-xl 
+          hover:bg-[#F5F1EF] transition-all duration-200 flex items-center justify-center gap-2">
+    <i class="fas fa-arrow-left"></i> Continue Shopping
+</a> {% endcomment %}

@@ -6,6 +6,12 @@ urlpatterns=[
     path('',views.admin_login,name='admin_login'),
     path('logout/',views.admin_logout,name='admin_logout'),
     path('dashboard/',views.admin_dashboard,name='admin_dashboard'),
+
+    path('banner/',views.banner_page,name='banner_page'),
+    path('banner/edit/<int:id>/',views.edit_banner,name='edit_banner'),
+    path('banner/delete/<int:id>',views.delete_banner,name='delete_banner'),
+
+
     path('categories/', views.admin_category_list, name='admin_category_list'),
     path('categories/add/', views.add_category, name='add_category'),
     path('categories/edit/<int:id>/', views.edit_category, name='edit_category'),

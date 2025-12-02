@@ -6,37 +6,30 @@
         position: absolute;
         left: 900px;
         top: 200px;
-    }
-    
+    } 
     .zoom-lens-active {
         cursor: zoom-in;
     }
-
     .variant-selected {
         border-color: #A89289 !important;
         background-color: #F5F1EF !important;
         color: #A89289 !important;
     }
-
     .star-rating {
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
-
     .stars {
         display: flex;
         gap: 0.25rem;
     }
-
     .stars i {
         font-size: 1rem;
     }
-
     .fade-in {
         animation: fadeIn 0.3s ease-in;
     }
-
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -45,7 +38,6 @@
 
 <div class="max-w-7xl mx-auto py-8 px-4 md:px-6">
 
-    <!-- Breadcrumb -->
     <nav class="text-sm text-gray-500 mb-8">
         <a href="{% url 'home'%}" class="hover:text-[#A89289] transition">Home</a>
         <span class="mx-2">/</span>
@@ -54,16 +46,16 @@
         <span class="mx-2">/</span>
         <span class="text-gray-700 font-medium">{{ product.name }}</span>
     </nav>
+<div id="cart-message"></div>
 
-    <!-- Availability Check -->
     {% if product.is_active %}
         <div class="bg-white rounded-2xl shadow-xl p-10 border border-gray-200 fade-in">
             <!-- Main Product Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
 
-                <!-- LEFT: Gallery Section -->
+
                 <div class="flex gap-4">
-                    <!-- Thumbnails -->
+
                     <div class="flex flex-col gap-3 w-24">
                         {% for img in product.images.all %}
                             <img src="{{ img.image.url }}"
@@ -72,7 +64,6 @@
                         {% endfor %}
                     </div>
 
-                    <!-- Main Image with Zoom -->
                     <div class="flex-1">
                         <div class="relative w-full aspect-square border-2 border-gray-200 rounded-2xl shadow-lg overflow-hidden bg-gray-100 zoom-lens-active"
                             id="zoomContainer">
@@ -81,26 +72,23 @@
                                 src="{{ product.images.first.image.url }}"
                                 class="w-full h-full object-cover pointer-events-none">
 
-                            <!-- Zoom Lens -->
                             <div id="zoomLens"
                                 class="absolute hidden bg-white/20 border-2 border-[#A89289] rounded-lg backdrop-blur-sm"
                                 style="width:120px; height:120px;"></div>
 
                         </div>
-                        <!-- Zoomed Preview -->
+
                         <div id="zoomResult"
                             class="hidden fixed w-96 h-96 border-2 border-[#A89289] rounded-2xl shadow-2xl bg-no-repeat bg-cover z-50"></div>
                     </div>
                 </div>
 
-                <!-- RIGHT: Product Information -->
                 <div class="flex flex-col">
 
-                    <!-- Product Title -->
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{{ product.name }}</h1>
                     <p class="text-gray-500 text-sm mb-6">SKU: #{{ product.id }}</p>
 
-                    <!-- Star Rating -->
+
                     <div class="star-rating mb-6">
                         <div class="stars" id="productRating">
                             <i class="fas fa-star text-yellow-400"></i>
@@ -140,60 +128,10 @@
                             {% endfor %}
                         </div>
                     </div>
-
-                    {% comment %} <!-- Quantity Selector -->
-                    <div class="mb-8">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Quantity</h3>
-                        <div class="flex items-center border-2 border-gray-300 rounded-lg w-fit">
-                            <button onclick="decreaseQty()" class="px-4 py-2 text-gray-600 hover:text-[#A89289] font-bold transition">−</button>
-                            <input type="number" id="quantity" value="1" class="w-16 text-center border-0 outline-none font-semibold" min="1" max="{{ v.stock }}">
-                            <button onclick="increaseQty()" class="px-4 py-2 text-gray-600 hover:text-[#A89289] font-bold transition">+</button>
-                        </div>
-                    </div> {% endcomment %}
-
-                    {% comment %} <!-- Add to Cart Button -->
-                    {% if product.variants.first.stock > 0 %}
-                        <button onclick="addToCart()" class="w-full bg-[#A89289] text-white py-4 rounded-xl text-lg font-semibold
-                                       hover:bg-[#8f7a73] transition-all duration-200 shadow-lg hover:shadow-xl
-                                       active:scale-95 mb-4">
-                            <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
-                        </button>
-                    {% else %}
-                        <button disabled class="w-full bg-gray-400 text-white py-4 rounded-xl text-lg font-semibold cursor-not-allowed mb-4">
-                            <i class="fas fa-ban mr-2"></i>Out of Stock
-                        </button>
-                    {% endif %} {% endcomment %}
-
-                    <!-- Wishlist Button -->
-                    
-
-                    {% comment %} <!-- Product Features -->
-                    <div class="mt-8 pt-8 border-t-2 border-gray-200">
-                        <h3 class="font-semibold text-gray-800 mb-4">Product Highlights</h3>
-                        <div class="space-y-3 text-sm text-gray-600">
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-check text-[#A89289] font-bold"></i>
-                                <span>Premium quality materials</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-check text-[#A89289] font-bold"></i>
-                                <span>Free shipping on orders above ₹1000</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-check text-[#A89289] font-bold"></i>
-                                <span>1 year warranty included</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-check text-[#A89289] font-bold"></i>
-                                <span>Easy returns within 30 days</span>
-                            </div>
-                        </div>
-                    </div> {% endcomment %}
                 </div>
-
             </div>
 
-            <!-- Description Section -->
+
             <div class="mt-10 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Product Description</h2>
                 {% with dv=product.variants.first %}
@@ -201,12 +139,12 @@
                 {% endwith %}
             </div>
 
-            <!-- Reviews Section -->
+
             <div class="mt-12 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
 
                 <h2 class="text-2xl font-bold text-gray-800 mb-8">Customer Reviews</h2>
 
-                <!-- Review Item -->
+
                 <div class="border-b-2 border-gray-200 pb-8 mb-8">
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 bg-[#A89289] rounded-full flex items-center justify-center flex-shrink-0">
@@ -234,7 +172,7 @@
                     </div>
                 </div>
 
-                <!-- Load More Reviews -->
+
                 <button class="w-full py-3 text-[#A89289] font-semibold border-2 border-[#A89289] rounded-lg hover:bg-[#F5F1EF] transition-all duration-200">
                     Load More Reviews
                 </button>
@@ -277,8 +215,8 @@
         </div>
 
     {% else %}
-        <!-- Product Unavailable Message -->
-        <div class="bg-white rounded-2xl shadow-xl p-16 border border-gray-200 text-center fade-in">
+
+    <div class="bg-white rounded-2xl shadow-xl p-16 border border-gray-200 text-center fade-in">
             <div class="max-w-md mx-auto">
                 <i class="fas fa-exclamation-circle text-6xl text-red-500 mb-4"></i>
                 <h2 class="text-3xl font-bold text-gray-800 mb-2">Product Unavailable</h2>
@@ -308,26 +246,6 @@ function highlightVariant(button) {
         btn.classList.remove("variant-selected");
     });
     button.classList.add("variant-selected");
-}
-
-function increaseQty() {
-    const qty = document.getElementById('quantity');
-    const max = parseInt(qty.getAttribute('max'));
-    if (parseInt(qty.value) < max) {
-        qty.value = parseInt(qty.value) + 1;
-    }
-}
-
-function decreaseQty() {
-    const qty = document.getElementById('quantity');
-    if (parseInt(qty.value) > 1) {
-        qty.value = parseInt(qty.value) - 1;
-    }
-}
-
-function addToCart() {
-    const qty = document.getElementById('quantity').value;
-    alert(qty + " item(s) added to cart!");
 }
 
 </script>

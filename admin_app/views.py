@@ -10,10 +10,12 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q,Prefetch
 from cloudinary.utils import cloudinary_url
+from .forms import BannerForm
+from .models import Banner
 
 from users.models import User,UserManager
 from product.models import Category,Product,ProductVariant,ProductImage
-from product.forms import CategoryForm,ProductForm,ProductVariantForm,ProductImageForm
+from product.forms import CategoryForm,ProductForm,ProductVariantForm
 
 
 def admin_login(request):
@@ -45,6 +47,54 @@ def admin_dashboard(request):
 def admin_logout(request):
     logout(request)
     return redirect('admin_login')
+
+
+@login_required(login_url='admin_login')
+def banner_page(request):
+    if request.method == 'POST':
+        form = BannerForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect("banner_page")
+    else:
+        form = BannerForm()
+
+    banners = Banner.objects.all().order_by('created_at')
+
+    return render(request, "admin/banner_page.html", {
+        'add_form': form,      
+        'banners': banners,    
+        'edit_form': None,     
+        'edit_id': None,
+    })
+
+
+@login_required(login_url='admin_login')
+def edit_banner(request, id):
+    banner = Banner.objects.get(id=id)
+
+    if request.method == "POST":
+        form = BannerForm(request.POST, request.FILES, instance=banner)
+        if form.is_valid():
+            form.save()
+            return redirect("banner_page")
+    else:
+        form = BannerForm(instance=banner)
+
+    banners = Banner.objects.all().order_by('-created_at')
+
+    return render(request, "admin/banner_page.html", {
+        'add_form': BannerForm(),   
+        'edit_form': form,          
+        'banners': banners,
+        'edit_id': id,              
+    })
+
+@login_required(login_url='admin_login')
+def delete_banner(request, id):
+    banner = Banner.objects.get(id=id)
+    banner.delete()   # Cloudinary image also gets removed
+    return redirect("banner_page")
 
 
 @login_required(login_url='admin_login')
@@ -293,7 +343,7 @@ def edit_product(request, id):
         if form.is_valid():
             form.save()
 
-            # Handles existing images
+            
             existing_images = [
                 img.image.url
                 for img in ProductImage.objects.filter(product=product)
@@ -303,11 +353,11 @@ def edit_product(request, id):
             new_urls = set(image_urls)
             old_urls = set(existing_images)
 
-            # Delete removed
+            
             for removed_url in old_urls - new_urls:
                 ProductImage.objects.filter(product=product, image__contains=removed_url).delete()
 
-            # Add new
+            
             for added_url in new_urls - old_urls:
                 ProductImage.objects.create(product=product, image=added_url)
 
@@ -318,7 +368,7 @@ def edit_product(request, id):
     else:
         form = ProductForm(instance=product, show_deleted=True)
 
-    #  convert CloudinaryResource to URL
+
     existing_images = [
         img.image.url
         for img in ProductImage.objects.filter(product=product)
@@ -398,14 +448,14 @@ def variant_list(request, product_id):
 
 @login_required(login_url='admin_login')
 def add_variant(request, product_id):
-    """Add a new variant for a specific product."""
+
     product = get_object_or_404(Product, id=product_id)
 
     if request.method == 'POST':
         form = ProductVariantForm(request.POST)
         if form.is_valid():
             variant = form.save(commit=False)
-            variant.product = product  # assign parent product
+            variant.product = product  
             variant.save()
             messages.success(request, "Variant added successfully.")
             return redirect('admin_variant_list', product_id=product.id)
@@ -420,7 +470,7 @@ def add_variant(request, product_id):
 @login_required(login_url='admin_login')
 def edit_variant(request, id):
     variant = get_object_or_404(ProductVariant.objects.all_with_deleted(), id=id)
-    product = variant.product  # for redirect and context
+    product = variant.product  
 
     if request.method == 'POST':
         form = ProductVariantForm(request.POST, instance=variant,show_deleted=True)
