@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.http import HttpResponse
 from django.urls import reverse
 import re
@@ -6,13 +6,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
-from .models import User
+from .models import User,UserAddress
 import json
 import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.utils import timezone
-from .forms import RegistrationForm,ForgotPasswordForm,ResetPasswordVerifyForm,LoginForm
+from .forms import RegistrationForm,ForgotPasswordForm,ResetPasswordVerifyForm,LoginForm,AddressForm
 from product.models import Category
 from users.decorators import block_check
 from admin_app.models import Banner
@@ -477,3 +477,86 @@ def resend_email_change_new_otp(request):
     messages.success(request, "New OTP sent to your new email.")
     return redirect("change_email_verify_new")
 
+@login_required
+def add_address(request):
+    if request.method == 'POST':
+        form = AddressForm(request.POST)
+
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            address.save()
+
+            # HTMX request → return updated list partial
+            if request.headers.get("HX-Request"):
+                messages.success(request, "Address added successfully!")
+                return render(request, "user/_address_list_partial.html", {
+                    "addresses": request.user.addresses.all()
+                })
+
+            # Normal POST → redirect
+            messages.success(request, "Address added successfully!")
+            return redirect('address_list')
+
+        else:
+            # If form invalid, return form partial for HTMX
+            if request.headers.get("HX-Request"):
+                return render(request, "user/_add_address_partial.html", {
+                    "form": form
+                })
+
+            messages.error(request, "Something went wrong!")
+
+    else:
+        form = AddressForm()
+
+    # Normal request → full page
+    if not request.headers.get("HX-Request"):
+        return render(request, "user/add_address_page.html", {   # full profile page
+            "form": form,
+            "addresses": request.user.addresses.all()
+        })
+
+    return render(request, "user/_add_address_partial.html", {"form": form})
+
+
+@login_required
+def edit_address(request, pk):
+    address = get_object_or_404(UserAddress, id=pk, user=request.user)
+
+    if request.method == 'POST':
+        form = AddressForm(request.POST, instance=address)
+
+        if form.is_valid():
+            form.save()
+
+            # HTMX request -> return updated list partial
+            if request.headers.get("HX-Request"):
+                messages.success(request, "Address updated successfully!")
+                return render(request, "user/profile/_address_list_partial.html", {
+                    "addresses": request.user.addresses.all()
+                })
+
+            # Normal POST -> redirect
+            messages.success(request, "Address updated successfully!")
+            return redirect('address_list')
+
+        # Form invalid case for HTMX
+        if request.headers.get("HX-Request"):
+            return render(request, "user/profile/_edit_address_partial.html", {
+                "form": form,
+                "address": address
+            })
+
+    else:
+        form = AddressForm(instance=address)
+
+    # HTMX GET request
+    if request.headers.get("HX-Request"):
+        return render(request, "user/profile/_edit_address_partial.html", {
+            "form": form,
+            "address": address
+        })
+
+    # Fallback for full page (you can change this if needed)
+    return redirect("profile_page")

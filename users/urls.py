@@ -19,6 +19,7 @@ urlpatterns = [
     path('resend-reset-password-otp/', views.resend_reset_password_otp, name='resend_reset_password_otp'),
     
 
+    path('address/add/',views.add_address,name='add_address'),
     # path('profile/',views.my_profile,name='my_profile'),
     # path('profile/edit/',views.edit_profile,name='edit_profile'),
     # path('profile/edit/password/', views.change_password, name='change_password'),

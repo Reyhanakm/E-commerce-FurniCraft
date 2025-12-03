@@ -1,5 +1,5 @@
 from django import forms
-from .models import User
+from .models import User,UserAddress
 import re
 
 class RegistrationForm(forms.Form):
@@ -111,4 +111,79 @@ class LoginForm(forms.Form):
             'id': 'login_password'
         })
     )
+
+
+class AddressForm(forms.ModelForm):
+    
+    class Meta:
+        model = UserAddress
+        exclude = ['user', 'created_at', 'updated_at', 'is_default', 'is_deleted']
+
+    # field level validation
+    def clean_house(self):
+        house = self.cleaned_data.get('house')
+        if not re.search(r'[A-Za-z]{3,}', house):
+            raise forms.ValidationError("House name must contain at least 3 alphabets.")
+        return house
+
+    def clean_street(self):
+        street = self.cleaned_data.get('street')
+        if street and not re.search(r'[A-Za-z]{3,}', street):
+            raise forms.ValidationError("Street must contain at least 3 alphabets.")
+        return street
+
+    def clean_district(self):
+        district = self.cleaned_data.get('district')
+        if not re.search(r'[A-Za-z]{3,}', district):
+            raise forms.ValidationError("District must contain at least 3 alphabets.")
+        return district
+
+    def clean_state(self):
+        state = self.cleaned_data.get('state')
+        if not re.search(r'[A-Za-z]{3,}', state):
+            raise forms.ValidationError("State must contain at least 3 alphabets.")
+        return state
+
+    def clean_phone_no(self):
+        phone = self.cleaned_data.get('phone_no')
+        if phone and not re.fullmatch(r'\d{10}', phone):
+            raise forms.ValidationError("Phone number must be exactly 10 digits.")
+        return phone
+
+    def clean_pincode(self):
+        pincode = self.cleaned_data.get('pincode')
+        if not re.fullmatch(r'\d{6}', str(pincode)):
+            raise forms.ValidationError("Pincode must be exactly 6 digits.")
+        return pincode
+    
+    # form level
+    def clean(self):
+        cleaned_data = super().clean()
+
+        user = self.initial.get('user') or self.instance.user
+        house = cleaned_data.get('house', '').strip()
+        street = cleaned_data.get('street', '').strip()
+        district = cleaned_data.get('district', '').strip()
+        pincode = cleaned_data.get('pincode')
+        state = cleaned_data.get('state', '').strip()
+
+        if user:
+            exists = UserAddress.objects.filter(
+                user=user,
+                house__iexact=house,
+                street__iexact=street,
+                district__iexact=district,
+                pincode=pincode,
+                state__iexact=state,
+                is_deleted=False
+            )
+
+            # If editing, ignore itself
+            if self.instance.pk:
+                exists = exists.exclude(pk=self.instance.pk)
+
+            if exists.exists():
+                raise forms.ValidationError("This address already exists.")
+
+        return cleaned_data
 

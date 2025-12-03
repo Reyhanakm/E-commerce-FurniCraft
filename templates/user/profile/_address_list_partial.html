@@ -1,0 +1,60 @@
+<div class="space-y-6">
+
+    <h2 class="text-2xl font-semibold text-gray-800">Your Addresses</h2>
+
+    {% include 'user/_messages_partial.html' %}
+
+    {% if addresses %}
+        <div class="grid grid-cols-1 gap-5">
+
+            {% for address in addresses %}
+            <div class="bg-white border border-gray-200 shadow-sm rounded-xl p-5">
+
+                <p class="font-semibold text-gray-900 text-lg">{{ address.street }}</p>
+
+                <p class="text-gray-700">
+                    {{ address.city }}, {{ address.state }} - {{ address.zip_code }}
+                </p>
+
+                <p class="text-gray-500 text-sm mt-1">
+                    Phone: {{ address.phone }}
+                </p>
+
+                <!-- Actions -->
+                <div class="mt-4 flex gap-3">
+
+                    <button
+                        hx-get="{% url 'edit_address' address.id %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="px-4 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">
+                        Edit
+                    </button>
+
+                    <button
+                        hx-delete="{% url 'delete_address' address.id %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="px-4 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200">
+                        Delete
+                    </button>
+
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <p class="text-gray-600">No addresses added yet.</p>
+
+        <button
+            hx-get="{% url 'add_address' %}"
+            hx-target="#profile-content"
+            hx-swap="innerHTML"
+            class="mt-3 px-5 py-2 bg-[#A89289] text-white rounded-lg">
+            Add Address
+        </button>
+    {% endif %}
+
+</div>

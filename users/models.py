@@ -48,6 +48,9 @@ class User(AbstractBaseUser,PermissionsMixin):
 class UserAddress(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='addresses')
     house = models.CharField(max_length=100)
+    name=models.CharField(max_length=100,null=True)
+    phone_no = models.CharField(max_length=15, null=True, blank=True)
+    street = models.CharField(max_length=200,null=True)
     district = models.CharField(max_length=50)
     pincode = models.IntegerField()
     state = models.CharField(max_length=100)
@@ -61,7 +64,7 @@ class UserAddress(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.house}"
     def __str__(self):
-        return f"{self.full_name} - {self.city}, {self.zip_code}"
+        return f"{self.house} - {self.district}, {self.pincode}"
 
     class Meta:
         constraints = [

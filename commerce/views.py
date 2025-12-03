@@ -1,6 +1,8 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from django.contrib.auth.decorators import login_required
+from users.decorators import block_check
 from django.contrib import messages
 from .models import Cart,CartItem
 from users.models import User
@@ -8,14 +10,15 @@ from product.models import Category,Product,ProductVariant
 from .utils.trigger import trigger
 from decimal import Decimal
 
+@block_check
+@login_required
 def add_cart_product(request, product_id):
-
     product = get_object_or_404(Product, id=product_id, is_active=True, is_deleted=False)
-
     variant = product.variants.filter(is_deleted=False).first()
-
     return add_to_cart_logic(request, product, variant)
 
+@block_check
+@login_required
 def add_cart_variant(request, variant_id):
 
     variant = get_object_or_404(ProductVariant, id=variant_id, is_deleted=False)
@@ -23,7 +26,8 @@ def add_cart_variant(request, variant_id):
 
     return add_to_cart_logic(request, product, variant)
 
-
+@block_check
+@login_required
 def add_to_cart_logic(request, product, variant):
     quantity = int(request.POST.get("quantity", 1))
 
@@ -43,7 +47,8 @@ def add_to_cart_logic(request, product, variant):
     CartItem.objects.create(cart=cart, product=product, variant=variant, quantity=quantity)
     return trigger("Product added to cart!", "success", update=True)
 
-    
+@block_check
+@login_required    
 def cart_page(request):
     if not request.user.is_authenticated:
         return redirect("user_login")
@@ -61,7 +66,8 @@ def cart_page(request):
         "cart": cart,
         "cart_items": cart_items,
     })
-
+@block_check
+@login_required
 def increase_quantity(request, item_id):
     if not request.user.is_authenticated:
         return HttpResponse("")
@@ -81,7 +87,8 @@ def increase_quantity(request, item_id):
     return response
 
 
-
+@block_check
+@login_required
 def decrease_quantity(request, item_id):
     if not request.user.is_authenticated:
         return HttpResponse("")
@@ -104,7 +111,8 @@ def decrease_quantity(request, item_id):
 
  
 
-
+@block_check
+@login_required
 def remove_cart_item(request, item_id):
     if not request.user.is_authenticated:
         return HttpResponse("")
@@ -122,7 +130,8 @@ def remove_cart_item(request, item_id):
     response["HX-Trigger"] = "update-cart"
     return response
 
-
+@block_check
+@login_required
 def cart_count(request):
     if not request.user.is_authenticated:
         return HttpResponse("0")  
@@ -132,6 +141,8 @@ def cart_count(request):
 
     return HttpResponse(count)
 
+@block_check
+@login_required
 def cart_totals(request):
     if not request.user.is_authenticated:
         return HttpResponse("")

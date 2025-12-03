@@ -1,0 +1,37 @@
+<div class="space-y-6">
+
+    <h2 class="text-2xl font-semibold text-gray-800">Add New Address</h2>
+
+    {% include 'user/_messages_partial.html' %}
+
+    <form 
+        method="POST"
+        hx-post="{% url 'add_address' %}"
+        hx-target="#profile-content"
+        hx-swap="innerHTML"
+        class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-5"
+    >
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <!-- Each field -->
+        {% for field in form %}
+        <div class="space-y-1">
+            <label class="text-gray-700 font-medium">{{ field.label }}</label>
+            {{ field }}
+            <p class="text-red-500 text-sm">{{ field.errors }}</p>
+        </div>
+        {% endfor %}
+
+        <button 
+            class="px-5 py-2 bg-[#A89289] text-white rounded-lg shadow hover:bg-[#8c7a73] transition">
+            Save Address
+        </button>
+    </form>
+
+</div>
+
+
+
+    

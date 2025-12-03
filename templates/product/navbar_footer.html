@@ -55,7 +55,7 @@
                                     <i class="far fa-user-circle text-2xl"></i>
                                 </button>
                                 <div class="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block hover:block">
-                                    <a href="{% url 'my_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a>
+                                    {% comment %} <a href="{% url 'my_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a>  {% endcomment %}
                                     <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
                                     <a href="{% url 'user_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
                                 </div>
