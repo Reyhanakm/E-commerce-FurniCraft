@@ -1,0 +1,130 @@
+{% extends "product/navbar_footer.html" %}
+{% block title %}Order {{ order.order_id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 mt-6">
+
+    <!-- Page Title -->
+    <h1 class="text-2xl font-semibold text-gray-800 mb-6">Order Details</h1>
+
+    <!-- Order Summary Card -->
+    <div class="bg-white shadow-sm rounded-lg border p-5 mb-6">
+
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <p class="text-gray-700 font-medium">Order ID:</p>
+                <p class="text-xl font-semibold text-gray-900">{{ order.order_id }}</p>
+            </div>
+
+            <div class="text-right">
+                <p class="text-gray-700 font-medium">Order Date:</p>
+                <p class="font-semibold text-gray-900">{{ order.created_at|date:"d M Y, h:i A" }}</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+            <!-- Payment Info -->
+            <div>
+                <p class="text-gray-700 font-medium">Payment Method:</p>
+                <p class="text-gray-900">{{ order.get_payment_method_display }}</p>
+
+                <p class="text-gray-700 font-medium mt-3">Payment Status:</p>
+                {% if order.is_paid == 'paid' %}
+                    <p class="text-green-600 font-semibold">Paid</p>
+                {% elif order.is_paid == 'pending' %}
+                    <p class="text-yellow-600 font-semibold">Pending</p>
+                {% else %}
+                    <p class="text-red-600 font-semibold">Failed</p>
+                {% endif %}
+            </div>
+
+            <!-- Price Summary -->
+            <div>
+                <p class="text-gray-700 font-medium">Amount Paid:</p>
+                <p class="font-semibold text-gray-900 text-lg">₹{{ order.total_price }}</p>
+
+                <p class="text-gray-700 font-medium mt-3">Delivery Charge:</p>
+                <p class="text-gray-900">₹{{ order.delivery_charge }}</p>
+
+                <p class="text-gray-700 font-medium mt-3">Order Total:</p>
+                <p class="font-semibold text-gray-900 text-lg">₹{{ order.total_price }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Card -->
+    <div class="bg-white shadow-sm rounded-lg border p-5 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">Delivery Address</h2>
+        <div class="text-gray-700 leading-relaxed">
+            <p class="font-medium">{{ order.address.name }}</p>
+            <p>{{ order.address.address_line_1 }}</p>
+            <p>{{ order.address.city }}, {{ order.address.state }}</p>
+            <p>{{ order.address.pincode }}</p>
+            <p class="mt-1"><strong>Phone:</strong> {{ order.address.phone }}</p>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="bg-white shadow-sm rounded-lg border overflow-hidden">
+        <h2 class="text-lg font-semibold text-gray-800 px-5 py-4 border-b">Items in this Order</h2>
+
+        <div class="divide-y">
+            {% for item in items %}
+            <div class="flex items-center gap-4 px-5 py-4">
+
+                <!-- Image -->
+                <div class="w-20 h-20">
+                    {% if item.product.images.first %}
+                        <img src="{{ item.product.images.first.image.url }}"
+                             class="w-full h-full object-cover rounded-md border" />
+                    {% else %}
+                        <div class="w-full h-full bg-gray-100 flex items-center justify-center 
+                                    text-gray-400 text-xs border rounded-md">
+                            No Image
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Product Info -->
+                <div class="flex-1">
+                    <p class="font-semibold text-gray-800">
+                        {{ item.product.product.name }}
+                    </p>
+
+                    <p class="text-sm text-gray-500">
+                        Qty: {{ item.quantity }} · ₹{{ item.unit_price }}
+                    </p>
+
+                    <p class="text-sm text-gray-500">
+                        Total: ₹{{ item.price }}
+                    </p>
+                </div>
+
+                <!-- Status -->
+                <div class="text-right">
+                    <p class="text-sm font-semibold 
+                        {% if item.status == 'delivered' %} text-green-600
+                        {% elif item.status == 'shipped' or item.status == 'in_transit' %} text-blue-600
+                        {% elif item.status == 'cancelled' %} text-red-600
+                        {% else %} text-gray-600 {% endif %}">
+                        {{ item.get_status_display }}
+                    </p>
+
+                    <!-- Return Button (Optional) -->
+                    {% if item.status == 'delivered' %}
+                    <a href="{% url 'return_request' item.id %}"
+                       class="block text-xs mt-2 px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100">
+                       Request Return
+                    </a>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

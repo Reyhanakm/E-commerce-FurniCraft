@@ -1,3 +1,126 @@
+{% comment %} {# Checkbox #}
+{% if field.field.widget.input_type == "checkbox" %}
+    <div class="flex items-center mb-4">
+        {{ field }}
+        <label for="{{ field.id_for_label }}" class="ml-2 font-medium text-gray-700">
+            {{ field.label }}
+        </label>
+    </div>
+
+{# Radio #}
+{% elif field.field.widget.input_type == "radio" %}
+    <div class="mb-4">
+        <label class="block font-medium text-gray-700 mb-1">{{ field.label }}</label>
+
+        {% for radio in field %}
+            <label class="flex items-center justify-center gap-1 cursor-pointer">
+                {{ radio.tag }}
+                {{ radio.choice_label }}
+            </label>
+        {% endfor %}
+
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+{# Hidden fields #}
+{% elif field.field.widget.input_type == "hidden" %}
+    {{ field }}
+
+{# File inputs #}
+{% elif field.field.widget.input_type == "file" %}
+    <div class="mb-4">
+        <label class="block font-medium text-gray-700 mb-1">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}
+            <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+        {% endfor %}
+    </div>
+
+{# Normal input fields #}
+{% else %}
+    <div class="mb-4">
+        <label for="{{ field.id_for_label }}" class="block font-medium text-gray-700 mb-1">
+            {{ field.label }}
+        </label>
+
+        {{ field }}
+
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endif %} {% endcomment %}
+
+
+{% comment %} {% for field in form %}
+    
+    {% if field.field.widget.input_type == "checkbox" %}
+        <!-- Checkbox Field -->
+        <div class="flex items-center mb-4">
+            {{ field }}
+            <label for="{{ field.id_for_label }}" class="ml-2 font-medium text-gray-700">
+                {{ field.label }}
+            </label>
+        </div>
+
+    {% elif field.field.widget.input_type == "radio" %}
+        <!-- Radio Field -->
+        <div class="mb-4">
+            <label class="block font-medium text-gray-700 mb-1">{{ field.label }}</label>
+
+            {% for radio in field %}
+                <label class="flex items-center justify-center gap-1 cursor-pointer">
+                    {{ radio.tag }}
+                    {{ radio.choice_label }}
+                </label>
+            {% endfor %}
+
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+    {% elif field.field.widget.input_type == "hidden" %}
+        {{ field }}
+
+    {% elif field.field.widget.input_type == "file" %}
+        <!-- File -->
+        <div class="mb-4">
+            <label class="block font-medium text-gray-700 mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- Normal Field -->
+        <div class="mb-4">
+            <label for="{{ field.id_for_label }}" class="block font-medium text-gray-700 mb-1">
+                {{ field.label }}
+            </label>
+
+            {{ field }}
+
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+                {% endfor %}
+            {% endif %}
+        </div>
+    {% endif %}
+
+{% endfor %} {% endcomment %}
+
+
 {% if field.field.widget.input_type == "checkbox" %}
   <!-- Checkbox Field -->
   <div class="flex items-center mb-4">
@@ -6,6 +129,24 @@
       {{ field.label }}
     </label>
   </div>
+  {% elif field.field.widget.input_type == "radio" %}
+    <div class="mb-4">
+        <label class="block font-medium text-gray-700 mb-1">{{ field.label }}</label>
+
+        {% for radio in field %}
+            <label class="flex items-center justify-center gap-1 cursor-pointer">
+                {{ radio.tag }}
+                {{ radio.choice_label }}
+            </label>
+        {% endfor %}
+
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+
 
 {% elif field.field.widget.input_type == "hidden" %}
   <!-- Hidden Field (Cloudinary, IDs, Tokens) -->
@@ -48,37 +189,3 @@
   </div>
 {% endif %}
 
-
-{% comment %} {% if field.field.widget.input_type == "checkbox" %}
-  <!-- Checkbox style -->
-  <div class="flex items-center mb-4">
-    {{ field }}
-    <label for="{{ field.id_for_label }}" class="ml-2 font-medium text-gray-700">
-      {{ field.label }}
-    </label>
-  </div>
-
-{% else %}
-  <!-- Regular or custom field -->
-  <div class="mb-4">
-    {% if not form.image%}
-    <label for="{{ field.id_for_label }}" class="block font-medium text-gray-700 mb-1">
-      {{ field.label }}
-    </label>
-    {%endif%}
-
-    {% if field_html %}
-      {{ field_html|safe }}
-    {% else %}
-      {{ field }}
-    {% endif %}
-
-    {% if field.errors %}
-      {% for error in field.errors %}
-        <p class="text-red-600 text-sm mt-1">{{ error }}</p>
-      {% endfor %}
-    {% endif %}
-  </div>
-
-{% endif %}
- {% endcomment %}

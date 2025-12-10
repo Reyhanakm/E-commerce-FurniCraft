@@ -1,0 +1,44 @@
+<div class="animate-fade-in-down">
+    <div class="flex justify-between items-start mb-4">
+        <h2 class="text-2xl font-semibold text-gray-800">
+            Welcome, {{ user.first_name }} 👋
+        </h2>
+        
+        <button 
+            hx-get="{% url 'edit_profile' %}" 
+            hx-target="#profile-content" 
+            class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm font-medium">
+            Edit Profile ✎
+        </button>
+    </div>
+
+    <div class="space-y-4">
+        <div class="flex flex-col items-center">
+            <img 
+                src="{{ user.image.url }}" 
+                alt="Profile Image"
+                class="w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm"
+            >
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">First Name</span>
+                <p class="text-gray-800 font-medium">{{ user.first_name }}</p>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Last Name</span>
+                <p class="text-gray-800 font-medium">{{ user.last_name }}</p>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Email</span>
+                <p class="text-gray-800 font-medium">{{ user.email }}</p>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Phone</span>                               
+                <p class="text-gray-800 font-medium">{% if user.phone_number %}{{ user.phone_number }}{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+

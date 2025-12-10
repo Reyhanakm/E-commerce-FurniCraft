@@ -113,11 +113,14 @@ class LoginForm(forms.Form):
     )
 
 
-class AddressForm(forms.ModelForm):
-    
+class AddressForm(forms.ModelForm):  
     class Meta:
         model = UserAddress
         exclude = ['user', 'created_at', 'updated_at', 'is_default', 'is_deleted']
+        widgets = {
+            'address_type': forms.RadioSelect(
+            )
+        }
 
     # field level validation
     def clean_house(self):
@@ -125,6 +128,13 @@ class AddressForm(forms.ModelForm):
         if not re.search(r'[A-Za-z]{3,}', house):
             raise forms.ValidationError("House name must contain at least 3 alphabets.")
         return house
+    
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if not re.search(r'[A-Za-z]{3,}', name):
+            raise forms.ValidationError("Name must contain at least 3 alphabets.")
+        return name
+    
 
     def clean_street(self):
         street = self.cleaned_data.get('street')
@@ -161,6 +171,7 @@ class AddressForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         user = self.initial.get('user') or self.instance.user
+        name = cleaned_data.get('name','').strip()
         house = cleaned_data.get('house', '').strip()
         street = cleaned_data.get('street', '').strip()
         district = cleaned_data.get('district', '').strip()

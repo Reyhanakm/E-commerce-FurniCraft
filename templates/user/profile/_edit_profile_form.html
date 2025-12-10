@@ -1,0 +1,145 @@
+<form 
+    hx-post="{% url 'edit_profile' %}" 
+    hx-target="#profile-content" 
+    hx-encoding="multipart/form-data"
+    hx-indicator="#save-spinner"
+    class="space-y-6 animate-fade-in"
+>
+    {% csrf_token %}
+
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Edit Profile</h2>
+    </div>
+
+    <div class="flex flex-col items-center gap-4">
+        <div class="relative group">
+            <img 
+                id="preview-img" 
+                src="{{ user.image.url }}" 
+                class="w-32 h-32 rounded-full object-cover border-4 border-gray-100 shadow-sm"
+            >
+            <label class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition">
+                <span class="text-sm font-bold">Change</span>
+                <input 
+                    type="file" 
+                    name="image" 
+                    accept="image/*" 
+                    class="hidden" 
+                    onchange="previewImage(event)"
+                >
+            </label>
+        </div>
+        <p class="text-xs text-gray-500">Click photo to upload new image</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+            <input type="text" name="first_name" value="{{ user.first_name }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#A89289] outline-none">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+            <input type="text" name="last_name" value="{{ user.last_name }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#A89289] outline-none">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input type="text" name="phone_number" value="{{ user.phone_number }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#A89289] outline-none">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-400 mb-1">Email </label>
+            <input type="text" value="{{ user.email }}" disabled class="w-full px-4 py-2 border bg-gray-100 rounded-lg text-gray-500 cursor-not-allowed">
+            <!-- Edit Email Button -->
+            <button 
+                hx-get="{% url 'change_email_request_old_otp' %}" 
+                hx-target="#emailModalContent" 
+                hx-swap="innerHTML"
+                onclick="openEmailModal()"
+                class="text-sm px-3 py-1 m-2 rounded-full bg-[#F3EDEB] text-[#A89289] hover:bg-[#e9dcd9] transition font-medium shadow-sm">
+                Edit Email
+            </button>
+
+
+
+            <!-- Modal -->
+            <div id="emailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+                <div id="emailModalContent" class="bg-white p-6 rounded-lg w-[400px]">
+                    <!--HTMX loads template-->
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+
+    <input type="password" value="********" disabled
+           class="w-full px-4 py-2 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed">
+
+    <button 
+        hx-get="{% url 'change_password_verify_current' %}" 
+        hx-target="#passwordModalContent"
+        hx-swap="innerHTML"
+        onclick="openPasswordModal()"
+        class="text-sm px-3 py-1 m-2 rounded-full bg-[#F3EDEB] text-[#A89289] hover:bg-[#e9dcd9] transition font-medium shadow-sm">
+        Change Password
+    </button>
+</div>
+
+<!-- PASSWORD MODAL -->
+<div id="passwordModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+    <div id="passwordModalContent" class="bg-white p-6 rounded-lg w-[380px]">
+        <!-- HTMX loads content here -->
+    </div>
+</div>
+
+    <div class="flex items-center gap-4 pt-4 border-t">
+        <button type="submit" class="px-6 py-2 bg-[#A89289] text-white rounded-lg hover:bg-[#8c7a73] transition shadow-md">
+            Save Changes
+        </button>
+        
+        <button 
+            type="button" 
+            hx-get="{% url 'my_profile' %}" 
+            hx-target="#profile-content" 
+            class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            Cancel
+        </button>
+
+        <div id="save-spinner" class="htmx-indicator flex items-center gap-2 text-[#A89289] font-medium">
+            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading...
+        </div>
+    </div>
+</form>
+
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('preview-img');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) { preview.src = e.target.result; }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+function openEmailModal() {
+    document.getElementById("emailModal").classList.remove("hidden");
+}
+
+function closeEmailModal() {
+    document.getElementById("emailModal").classList.add("hidden");
+}
+
+function openPasswordModal() {
+    document.getElementById("passwordModal").classList.remove("hidden");
+}
+function closePasswordModal() {
+    document.getElementById("passwordModal").classList.add("hidden");
+}
+</script>

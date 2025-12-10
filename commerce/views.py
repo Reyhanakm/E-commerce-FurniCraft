@@ -1,11 +1,12 @@
 from django.shortcuts import render,redirect,get_object_or_404
+from django.db import transaction
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from users.decorators import block_check
 from django.contrib import messages
-from .models import Cart,CartItem
-from users.models import User
+from .models import Cart,CartItem,OrderItem,Orders
+from users.models import User,UserAddress
 from product.models import Category,Product,ProductVariant
 from .utils.trigger import trigger
 from decimal import Decimal
@@ -176,3 +177,115 @@ def cart_totals(request):
 
     return render(request, "commerce/cart/_cart_totals.html", context)
 
+@login_required
+def checkout(request):
+    user=request.user
+    cart,_=Cart.objects.get_or_create(user=user)
+    
+    products=cart.items.select_related("variant",'product').all()
+    if not products.exists():
+        messages.error(request,"Your cart is empty!")
+        return redirect('cart_page')
+    
+    addresses=user.addresses.filter(is_deleted=False)
+
+    subtotal=sum((i.variant.sales_price * i.quantity) for i in products)
+    shipping_cost= 0 if subtotal>=1000 else 80
+    total = subtotal + shipping_cost
+    request.session["checkout_cart_update_at"]=cart.updated_at.timestamp()
+    context={
+        "products":products,
+        "addresses":addresses,
+        "subtotal":subtotal,
+        "shipping_cost":shipping_cost,
+        "total":total
+    }
+    return render(request,'commerce/checkout/checkout_page.html',context)
+
+@login_required
+def place_order(request):
+    if request.method!="POST":
+        return redirect('checkout')
+
+
+    user=request.user
+    cart,_=Cart.objects.get_or_create(user=user)
+
+    last_checkout_time=request.session.get("checkout_cart_updated_at")
+
+    if last_checkout_time and float(last_checkout_time)!=float(cart.updated_at.timestamp()):
+        messages.error(request,"Your cart was updated. Please review checkout again.")
+        return request('checkout')
+    
+    with transaction.atomic():
+        items = cart.items.select_related("variant","product").select_for_update()
+
+        if not items.exists():
+            messages.error(request,"Your cart is empty!")
+            return redirect("cart_page")
+
+        address_id=request.POST.get('address')
+        payment_method=request.POST.get('payment_method')
+
+        address=get_object_or_404(UserAddress,id=address_id,user=user)
+
+        for item in items:
+            if item.quantity>item.variant.stock:
+                messages.error(request,
+                f"Only {item.variant.stock} left for {item.variant.material_type}. Please update your cart.")
+                return redirect('cart_page')
+            
+        subtotal= sum(item.variant.sales_price*item.quantity for item in items)
+        delivery_charge= 0 if subtotal >=1000 else 80
+        total = subtotal+delivery_charge
+
+        order = Orders.objects.create(
+            user=user,
+            address=address,
+            total_price_before_discount=subtotal,
+            total_price=total,
+            payment_method=payment_method,
+            delivery_charge=delivery_charge,
+            
+        )
+        for item in items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.variant,
+                quantity=item.quantity,
+                unit_price=item.variant.sales_price,
+                price=item.variant.sales_price * item.quantity,
+
+            )
+            item.variant.stock -=item.quantity
+            item.variant.save(update_fields=['stock'])
+            messages.success(request, "Your order was placed successfully!")
+
+    items.delete()
+
+    request.session.pop('checkout_cart_updated_at',None)
+    return redirect("order_success",order_id=order.order_id)
+
+@login_required
+def order_success(request,order_id):
+    order=get_object_or_404(
+        Orders.objects.select_related("address").prefetch_related("items__product"),
+        order_id=order_id,
+        user=request.user
+    )
+    return render(request,"commerce/order/order_success.html",{"order":order})
+
+@login_required
+def my_orders(request):
+    orders=Orders.objects.filter(user=request.user).order_by("-created_at")
+    return render(request,"commerce/order/my_orders.html",{"orders":orders})
+
+
+@login_required
+def user_order_detail(request, order_id):
+    order = get_object_or_404(Orders, order_id=order_id, user=request.user)
+    items = order.items.select_related("product", "product__product")
+    return render(request, "commerce/order/order_details.html", {
+        "order": order,
+        "items": items,
+    })

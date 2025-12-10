@@ -2,7 +2,114 @@
 
     <h2 class="text-2xl font-semibold text-gray-800">Your Addresses</h2>
 
-    {% include 'user/_messages_partial.html' %}
+    {% include 'components/messages.html' %}
+
+    {% if addresses %}
+        <div id="address-list" class="grid grid-cols-1 gap-5">
+
+            {% for address in addresses %}
+            <div class="bg-white border {% if address.is_default %}border-amber-500{% else %}border-gray-200{% endif %} 
+                        shadow-sm rounded-xl p-5 relative">
+
+                {% if address.is_default %}
+                    <span class="absolute top-3 right-3 bg-amber-500 text-white text-xs px-2 py-1 rounded">
+                        Default
+                    </span>
+                {% endif %}
+
+                <p class="font-semibold text-gray-900 text-lg">
+                    {{ address.name }} <br> {{ address.house }}, {{ address.street }}
+                </p>
+
+                <p class="text-gray-700">
+                    {{ address.district }}, {{ address.state }} - {{ address.pincode }}
+                </p>
+
+                <p class="text-gray-500 text-sm mt-1">
+                    Phone: {{ address.phone_no }}
+                </p>
+
+                <!-- Address Type -->
+                <p class="text-xs text-gray-500 mt-1">({{ address.address_type }})</p>
+
+                <!-- Actions -->
+                <div class="mt-4 flex gap-3">
+
+                    <!-- Edit -->
+                    <button
+                        hx-get="{% url 'edit_address' address.id %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="px-4 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                        Edit
+                    </button>
+
+                    <!-- Delete with SweetAlert -->
+                    <button
+                        hx-get="{% url 'delete_address' address.id %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        onclick="confirmDelete('{% url 'delete_address' address.id %}','{{ address.id }}')"
+                        class="px-4 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
+                        Delete
+                    </button>
+                    <!-- Make default (only show if not default) -->
+                    {% if not address.is_default %}
+                    <button 
+                        hx-post="{% url 'set_default_address' address.id %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="px-4 py-1 text-sm bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition">
+                        Make Default
+                    </button>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <p class="text-gray-600">No addresses added yet.</p>
+
+        <button
+            hx-get="{% url 'add_address' %}"
+            hx-target="#profile-content"
+            hx-swap="innerHTML"
+            class="mt-3 px-5 py-2 bg-[#A89289] text-white rounded-lg">
+            Add Address
+        </button>
+    {% endif %}
+
+</div>
+
+{% comment %} <script>
+function confirmDelete(id) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "This address will be permanently deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            htmx.ajax('DELETE', `/profile/address/delete/${id}/`, {
+                target: "#profile-content",
+                swap: "innerHTML"
+            });
+        }
+    });
+}
+</script> {% endcomment %}
+
+
+{% comment %} <div class="space-y-6">
+
+    <h2 class="text-2xl font-semibold text-gray-800">Your Addresses</h2>
+
+    {% include 'components/messages.html' %}
 
     {% if addresses %}
         <div class="grid grid-cols-1 gap-5">
@@ -10,14 +117,14 @@
             {% for address in addresses %}
             <div class="bg-white border border-gray-200 shadow-sm rounded-xl p-5">
 
-                <p class="font-semibold text-gray-900 text-lg">{{ address.street }}</p>
+                <p class="font-semibold text-gray-900 text-lg">{{ address.name }} <br>{{ address.street }}</p>
 
                 <p class="text-gray-700">
-                    {{ address.city }}, {{ address.state }} - {{ address.zip_code }}
+                    {{ address.district }}, {{ address.state }} - {{ address.pincode }}
                 </p>
 
                 <p class="text-gray-500 text-sm mt-1">
-                    Phone: {{ address.phone }}
+                    Phone: {{ address.phone_no }}
                 </p>
 
                 <!-- Actions -->
@@ -38,6 +145,13 @@
                         class="px-4 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200">
                         Delete
                     </button>
+                    <button 
+                        hx-post="{% url 'set_default_address' address.id %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                    >
+                        Make Default
+                    </button>
 
                 </div>
 
@@ -57,4 +171,4 @@
         </button>
     {% endif %}
 
-</div>
+</div> {% endcomment %}

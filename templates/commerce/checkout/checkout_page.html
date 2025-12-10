@@ -1,0 +1,187 @@
+{% extends "product/navbar_footer.html" %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- LEFT SIDE: DELIVERY ADDRESS + PAYMENT METHOD -->
+    <div class="md:col-span-2 space-y-6">
+
+        <!-- ADDRESS SECTION -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
+            <div id="address-container">
+            {% if addresses %}
+                <form action="{% url 'place_order' %}" method="POST">
+                    {% csrf_token %}
+
+                    <div class="space-y-4">
+                        {% for address in addresses %}
+                            <label class="flex gap-3 items-start border rounded-lg p-4 cursor-pointer hover:border-[#A89289]">
+
+                                <input type="radio" name="address" value="{{ address.id }}" required>
+
+                                <div>
+                                    <p class="font-semibold">{{ address.name }}</p>
+                                    <p class="text-gray-600">{{ address.phone_no }}</p>
+                                    <p class="text-gray-600 text-sm">
+                                        {{ address.house }},
+                                        {{ address.street }},
+                                        {{ address.district }},
+                                        {{ address.state }} - {{ address.pincode }}
+                                    </p>
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                    <a href="{% url 'add_address' %}" 
+                       hx-get="{% url 'add_address' %}" 
+                       hx-swap='innerHTML'
+                       hx-target='#address-container'
+                       class="mt-4 inline-block text-[#A89289] font-medium hover:underline">
+                        + Add New Address
+                    </a>
+            {% else %}
+                <p>No address found.</p>
+                <a href="{% url 'add_address' %}" class="text-[#A89289] hover:underline">
+                    + Add Address
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- PAYMENT METHOD -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Payment Method</h2>
+
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="radio" name="payment_method" value="wallet" required>
+                    <span>Wallet</span>
+                </label>
+
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="radio" name="payment_method" value="razor_pay" required>
+                    <span>RazorPay</span>
+                </label>
+
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="radio" name="payment_method" value="cash_on_delivery" checked>
+                    <span>Cash On Delivery</span>
+                </label>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE: ORDER SUMMARY -->
+    <div class="space-y-6">
+
+        <!-- ORDER SUMMARY -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+
+            <div class="divide-y">
+                {% for item in products %}
+                <div class="flex justify-between py-3">
+
+                    <div class="flex gap-3">
+                        {% with image=item.product.images.first %}
+                            {% if image %}
+                                <img src="{{ image.image.url }}" class="w-16 h-16 rounded object-cover">
+                            {% endif %}
+                        {% endwith %}
+
+                        <div>
+                            <p class="font-medium">{{ item.product.name }}</p>
+                            <p class="text-gray-600 text-sm">
+                                {{ item.variant.material_type }}
+                            </p>
+                            <p class="text-sm">Qty: {{ item.quantity }}</p>
+                        </div>
+                    </div>
+
+                    <p class="font-semibold">₹{{ item.variant.sales_price }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- PRICE DETAILS -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Price Details</h2>
+
+            <p class="flex justify-between">
+                <span>Subtotal:</span>
+                <span>₹{{ subtotal }}</span>
+            </p>
+
+            <p class="flex justify-between">
+                <span>Shipping:</span>
+                <span>
+                    {% if shipping_cost == 0 %}
+                        Free
+                    {% else %}
+                        ₹{{ shipping_cost }}
+                    {% endif %}
+                </span>
+            </p>
+
+            <hr class="my-3">
+
+            <p class="flex justify-between text-lg font-semibold">
+                <span>Total:</span>
+                <span>₹{{ total }}</span>
+            </p>
+
+            <button type="submit"
+                class="mt-5 w-full bg-[#A89289] text-white font-semibold py-3 rounded-lg hover:bg-[#8f7a73] transition">
+                Place Order
+            </button>
+
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% comment %} {% extends "product/navbar_footer.html" %}
+
+{% block content %}
+
+<div>    
+    {% for address in addresses %}
+        <p>{{address.name}}</p>
+        <p>{{address.phone_no}}</p>
+        <p>{{address.house}},{{address.street}},{{address.district}},{{address.state}},{{address.pincode}}</p>
+    {% endfor %}
+    <button on click="{% url 'add_address' %}">
+        Add Address
+    </button>
+</div>
+<div>
+    <h2>Order Summary</h2>
+    {% for p in items %}
+    <img src="{{p.images.image.url}}" alt="">
+        {{p.name}}
+        {{variant.material_type}}
+        {{variant.sales_price}}
+     {% endfor %}</div>
+     <div>
+        <h2>Price Details</h2>
+       <p>Sub total :Rs.{{subtotal}}</p>
+       <p>shhpping charges :Rs.{{shipping_cost}}</p>
+       <p>Total :{{total}}</p>
+     </div>
+     <div>
+        <h2>Payment Method</h2>
+        <ul>
+            <li>Wallet</li>
+            <li>RazorPay</li>
+            <li>Cash On Delivery</li>
+        </ul>
+     </div>
+{% endblock content %}
+     {% endcomment %}

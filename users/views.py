@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect,get_object_or_404
+from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.urls import reverse
 import re
@@ -331,13 +332,13 @@ def change_email_verify_old(request):
 
         if not valid:
             messages.error(request, msg)
-            return render(request, "user/change_email_verify_old.html", {'old_email': old_email}) 
+            return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email}) 
         request.session["email_change_old_verified"] = True
         request.session.pop("email_change_old_pending", None)
         messages.success(request, "Current email verified. Now enter your new email.")
         return redirect("change_email_enter_new")
 
-    return render(request, "user/change_email_verify_old.html", {'old_email': old_email})
+    return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email})
 
 
 @login_required
@@ -350,12 +351,12 @@ def change_email_enter_new(request):
 
         if User.objects.filter(email=new_email).exists():
             messages.error(request, "Email already in use.")
-            return render(request, "user/change_email_enter_new.html") 
+            return render(request, "user/profile/change_email_enter_new.html") 
         
         request.session["pending_new_email"] = new_email
         return redirect("change_email_request_new_otp")
 
-    return render(request, "user/change_email_enter_new.html")
+    return render(request, "user/profile/change_email_enter_new.html")
 
 
 @login_required
@@ -393,7 +394,7 @@ def change_email_verify_new(request):
 
         if not valid:
             messages.error(request, msg)
-            return render(request, "user/change_email_verify_new.html", {'new_email': new_email})
+            return render(request, "user/profile/change_email_verify_new.html", {'new_email': new_email})
         
         user = request.user
         user.email = new_email
@@ -411,7 +412,7 @@ def change_email_verify_new(request):
         return response
 
 
-    return render(request, "user/change_email_verify_new.html", {'new_email': new_email})
+    return render(request, "user/profile/change_email_verify_new.html", {'new_email': new_email})
 
 @login_required
 @never_cache
@@ -478,46 +479,73 @@ def resend_email_change_new_otp(request):
     return redirect("change_email_verify_new")
 
 @login_required
+def change_password_verify_current(request):
+    if request.method == "GET":
+        return render(request, "user/profile/change_password_verify_current.html")
+
+    current_password = request.POST.get("current_password")
+
+    if not request.user.check_password(current_password):
+        messages.error(request, "Incorrect current password")
+        return render(request, "user/profile/change_password_verify_current.html")
+
+    
+    request.session["password_verified"] = True
+
+    return render(request, "user/profile/change_password_new.html")
+
+@login_required
+def change_password_set_new(request):
+    if not request.session.get("password_verified"):
+        return render(request, "user/profile/change_password_verify_current.html")
+
+    new = request.POST.get("new_password")
+    confirm = request.POST.get("confirm_password")
+
+    if new != confirm:
+        messages.error(request, "Passwords do not match")
+        return render(request, "user/profile/change_password_new.html")
+    user=request.user
+    user.set_password(new)
+    user.save()
+
+    update_session_auth_hash(request, user)
+    request.session.pop("password_verified", None)
+
+    messages.success(request, "Password changed successfully!")
+    return render(request, "user/profile/change_password_success.html")
+
+@login_required
 def add_address(request):
     if request.method == 'POST':
-        form = AddressForm(request.POST)
+        form = AddressForm(request.POST,initial={'user':request.user})
 
         if form.is_valid():
             address = form.save(commit=False)
             address.user = request.user
-            address.save()
+            address.save()  
 
-            # HTMX request → return updated list partial
             if request.headers.get("HX-Request"):
-                messages.success(request, "Address added successfully!")
-                return render(request, "user/_address_list_partial.html", {
-                    "addresses": request.user.addresses.all()
+                return render(request, "user/profile/_address_list_partial.html", {
+                    "addresses": request.user.addresses.filter(is_deleted=False)
                 })
 
-            # Normal POST → redirect
-            messages.success(request, "Address added successfully!")
-            return redirect('address_list')
+            return redirect('my_address')
 
-        else:
-            # If form invalid, return form partial for HTMX
-            if request.headers.get("HX-Request"):
-                return render(request, "user/_add_address_partial.html", {
-                    "form": form
-                })
+        
+        if request.headers.get("HX-Request"):
+            return render(request, "user/profile/_add_address_partial.html", {
+                "form": form
+            })
 
-            messages.error(request, "Something went wrong!")
+    
+    form = AddressForm(initial={'user':request.user})
 
-    else:
-        form = AddressForm()
+    return render(request, "user/profile/_add_address_partial.html", {
+        "form": form,
+        "addresses": request.user.addresses.filter(is_deleted=False)
+    })
 
-    # Normal request → full page
-    if not request.headers.get("HX-Request"):
-        return render(request, "user/add_address_page.html", {   # full profile page
-            "form": form,
-            "addresses": request.user.addresses.all()
-        })
-
-    return render(request, "user/_add_address_partial.html", {"form": form})
 
 
 @login_required
@@ -528,35 +556,109 @@ def edit_address(request, pk):
         form = AddressForm(request.POST, instance=address)
 
         if form.is_valid():
-            form.save()
+            form.save() 
 
-            # HTMX request -> return updated list partial
             if request.headers.get("HX-Request"):
-                messages.success(request, "Address updated successfully!")
                 return render(request, "user/profile/_address_list_partial.html", {
-                    "addresses": request.user.addresses.all()
+                    "addresses": request.user.addresses.filter(is_deleted=False)
                 })
 
-            # Normal POST -> redirect
-            messages.success(request, "Address updated successfully!")
-            return redirect('address_list')
+            return redirect('my_address')
 
-        # Form invalid case for HTMX
         if request.headers.get("HX-Request"):
             return render(request, "user/profile/_edit_address_partial.html", {
-                "form": form,
-                "address": address
+                "form": form, "address": address
             })
 
-    else:
-        form = AddressForm(instance=address)
+    form = AddressForm(instance=address)
 
-    # HTMX GET request
+    return render(request, "user/profile/_edit_address_partial.html", {
+        "form": form, "address": address
+    })
+
+
+@login_required
+def delete_address(request, pk):
+    address = get_object_or_404(UserAddress, id=pk, user=request.user,is_deleted=False)
+    address.is_deleted=True
+    address.save()
+
+    messages.success(request, "Address deleted successfully!")
+    return render(request, "user/profile/_address_list_partial.html", {
+        "addresses": request.user.addresses.filter(is_deleted=False),
+        "user": request.user
+    })
+
+
+@block_check
+@login_required
+def my_address(request):
+    return render(request, "user/profile/_address_list_partial.html", {
+        "addresses": request.user.addresses.filter(is_deleted=False),
+        "user": request.user
+    })
+
+
+@login_required
+def set_default_address(request, pk):
+    address = get_object_or_404(UserAddress, id=pk, user=request.user,is_deleted=False)
+    address.is_default = True
+    address.save() 
+
+    return render(request, "user/profile/_address_list_partial.html", {
+        "addresses": request.user.addresses.filter(is_deleted=False),
+        "user": request.user
+    })
+
+
+@block_check
+@login_required
+def my_profile(request):
+    user=request.user
     if request.headers.get("HX-Request"):
-        return render(request, "user/profile/_edit_address_partial.html", {
-            "form": form,
-            "address": address
-        })
+        return render(request,"user/profile/_profile_partial.html",{"user":user})
+    return render(request,'user/profile/my_profile.html',{'user':user})
 
-    # Fallback for full page (you can change this if needed)
-    return redirect("profile_page")
+# @login_required
+# def edit_image(request):
+#     user=request.user
+#     if request.method=='POST':
+#         if "image" in request.FILES:
+#             user.image=request.FILES["image"]
+#             user.save()
+        
+#         if request.headers.get("HX-Request"):
+#             return render(request,"user/profile/_profile_partial.html",{'user':user})
+        
+#         return redirect("my_profile")
+#     return render(request,"user/profile/_edit_image_partial.html",{"user":user})
+
+@login_required
+def edit_profile(request):
+    user = request.user
+    
+    if request.method == 'POST':
+        
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.phone_number = request.POST.get('phone_number', user.phone_number) 
+        
+        
+        if 'image' in request.FILES:
+            user.image = request.FILES['image']
+            
+        user.save()
+        
+        return render(request, "user/profile/_profile_partial.html", {'user': user})
+
+    return render(request, "user/profile/_edit_profile_form.html", {'user': user})
+            
+    
+# @login_required
+# def add_image(request):
+#     user=request.user
+#     if request.method=='POST':
+#         user.image=request.POST.get('image')
+#         user.save()
+#         return render(request,"user/profile/my_profile.html")
+

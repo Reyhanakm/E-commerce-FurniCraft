@@ -26,7 +26,7 @@ def category_products(request,id):
 @never_cache
 @login_required(login_url="/login")
 def products(request):    
-    products=Product.objects.filter(category__is_deleted=False).annotate(min_price=Min('variants__sales_price')).prefetch_related(
+    products=Product.objects.filter(category__is_deleted=False,variants__isnull=False).annotate(min_price=Min('variants__sales_price')).prefetch_related(
         Prefetch('images',queryset=ProductImage.objects.order_by('id')),
         Prefetch('variants',queryset=ProductVariant.objects.order_by('id')))
     

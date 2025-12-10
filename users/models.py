@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser,PermissionsMixin,BaseUserManager
 from django.utils import timezone
+from cloudinary.models import CloudinaryField 
 from django.conf import settings
 
 class UserManager(BaseUserManager):
@@ -27,7 +28,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     referralcode = models.CharField(max_length=50,blank=True,null= True)
     referredby = models.ForeignKey('self',on_delete=models.SET_NULL,blank= True,null= True,related_name='referrals')
 
-    image = models.ImageField(upload_to="profile_images/",default='default-user.png',null=True,blank=True)
+    image = CloudinaryField('image',folder="profile_images",default='gejrgsa4pnhygnhq32hi',null=True,blank=True)
 
     is_admin = models.BooleanField(default= False)
     is_staff = models.BooleanField(default= False)
@@ -54,22 +55,38 @@ class UserAddress(models.Model):
     district = models.CharField(max_length=50)
     pincode = models.IntegerField()
     state = models.CharField(max_length=100)
-    address_type = models.CharField(max_length=20)
+    address_type = models.CharField(max_length=20,choices=[('home','Home'),('work','Work')],default='home')
 
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now= True)
     is_default = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default= False)
 
+
     def __str__(self):
-        return f"{self.user.email} - {self.house}"
-    def __str__(self):
-        return f"{self.house} - {self.district}, {self.pincode}"
+        return f"{self.house}, {self.district}, {self.pincode}"
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['user', 'is_default'], condition=models.Q(is_default=True), name='unique_default_address'),
-]
+    def save(self, *args, **kwargs):
 
+        if not UserAddress.objects.filter(user=self.user, is_default=True).exclude(pk=self.pk).exists():
+            self.is_default = True
 
-    
+        if self.is_default:
+            UserAddress.objects.filter(
+                user=self.user,
+                is_default=True
+            ).exclude(pk=self.pk).update(is_default=False)
+
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        user = self.user
+        was_default = self.is_default
+        
+        super().delete(*args, **kwargs)
+
+        if was_default:
+            next_addr = UserAddress.objects.filter(user=user).first()
+            if next_addr:
+                next_addr.is_default = True
+                next_addr.save()

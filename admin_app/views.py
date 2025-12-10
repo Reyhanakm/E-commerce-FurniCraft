@@ -12,7 +12,7 @@ from django.db.models import Q,Prefetch
 from cloudinary.utils import cloudinary_url
 from .forms import BannerForm
 from .models import Banner
-
+from commerce.models import Orders,OrderItem
 from users.models import User,UserManager
 from product.models import Category,Product,ProductVariant,ProductImage
 from product.forms import CategoryForm,ProductForm,ProductVariantForm
@@ -407,7 +407,7 @@ def restore_product(request, id):
 
 
 @login_required(login_url='admin_login')
-def variant_list(request, product_id):
+def admin_variant_list(request, product_id):
 
     product = get_object_or_404(Product, id=product_id)
     search_query = request.GET.get('q', '').strip()
@@ -452,7 +452,7 @@ def add_variant(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
     if request.method == 'POST':
-        form = ProductVariantForm(request.POST)
+        form = ProductVariantForm(request.POST,instance=ProductVariant(product=product))
         if form.is_valid():
             variant = form.save(commit=False)
             variant.product = product  
@@ -505,3 +505,47 @@ def restore_variant(request, id):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False, 'message': 'Variant not found or already active.'})
 
+
+@login_required(login_url='admin_login')
+def admin_order_list(request):
+    search_query = request.GET.get("q", "")
+
+    orders=Orders.objects.select_related("user","address").order_by("-created_at")
+
+    if search_query:
+        orders = orders.filter(order_id__icontains=search_query)
+
+    paginator = Paginator(orders, 10)  
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "admin/order_list.html", {
+        "page_obj": page_obj,
+        "search_query": search_query,
+    })
+
+
+@login_required(login_url='admin_login')
+def admin_order_details(request,order_id):
+    order=get_object_or_404(Orders,order_id=order_id)
+    items=order.items.select_related("product","product__product")
+
+    if request.method=="POST":
+        item_id=request.POST.get("item_id")
+        new_status=request.POST.get("status")
+
+        if "payment_status" in request.POST:
+            order.is_paid = request.POST["payment_status"]
+            order.save()
+            messages.success(request, "Payment status updated.")
+            return redirect("order_details", order_id=order_id)
+
+        item=get_object_or_404(OrderItem,id=item_id,order=order)
+        print("POSTED ITEM ID:", item_id)
+        print("NEW STATUS:", new_status)
+        item.status=new_status
+        item.save()
+        messages.success(request,"Order Item status updated successfully.")
+        return redirect("order_details",order_id=order_id)
+    
+    return render(request,"admin/order_details.html",{"order":order,"items":items})

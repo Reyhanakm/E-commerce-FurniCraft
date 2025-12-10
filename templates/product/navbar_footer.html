@@ -1,4 +1,5 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,9 +8,11 @@
     <title>FurniCraft - Premium Furniture Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
 
     
 </head>
@@ -55,8 +58,8 @@
                                     <i class="far fa-user-circle text-2xl"></i>
                                 </button>
                                 <div class="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block hover:block">
-                                    {% comment %} <a href="{% url 'my_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a>  {% endcomment %}
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
+                                    <a href="{% url 'my_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a> 
+                                    <a href="{% url 'my_orders' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
                                     <a href="{% url 'user_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
                                 </div>
                             </div>
@@ -133,7 +136,7 @@
 {% block script %}
     
 {% endblock script %}
-
+{% include "components/loading_overlay.html" %}
 <style>
         @keyframes slide-in {
             from {
@@ -190,6 +193,21 @@
 {% block extrascripts %}{% endblock %}
     
 <script>
+    function confirmAction(message, confirmText, callback, color = '#b82d2d') {
+      Swal.fire({
+        title: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: color,
+        cancelButtonColor: '#6b7280',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          callback(); 
+        }
+      });
+    }
     document.body.addEventListener('htmx:beforeSwap', function(evt) {
     if (evt.detail.xhr.status === 302) {
         evt.detail.shouldSwap = false;
@@ -209,54 +227,26 @@
         }, 5000); 
         // HTMX backend support
         document.body.addEventListener("toast", e => showToast(e.detail.message));
+
+
+        document.body.addEventListener("htmx:beforeRequest", function(evt) {
+            showLoader();  
+        });
+
+        document.body.addEventListener("htmx:afterSwap", function(evt) {
+            hideLoader();
+        });
+
+        document.body.addEventListener("htmx:responseError", function(evt) {
+            hideLoader();
+        });
+
+        document.body.addEventListener("htmx:sendError", function(evt) {
+            hideLoader();
+        });
+
+
 </script>    
 </body>
 </html>
                 
-
-{% comment %} <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
-<style>
-.toast {
-    padding: 10px 16px;
-    background: #333;
-    color: #fff;
-    border-radius: 8px;
-    animation: fadeSlide 0.4s ease;
-}
-@keyframes fadeSlide {
-    from { opacity: 0; transform: translateX(40px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-</style>
-
-
-<script>
- 
-    document.body.addEventListener('htmx:configRequest', (event) => {
-    const token = document.cookie
-      .split('; ')
-      .find(r => r.startsWith('csrftoken='))?.split('=')[1];
-
-    if (token) {
-        event.detail.headers['X-CSRFToken'] = token;
-    }
-});
-
-
-function showToast(msg) {
-    const box = document.getElementById("toast-container");
-    const t = document.createElement("div");
-    t.className = "toast";
-    t.textContent = msg;
-    box.appendChild(t);
-    setTimeout(() => t.remove(), 2500);
-}
-
-// HTMX backend support
-document.body.addEventListener("toast", e => showToast(e.detail.message));
-</script>
-
-     
-</body>
-</html>
-     {% endcomment %}

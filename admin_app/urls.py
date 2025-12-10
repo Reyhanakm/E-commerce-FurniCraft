@@ -26,12 +26,15 @@ urlpatterns=[
     path('products/edit/<int:id>/',views.edit_product,name='edit_product'),
     path('products/delete/<int:id>/',views.delete_product,name='delete_product'),
     path('products/restore/<int:id>/', views.restore_product, name='restore_product'),
-    path('products/<int:product_id>/variants/', views.variant_list, name='admin_variant_list'),
+    path('products/<int:product_id>/variants/', views.admin_variant_list, name='admin_variant_list'),
     path('products/<int:product_id>/variants/add/', views.add_variant, name='add_variant'),
 
     path('variants/edit/<int:id>/', views.edit_variant, name='edit_variant'),
     path('variants/delete/<int:id>/', views.delete_variant, name='delete_variant'),
     path('variants/restore/<int:id>/', views.restore_variant, name='restore_variant'),
+
+    path('orders/',views.admin_order_list,name="order_list"),
+    path("orders/<str:order_id>/",views.admin_order_details,name="order_details"),
 
 
  

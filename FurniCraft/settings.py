@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import os
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -60,6 +64,7 @@ INSTALLED_APPS = [
     'admin_app',
     'product',
     'commerce',
+    'widget_tweaks',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -125,17 +130,13 @@ WSGI_APPLICATION = 'FurniCraft.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# CLOUDINARY_STORAGE = {
-#     'CLOUD_NAME': config('CLOUD_NAME'),
-#     'API_KEY': config('API_KEY'),
-#     'API_SECRET': config('API_SECRET'),
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUD_NAME'),
+    'API_KEY': config('API_KEY'),
+    'API_SECRET': config('API_SECRET'),
     
-# }
-import os
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-from decouple import config
+}
+
 
 cloudinary.config(
     cloud_name=config('CLOUD_NAME'),
@@ -215,8 +216,11 @@ LOGIN_REDIRECT_URL = 'home'
 STATIC_URL = config('STATIC_URL', default='/static/')
 STATICFILES_DIRS = [ BASE_DIR / "static" ]
 
+STATIC_ROOT = BASE_DIR / "staticfiles"  # REQUIRED for collectstatic
+STATICFILES_STORAGE = "cloudinary_storage.storage.StaticHashedCloudinaryStorage"
 
-MEDIA_URL = config('MEDIA_URL', default='/media/')
+
+# MEDIA_URL = config('MEDIA_URL', default='/media/')
 
 SITE_ID = 1
 

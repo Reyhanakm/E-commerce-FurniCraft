@@ -27,7 +27,7 @@
 
 <!-- Stock Section -->
 <div class="pt-4 border-t border-[#D8C6C0]">
-    {% comment %} {% if variant.stock == 0 %}
+    {% if variant.stock == 0 %}
         <div class="flex items-center gap-2">
             <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
             <span class="text-sm font-semibold text-red-700">Out of Stock</span>
@@ -46,7 +46,7 @@
                 {% endif %}
             </span>
         </div>
-    {% endif %} {% endcomment %}
+    {% endif %}
     {% comment %} <form 
     hx-post="{% url 'add_cart_product' product.id %}"
     hx-swap="none"
