@@ -1,4 +1,48 @@
 {% if messages %}
+  <div id="django-messages" class="fixed top-5 right-5 z-50 space-y-4 w-[28rem] max-w-[90vw]">
+    {% for message in messages %}
+      <div class="
+          animate-slide-in 
+          px-5 py-4 rounded-xl shadow-xl flex items-start justify-between gap-4
+          border-l-8 text-base font-medium leading-relaxed
+          {% if message.tags == 'success' %}bg-green-50 text-green-800 border-green-600
+          {% elif message.tags == 'error' %}bg-red-50 text-red-800 border-red-600
+          {% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-800 border-yellow-600
+          {% elif message.tags == 'info' %}bg-blue-50 text-blue-800 border-blue-600
+          {% else %}bg-gray-50 text-gray-700 border-gray-500
+          {% endif %}
+      ">
+        <div class="flex-1">
+          {{ message }}
+        </div>
+        <button class="text-xl font-bold hover:opacity-60" onclick="this.parentElement.remove()">×</button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+<style>
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.35s ease-out forwards;
+}
+</style>
+<script>
+  setTimeout(() => {
+    const msg = document.getElementById('django-messages');
+    if (msg) {
+      msg.style.transition = "opacity 0.5s";
+      msg.style.opacity = "0";
+      setTimeout(() => msg.remove(), 500);
+    }
+  }, 3500);
+</script>
+
+
+{% comment %} {% if messages %}
   <div id="django-messages" class="fixed top-5 right-5 z-50 space-y-3 w-80">
     {% for message in messages %}
       <div class="px-4 py-3 rounded-lg shadow-md flex items-center justify-between animate-slide-in 
@@ -30,4 +74,4 @@
     const messages = document.getElementById('django-messages');
     if (messages) messages.remove();
   }, 3000);
-</script>
+</script> {% endcomment %}

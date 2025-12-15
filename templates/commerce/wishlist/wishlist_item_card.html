@@ -1,0 +1,59 @@
+{% with v=product %}
+    <div id="wishlist-item-{{ product.id }}" 
+         class="flex items-center bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-4">
+
+        <a href="{% url 'product_details' v.product.id %}" class="flex-shrink-0 mr-4">
+            {% with image=v.product.images.all.0 %} 
+            <img src="{{ image.image.url }}" 
+                 alt="{{ v.product.name }}" 
+                 class="w-20 h-20 object-cover rounded-lg border border-gray-100">
+            {% endwith %}
+        </a>
+
+        <div class="flex-grow flex justify-between items-center">
+            
+            <div>
+                <a href="{% url 'product_details' v.product.id %}">
+                    <h3 class="text-lg font-bold text-gray-800 hover:text-[#A89289] transition">
+                        {{ v.product.name }} ({{ v.material_type }})
+                    </h3>
+                </a>
+                
+                <p class="text-xl font-extrabold text-[#A89289] mt-1">
+                    ₹{{ v.sales_price }}
+                </p>
+                
+                <p class="text-sm text-gray-500">
+                    {% if v.stock > 0 %}
+                        <i class="fas fa-check-circle text-green-500 mr-1"></i> In Stock
+                    {% else %}
+                        <i class="fas fa-times-circle text-red-500 mr-1"></i> Out of Stock
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3">
+                
+                {% if v.stock > 0 %}
+                    <button 
+                        hx-post="{% url 'move_to_cart' v.id %}" 
+                        hx-swap="outerHTML" 
+                        hx-target="#wishlist-item-{{ v.id }}"
+                        class="px-4 py-2 text-sm font-semibold text-white bg-[#A89289] rounded-lg shadow-md 
+                               hover:bg-[#876F67] transition-colors duration-200">
+                        <i class="fas fa-cart-plus mr-1"></i> Move to Cart
+                    </button>
+                {% endif %}
+                
+                <button 
+                    hx-post="{% url 'toggle_wishlist' v.id %}" 
+                    hx-target="#wishlist-item-{{ v.id }}" 
+                    hx-swap="outerHTML" 
+                    class="px-4 py-2 text-sm font-semibold text-gray-600 border border-gray-300 rounded-lg shadow-sm 
+                           hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-colors duration-200">
+                    <i class="fas fa-trash-alt mr-1"></i> Remove
+                </button>
+            </div>
+        </div>
+    </div>
+{% endwith %}

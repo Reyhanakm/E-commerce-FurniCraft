@@ -24,11 +24,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div class="p-3 bg-gray-50 rounded-lg">
                 <span class="text-xs text-gray-500 uppercase font-bold">First Name</span>
-                <p class="text-gray-800 font-medium">{{ user.first_name }}</p>
+                <p class="text-gray-800 font-medium">{{ user.first_name|default:"Not provided" }}</p>
             </div>
             <div class="p-3 bg-gray-50 rounded-lg">
                 <span class="text-xs text-gray-500 uppercase font-bold">Last Name</span>
-                <p class="text-gray-800 font-medium">{{ user.last_name }}</p>
+                <p class="text-gray-800 font-medium">{{ user.last_name|default:"Not provided" }}</p>
             </div>
             <div class="p-3 bg-gray-50 rounded-lg">
                 <span class="text-xs text-gray-500 uppercase font-bold">Email</span>
@@ -36,7 +36,7 @@
             </div>
             <div class="p-3 bg-gray-50 rounded-lg">
                 <span class="text-xs text-gray-500 uppercase font-bold">Phone</span>                               
-                <p class="text-gray-800 font-medium">{% if user.phone_number %}{{ user.phone_number }}{% endif %}</p>
+                <p class="text-gray-800 font-medium">{{ user.phone_number|default:"Not provided" }}</p>
             </div>
         </div>
     </div>

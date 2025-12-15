@@ -47,7 +47,7 @@
         <span class="text-gray-700 font-medium">{{ product.name }}</span>
     </nav>
 <div id="cart-message"></div>
-
+product_details
     {% if product.is_active %}
         <div class="bg-white rounded-2xl shadow-xl p-10 border border-gray-200 fade-in">
             <!-- Main Product Section -->
@@ -102,9 +102,12 @@
                     </div>
 
                     <div id="variantInfo"
-                         class="bg-gradient-to-br from-[#F5F1EF] to-[#EEDDD8] rounded-2xl p-6 shadow-md mb-8 border border-[#E8DFD7]">
+                        hx-get="{% url 'load_variant_info' product.variants.first.id %}" 
+                        hx-trigger="update-cart from:body"
+                        hx-swap="innerHTML"  
+                        class="bg-gradient-to-br from-[#F5F1EF] to-[#EEDDD8] rounded-2xl p-6 shadow-md mb-8 border border-[#E8DFD7]">
                         
-                         {% include "product/components/variant_info.html" with variant=product.variants.first %}
+                         {% include "product/components/variant_info.html" with variant=product.variants.first is_in_wishlist=is_in_wishlist %}
 
                     </div>
 
@@ -120,6 +123,7 @@
                                     hx-get="{% url 'load_variant_info' v.id %}"
                                     hx-target="#variantInfo"
                                     hx-swap="innerHTML"
+                                    hx-trigger="click, update-cart from:body"
                                     class="px-5 py-3 rounded-full border-2 border-gray-300 bg-white 
                                            hover:border-[#A89289] hover:bg-[#F5F1EF] hover:text-[#A89289] 
                                            transition-all duration-200 font-medium text-sm cursor-pointer">

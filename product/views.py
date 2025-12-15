@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect,HttpResponse
+from django.shortcuts import render, redirect,HttpResponse,get_object_or_404
 from product.models import Category,Product,ProductImage,ProductVariant
 from django.db.models import Prefetch,Q,Min
 from django.core.paginator import Paginator
@@ -7,20 +7,57 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from users.models import User
 from django.core.cache import cache
+from commerce.models import Wishlist, WishlistItem
 import json
 from users.decorators import block_check
 
 
-@block_check
-@login_required
-def category_products(request,id):
-    category=Category.objects.get(id=id)
-    products=Product.objects.filter(category=category).prefetch_related(
-        Prefetch('variants',queryset=ProductVariant.objects.order_by('id')),
-        Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')))
+# @block_check
+# @login_required
+# def category_products(request,id):
+#     category=Category.objects.get(id=id)
+#     products=Product.objects.filter(category=category).prefetch_related(
+#         Prefetch('variants',queryset=ProductVariant.objects.order_by('id')),
+#         Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')))
     
-    return render(request,'product/category_products.html',{'products':products,'category':category})
+#     return render(request,'product/category_products.html',{'products':products,'category':category})
+# product/views.py
 
+
+@block_check
+@login_required 
+def category_products(request, id):
+    category = get_object_or_404(Category, id=id)
+    
+    # Efficiently fetch Products and related data
+    products = Product.objects.filter(category=category).prefetch_related(
+        Prefetch('variants', queryset=ProductVariant.objects.order_by('id')),
+        Prefetch('images', queryset=ProductImage.objects.order_by('-is_primary', 'id'))
+    )
+    
+    # --- WISHILIST CONTEXT LOGIC (NEW) ---
+    wishlist_product_ids = set()
+    
+    if request.user.is_authenticated:
+        # 1. Fetch the IDs of the parent Products (Product.id) that are in the user's wishlist.
+        #    We filter WishlistItem by the current user and get the ID of the linked Product (via ProductVariant).
+        #    We use .values_list and set() for maximum efficiency.
+        wishlist_product_ids = set(
+            WishlistItem.objects.filter(
+                wishlist__user=request.user,
+                # Filter to only check products currently displayed on the page (optional optimization)
+                product__product__in=products 
+            ).values_list('product__product__id', flat=True)
+        )
+    # --------------------------------------
+
+    context = {
+        'products': products,
+        'category': category,
+        'wishlist_product_ids': wishlist_product_ids # <-- Pass the set of IDs to the template
+    }
+    
+    return render(request, 'product/category_products.html', context)
 
 @block_check
 @never_cache
@@ -120,7 +157,22 @@ def product_details(request,id):
         Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
         'variants'
     ).exclude(id=id)
-    return render(request,'product/product_details.html',{'product':product,'related_products':related_products})
+
+    is_in_wishlist = False
+    if request.user.is_authenticated:
+        
+        default_variant = product.variants.first()
+        
+        if default_variant:
+            is_in_wishlist = WishlistItem.objects.filter(
+                wishlist__user=request.user,
+                product=default_variant 
+            ).exists()
+    return render(request,'product/product_details.html',{'product':product,'related_products':related_products,
+                                        'is_in_wishlist': is_in_wishlist,
+                                        'default_variant_id': product.variants.first().id 
+                                        if product.variants.first() else None,
+    })
 
 @block_check
 def load_product_image(request, id):
@@ -128,9 +180,32 @@ def load_product_image(request, id):
     return HttpResponse(f"""
         <img src='{src}' class='zoomable w-full h-auto rounded-xl shadow-lg object-cover'>
     """)
+# @block_check
+# def load_variant_info(request, variant_id):
+#     v = ProductVariant.objects.get(id=variant_id)
+#     return render(request,'product/components/variant_info.html',{'variant':v})
+
+
 @block_check
 def load_variant_info(request, variant_id):
+    # 1. Get the variant
     v = ProductVariant.objects.get(id=variant_id)
-    return render(request,'product/components/variant_info.html',{'variant':v})
+    
+    # 2. Check if it's in the wishlist (Default to False)
+    is_in_wishlist = False
+    
+    if request.user.is_authenticated:
+        # Check if a WishlistItem exists for this user and this variant
+        # We query across the relationship: wishlist -> user
+        is_in_wishlist = WishlistItem.objects.filter(
+            wishlist__user=request.user, 
+            product=v
+        ).exists()
 
-
+    # 3. Pass the boolean to the template
+    context = {
+        'variant': v,
+        'is_in_wishlist': is_in_wishlist
+    }
+    
+    return render(request, 'product/components/variant_info.html', context)

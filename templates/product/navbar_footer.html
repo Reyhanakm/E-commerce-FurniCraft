@@ -35,8 +35,16 @@
                 </div>
                     
                     <div class="flex items-center space-x-5">
-                        <a href="#" class="text-gray-700 hover:text-amber-700 relative">
-                            <i class="far fa-heart text-2xl"></i>
+                        
+                        <a href="{% url 'wishlist'%}" class="text-gray-700 hover:text-[#A89289] relative">
+                                <i class="fas fa-heart text-2xl"></i>
+                                
+                                <span id="wishlist-badge"
+                                    hx-get="{% url 'wishlist_count' %}"
+                                    hx-trigger="load, wishlistUpdated from:body"  hx-swap="innerHTML"
+                                    class="absolute -top-1 -right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-[#F1EEDC]">
+                                    0 
+                                </span>
                         </a>
                         
                         <a href="{% url 'cart_page'%}" class="text-gray-700 hover:text-amber-700 relative">
@@ -44,7 +52,7 @@
                             
                             <span id="cart-badge"
                                 hx-get="{% url 'cart_count' %}"
-                                hx-trigger="update-cart from:body, load"
+                                hx-trigger="update-cart from:body,reload-stock from:body, load"
                                 hx-swap="innerHTML"
                                 class="absolute -top-1 -right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-[#F1EEDC]">
                                 </span>
@@ -209,10 +217,32 @@
       });
     }
     document.body.addEventListener('htmx:beforeSwap', function(evt) {
-    if (evt.detail.xhr.status === 302) {
+    const xhr = evt.detail.xhr;
+    
+    const hxTrigger = xhr.getResponseHeader('HX-Trigger');
+    
+    if (hxTrigger) {
+        try {
+            const triggerData = JSON.parse(hxTrigger);
+
+            if (triggerData.toast) {
+                const message = triggerData.toast.message;
+                const type = triggerData.toast.type;
+                
+                showToast(message, type); 
+            }
+            
+        } catch (e) {
+            console.error("Failed to parse HX-Trigger JSON:", e);
+        }
+    }
+
+    if (xhr.status === 302) {
         evt.detail.shouldSwap = false;
         
-        window.location.href = evt.detail.xhr.getResponseHeader('Location');
+        setTimeout(() => {
+            window.location.href = xhr.getResponseHeader('Location');
+        }, 100); 
     }
 });
         // Auto-hide messages after 5 seconds
@@ -244,7 +274,6 @@
         document.body.addEventListener("htmx:sendError", function(evt) {
             hideLoader();
         });
-
 
 </script>    
 </body>

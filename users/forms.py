@@ -9,7 +9,7 @@ class RegistrationForm(forms.Form):
     phone_number = forms.CharField(max_length=15)
     password = forms.CharField(widget=forms.PasswordInput(attrs={'id':'id_password'}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'id':'id_confirm_password'}))
-    referralcode =forms.CharField(max_length=100,required=False)
+    referralcode =forms.CharField(max_length=100,required=False,help_text="Optional")
 
     def clean_email(self):
         email = self.cleaned_data.get('email')

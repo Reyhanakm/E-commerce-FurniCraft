@@ -1,17 +1,21 @@
-<div class="cart-card bg-white rounded-2xl shadow-md p-6 border border-gray-200">
+{% load product_filters %}
+<div id="cart-item-{{ item.id }}" class="cart-card bg-white rounded-2xl shadow-md p-6 border border-gray-200" >
     <div class="flex gap-6">
 
-        <div class="w-32 h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-            {% if item.product.images.all %}
-                <img src="{{ item.product.images.first.image.url }}" class="w-full h-full object-cover">
-            {% else %}
-                <img src="https://via.placeholder.com/150" class="w-full h-full object-cover">
-            {% endif %}
-        </div>
-
+        <a href="{% url 'product_details' item.product.id %}" class="w-32 h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+            {% with primary_image=item.product.images.all|get_primary_image %}
+                {% if primary_image %}
+                    <img src="{{ primary_image.image.url }}" class="w-full h-full object-cover">
+                {% else %}
+                    <img src="https://via.placeholder.com/150" class="w-full h-full object-cover">
+                {% endif %}
+            {% endwith %}
+        </a>
         <div class="flex-1 flex flex-col justify-between">
             <div>
-                <h3 class="text-lg font-bold text-gray-800 mb-1">{{ item.product.name }}</h3>
+                <a href="{% url 'product_details' item.product.id %}" class="hover:text-[#8f7a73] transition-colors duration-200 block">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1">{{ item.product.name }}</h3>
+                </a> 
                 <p class="text-sm text-gray-500 mb-3">Variant: {{ item.variant.material_type }}</p>
                 
                 <div class="flex items-center gap-4 mb-4">
@@ -25,8 +29,8 @@
                     
                     <div class="flex items-center gap-2">
                         <button hx-get="{% url 'decrease_quantity' item.id %}"
-                                hx-target="#cart-content"
-                                hx-swap="innerHTML"
+                                hx-target="#cart-item-{{item.id}}"
+                                hx-swap="outerHTML"
                                 class="w-8 h-8 flex items-center justify-center border-2 border-[#E8DFD7] rounded hover:bg-[#F5F1EF]">
                                 <i class="fas fa-minus text-sm text-gray-600"></i>
                         </button>
@@ -38,8 +42,8 @@
                                 disabled class="w-8 h-8 flex items-center justify-center border-2 border-gray-200 rounded bg-gray-100 cursor-not-allowed"
                             {% else %}
                                 hx-get="{% url 'increase_quantity' item.id %}"
-                                hx-target="#cart-content"
-                                hx-swap="innerHTML"
+                                hx-target="#cart-item-{{item.id}}"
+                                hx-swap="outerHTML"
                                 class="w-8 h-8 flex items-center justify-center border-2 border-[#E8DFD7] rounded hover:bg-[#F5F1EF]"
                             {% endif %}>
                             <i class="fas fa-plus text-sm text-gray-600"></i>
@@ -48,8 +52,8 @@
                 </div>
 
                 <button hx-get="{% url 'remove_cart_item' item.id %}"
-                        hx-target="#cart-content"
-                        hx-swap="innerHTML"
+                        hx-target="#cart-item-{{item.id}}"
+                        hx-swap="outerHTML"
                         class="px-4 py-2 bg-red-50 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors">
                     <i class="fas fa-trash mr-2"></i> Remove
                 </button>

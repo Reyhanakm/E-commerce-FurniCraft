@@ -1,0 +1,50 @@
+<div class="space-y-4">
+  
+    {% if in_cart_qty > 0 %}
+      stock_status
+    <p class="text-lg text-[#A89289] font-semibold mb-4">
+        <i class="fas fa-shopping-cart mr-1"></i> 
+        **{{ in_cart_qty }}** of this item ({{ variant.material_type }}) in your cart.
+    </p>
+    {% endif %}
+
+    <p class="text-sm font-medium text-gray-700">
+        Stock Available to Add: 
+        {% if available_to_add > 0 %}
+            <span class="text-green-600 font-bold">{{ available_to_add }}</span>
+        {% else %}
+            <span class="text-red-600 font-bold">Max Quantity Reached</span>
+        {% endif %}
+        (Total Stock: {{ total_stock }})
+    </p>
+
+    </div>
+
+    <script>
+        const submitButton = document.getElementById('add-to-cart-btn-{{ variant.id }}');
+        const maxAllowed = parseInt('{{ available_to_add }}');
+        
+        if (submitButton) {
+            if (maxAllowed === 0) {
+                submitButton.setAttribute('disabled', 'true');
+            } else {
+                submitButton.removeAttribute('disabled');
+            }
+        }
+    </script>
+    <div id="stock-info-{{ variant.id }}" class="space-y-4">
+    
+    <script>
+        const submitButton = document.getElementById('add-to-cart-btn-{{ variant.id }}');
+        const maxAllowed = parseInt('{{ available_to_add }}'); 
+        
+        if (submitButton) {
+            if (maxAllowed === 0) {
+                submitButton.setAttribute('disabled', 'true');
+            } else {
+                submitButton.removeAttribute('disabled');
+            }
+        }
+    </script>
+</div>
+</div>

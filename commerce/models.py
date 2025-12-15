@@ -114,3 +114,34 @@ class WishlistItem(models.Model):
     
 
 
+class Wallet(models.Model):
+    user=models.ForeignKey(User,related_name='wallet_user',on_delete=models.CASCADE)
+    balance=models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
+    updated_at=models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.first_name}'s wallet has Rs.{self.balance} as balance."
+
+def generate_transaction_id():
+    return str(uuid.uuid4()).split('-')[0].upper()
+
+class WalletTransaction(models.Model):
+    SOURCE_CHOICES = [
+        ('razorpay','Credit through Razorpay'),
+        ('order_cancel','Refund - Order Cancelled'),
+        ('order_return','Refund - Order Returned'),
+        ('order_debit','Debited for order'),
+        ('referral','Referral Bonus'),
+    ]
+    transaction_id=models.CharField(max_length=20,unique=True,default=generate_transaction_id)
+    wallet=models.ForeignKey(Wallet,related_name="transaction",on_delete=models.CASCADE)
+    order=models.ForeignKey(Orders,related_name='order_wallet',on_delete=models.CASCADE)
+    amount=models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
+    transaction_type=models.CharField(max_length=100,choices=[
+        ('credit','Credit'),('debit','Debit')
+    ])
+    is_paid=models.BooleanField(default=False)
+    razorpay_order_id=models.CharField(max_length=255,blank=True,null=True)
+    source=models.CharField(max_length=150,choices=SOURCE_CHOICES,default="null")
+    created_at=models.DateTimeField(auto_now_add=True)
+    

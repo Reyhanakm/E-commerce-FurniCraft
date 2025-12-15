@@ -12,6 +12,9 @@
     </div>
 </div>
 
+{% if cart_items %}
+    
+<div id="cart">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-4xl font-bold text-gray-800 mb-2">Shopping Cart</h1>
     <p class="text-gray-500">Review your items before checkout</p>
@@ -41,9 +44,23 @@
                  </div>
             </div>
         </section>
-{% endif %}
+        {% endif %}
     </div>
 </div>
+{% else %}
+<div class="bg-white rounded-2xl shadow-xl p-16 border border-gray-200 text-center">
+    <div class="max-w-md mx-auto">
+        <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Your Cart is Empty</h2>
+        <p class="text-gray-600 mb-8">You haven't added any items yet.</p>
+        <a href="{% url 'products' %}" 
+           class="inline-block bg-[#A89289] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#8f7a73]">
+            <i class="fas fa-arrow-left mr-2"></i> Start Shopping
+        </a>
+    </div>
+</div>
+</div>
+{% endif %}
 
 <script>
     document.body.addEventListener("update-cart", function () {

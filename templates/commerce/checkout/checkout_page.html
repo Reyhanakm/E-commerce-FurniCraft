@@ -32,12 +32,15 @@
                                 </div>
                             </label>
                         {% endfor %}
+                        <div id="add-address">
+
+                        </div>
                     </div>
                 </div>
                     <a href="{% url 'add_address' %}" 
                        hx-get="{% url 'add_address' %}" 
                        hx-swap='innerHTML'
-                       hx-target='#address-container'
+                       hx-target='#add-address'
                        class="mt-4 inline-block text-[#A89289] font-medium hover:underline">
                         + Add New Address
                     </a>

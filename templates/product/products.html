@@ -131,7 +131,7 @@
                 Z → A
               </option>
               <option value="new" {% if request.GET.sort == 'new' %}selected{% endif %}>
-                ✨ New Arrivals
+                New Arrivals
               </option>
 
             </select>
@@ -153,6 +153,7 @@
         <!-- PRODUCT GRID (HTMX target wrapper) -->
         <div id="product-container-wrapper">
             {% include "product/components/product_grid.html" %}
+      
             {% include "product/components/pagination.html" %}
         </div>
 

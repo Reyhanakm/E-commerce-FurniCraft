@@ -7,7 +7,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
-from .models import User,UserAddress
+from .models import User,UserAddress,Referral
+from commerce.models import Wallet,WalletTransaction
 import json
 import random
 from django.core.cache import cache
@@ -31,15 +32,25 @@ def user_register(request):
         if form.is_valid():
             cleaned_data = form.cleaned_data
             email = cleaned_data['email']
+            referral_code = cleaned_data.get('referralcode')
+
             request.session['pending_email']=email
            
+            referredby = None
+            if referral_code:
+                try:
+                    referrer = User.objects.get(referralcode=referral_code)
+                    referredby=referrer.id
+                except User.DoesNotExist:
+                    messages.warning(request,"Invalid referral code. Continuing without referral.")
+        
             registration_data = {
                 'email': email,
                 'first_name': cleaned_data["first_name"],
                 'last_name': cleaned_data["last_name"],
                 'phone_number': cleaned_data["phone_number"],
-                'password': cleaned_data["password"],
-                
+                'password': cleaned_data["password"], 
+                'referredby':referredby,             
             }
 
             # Save to Redis
@@ -99,10 +110,47 @@ def verify_otp(request):
             last_name=reg['last_name'],
             phone_number=reg['phone_number'],
             password=reg['password'],
-            referralcode=reg.get('referralcode'),
             is_blocked=False
         )
 
+        Wallet.objects.get_or_create(user=user)
+        referrer_id=reg.get('referrer_id')
+        if referrer_id:
+            try:
+                referredby=User.objects.get(id=referrer_id)
+                if referredby and referredby!=user:
+                    user.referredby=referredby
+                    user.save()
+
+                    referral,created=Referral.objects.get_or_create(
+                        referrer=referredby,
+                        referred_user=user,
+                        defaults={'reward_amound':100}
+                    )
+                    if created and not referral.reward_given:
+                        # get or create referrer wallet
+                        ref_wallet, _ = Wallet.objects.get_or_create(user=referredby)
+
+                        # credit amount
+                        reward_amount = referral.reward_amount
+                        ref_wallet.balance += reward_amount
+                        ref_wallet.save()
+
+                        # transaction log
+                        WalletTransaction.objects.create(
+                            wallet=ref_wallet,
+                            amount=reward_amount,
+                            transaction_type='credit',
+                            source='referral',
+                            is_paid=True,
+                            description=f"Referral bonus for {user.email}"
+                        )
+
+                        referral.reward_given = True
+                        referral.save()
+            except User.DoesNotExist:
+                pass
+                
         # Clear Redis cache
         cache.delete(f"user_register:{email}")
         messages.success(request, "Account created successfully! You can now log in.")
@@ -653,12 +701,5 @@ def edit_profile(request):
 
     return render(request, "user/profile/_edit_profile_form.html", {'user': user})
             
-    
-# @login_required
-# def add_image(request):
-#     user=request.user
-#     if request.method=='POST':
-#         user.image=request.POST.get('image')
-#         user.save()
-#         return render(request,"user/profile/my_profile.html")
+
 

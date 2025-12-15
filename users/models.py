@@ -90,3 +90,10 @@ class UserAddress(models.Model):
             if next_addr:
                 next_addr.is_default = True
                 next_addr.save()
+
+class Referral(models.Model):
+    referrer=models.ForeignKey(User,related_name='referrer_data',on_delete=models.CASCADE)
+    referred_user=models.ForeignKey(User,related_name='referred_data',on_delete=models.CASCADE)
+    reward_given=models.BooleanField(default=False)
+    reward_amount=models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
+    created_at=models.DateTimeField(auto_now_add=True)
