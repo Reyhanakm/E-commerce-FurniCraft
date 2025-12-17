@@ -20,10 +20,14 @@ urlpatterns = [
     path('stock-status/variant/<int:variant_id>/',views.stock_status_for_variant,name="stock_status_for_variant"),
 
     path('checkout/',views.checkout,name='checkout'),
+    path('checkout/address/',views.add_checkout_address,name='add_checkout_address'),
     path('checkout/placeorder/',views.place_order,name='place_order'),
 
     path('order/success/<str:order_id>/',views.order_success,name="order_success"),
+    path('orders-page/',views.my_orders_page,name="my_orders_page"),
     path('orders/',views.my_orders,name="my_orders"),
     path("orders/<str:order_id>/", views.user_order_detail, name="user_order_detail"),
+
+    path('wallet/',views.my_wallet,name='my_wallet'),
     
 ]

@@ -62,10 +62,18 @@
             {% with v=p.variants.all.0 %}
                 {% if v %}
                     <div class="flex flex-col">
-                        <p class="text-xl font-bold text-[#A89289]">₹{{ v.sales_price }}</p>
+                        {% comment %} <p class="text-xl font-bold text-[#A89289]">₹{{ v.sales_price }}</p>
                         {% if v.regular_price and v.regular_price > v.sales_price %}
                             <p class="text-xs text-gray-400 line-through">₹{{ v.regular_price }}</p>
-                        {% endif %}
+                        {% endif %} {% endcomment %}
+                        <p class="text-xl font-bold text-[#A89289]">
+    ₹{{ p.display_price|default:v.sales_price }}
+</p>
+
+{% if v.regular_price and v.regular_price > p.display_price %}
+    <p class="text-xs text-gray-400 line-through">₹{{ v.regular_price }}</p>
+{% endif %}
+
                     </div>
 
                     {% if v.stock > 0 %}

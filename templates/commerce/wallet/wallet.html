@@ -1,0 +1,39 @@
+<div class="max-w-xl mx-auto bg-white rounded-xl border shadow-sm p-6">
+
+   
+    <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xl font-semibold text-gray-800">
+            Wallet
+        </h2>
+        <span class="text-sm text-gray-500">
+            {{ wallet.user.first_name }} {{ wallet.user.last_name }}
+        </span>
+    </div>
+
+    <div class="bg-[#F7F4F2] border border-[#E6DDD8] rounded-lg p-5">
+
+        <p class="text-sm text-gray-600 mb-1">
+            Available Balance
+        </p>
+
+        {% if wallet.balance > 0 %}
+            <p class="text-3xl font-bold text-[#6B4F44]">
+                ₹{{ wallet.balance }}
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+                Use this balance during checkout
+            </p>
+        {% else %}
+            <p class="text-lg font-semibold text-gray-500">
+                ₹0.00
+            </p>
+            <p class="text-sm text-gray-500 mt-2">
+                Your wallet is empty
+            </p>
+        {% endif %}
+
+    </div>
+
+</div>
+
+    

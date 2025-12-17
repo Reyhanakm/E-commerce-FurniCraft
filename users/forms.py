@@ -35,7 +35,7 @@ class RegistrationForm(forms.Form):
     def clean_referralcode(self):
         referralcode = self.cleaned_data.get('referralcode')
         if referralcode:
-            if not (referralcode.isalnum() and len(referralcode)==6):
+            if not (referralcode.isalnum() and len(referralcode)==10):
                 raise forms.ValidationError("Invalid referral code")
         return referralcode
 

@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from users.decorators import block_check
 from django.contrib import messages
-from .models import Cart,CartItem,OrderItem,Orders,Wishlist,WishlistItem
+from .models import Cart,CartItem,OrderItem,Orders,Wishlist,WishlistItem,Wallet,WalletTransaction
 from users.models import User,UserAddress
 from product.models import Category,Product,ProductVariant
 from .utils.trigger import trigger
@@ -467,3 +467,15 @@ def user_order_detail(request, order_id):
         "order": order,
         "items": items,
     })
+
+@login_required
+def my_orders_page(request):
+    orders=Orders.objects.filter(user=request.user).order_by("-created_at")
+    return render(request,"commerce/order/my_orders_page.html",{"orders":orders})
+
+@login_required
+def my_wallet(request):
+    wallet,_=Wallet.objects.get_or_create(user=request.user)
+    return render(request,"commerce/wallet/wallet.html",{'wallet':wallet})
+def add_checkout_address(request):
+    return render(request,"commerce/checkout/add_checkout_address.html")

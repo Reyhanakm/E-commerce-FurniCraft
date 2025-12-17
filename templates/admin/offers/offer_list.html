@@ -1,0 +1,215 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Offers | FurniCraft Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+
+  <!-- Page Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-[#8b7b5b]">
+      Offer Management
+    </h1>
+
+    <div class="flex gap-3">
+      <a href="{% url 'admin_product_offer_create' %}"
+         class="px-4 py-2 rounded-md bg-[#b82d2d] text-white
+                hover:bg-[#9f2626] transition font-medium">
+        + Product Offer
+      </a>
+
+      <a href="{% url 'admin_category_offer_create' %}"
+         class="px-4 py-2 rounded-md bg-gray-700 text-white
+                hover:bg-gray-800 transition font-medium">
+        + Category Offer
+      </a>
+    </div>
+  </div>
+
+  <!-- Offers Table -->
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+
+    <table class="w-full text-sm">
+      <thead class="bg-[#f5f2e9] text-gray-700">
+        <tr>
+          <th class="px-5 py-3 text-left font-semibold">Name</th>
+          <th class="px-5 py-3 text-left font-semibold">Target</th>
+          <th class="px-5 py-3 text-left font-semibold">Discount</th>
+          <th class="px-5 py-3 text-left font-semibold">Validity</th>
+          <th class="px-5 py-3 text-left font-semibold">Status</th>
+          <th class="px-5 py-3 text-left font-semibold">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y">
+
+        <!-- Product Offers -->
+        {% for offer in product_offers %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-5 py-3 font-medium text-gray-800">
+            {{ offer.name }}
+          </td>
+
+          <td class="px-5 py-3 text-gray-600">
+            Product – {{ offer.product.name }}
+          </td>
+
+          <td class="px-5 py-3">
+            {% if offer.discount_type == 'percentage' %}
+              {{ offer.discount_value }}%
+            {% else %}
+              ₹{{ offer.discount_value }}
+            {% endif %}
+          </td>
+
+          <td class="px-5 py-3 text-gray-600">
+            {{ offer.start_date|date:"d M Y" }} → {{ offer.end_date|date:"d M Y" }}
+          </td>
+
+          <td class="px-5 py-3">
+            {% if offer.status == "active" %}
+              <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700 font-semibold">
+                Active
+              </span>
+
+            {% elif offer.status == "upcoming" %}
+              <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700 font-semibold">
+                Upcoming
+              </span>
+
+            {% elif offer.status == "expired" %}
+              <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 font-semibold">
+                Expired
+              </span>
+
+            {% else %}
+              <span class="px-2 py-1 text-xs rounded bg-gray-200 text-gray-600 font-semibold">
+                Inactive
+              </span>
+            {% endif %}
+          </td>
+          
+          <td class="px-5 py-3 space-x-3">
+            {% if offer.status == "expired" %}
+              <span class="text-gray-400 text-sm">Expired</span>
+            {% else %}
+            <a href="{% url 'admin_product_offer_edit' offer.id %}"
+               class="text-blue-600 hover:underline">
+              Edit
+            </a>
+            
+                <form method="post"
+                      action="{% url 'admin_offer_toggle' 'product' offer.id %}"
+                      class="inline"
+                      id="toggle-form-product-{{ offer.id }}">
+                    {% csrf_token %}
+                    <button type="button"
+                            onclick="confirmToggle(
+                                'toggle-form-product-{{ offer.id }}',
+                                '{% if offer.is_active %}Deactivate{% else %}Activate{% endif %} this offer?'
+                            )"
+                            class="{% if offer.is_active %}
+                                    text-red-600
+                                  {% else %}
+                                    text-green-600
+                                  {% endif %} hover:underline">
+                        {% if offer.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+
+        <!-- Category Offers -->
+        {% for offer in category_offers %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-5 py-3 font-medium text-gray-800">
+            {{ offer.name }}
+          </td>
+
+          <td class="px-5 py-3 text-gray-600">
+            Category – {{ offer.category.name }}
+          </td>
+
+          <td class="px-5 py-3">
+            {% if offer.discount_type == 'percentage' %}
+              {{ offer.discount_value }}%
+            {% else %}
+              ₹{{ offer.discount_value }}
+            {% endif %}
+          </td>
+
+          <td class="px-5 py-3 text-gray-600">
+            {{ offer.start_date|date:"d M Y" }} → {{ offer.end_date|date:"d M Y" }}
+          </td>
+
+          <td class="px-5 py-3">
+            {% if offer.status == "active" %}
+              <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700 font-semibold">
+                Active
+              </span>
+
+            {% elif offer.status == "upcoming" %}
+              <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700 font-semibold">
+                Upcoming
+              </span>
+
+            {% elif offer.status == "expired" %}
+              <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 font-semibold">
+                Expired
+              </span>
+
+            {% else %}
+              <span class="px-2 py-1 text-xs rounded bg-gray-200 text-gray-600 font-semibold">
+                Inactive
+              </span>
+            {% endif %}
+          </td>
+
+          <td class="px-5 py-3 space-x-3">
+            
+            <a href="{% url 'admin_category_offer_edit' offer.id %}"
+               class="text-blue-600 hover:underline">
+              Edit
+            </a>
+            {% if offer.status == "expired" %}
+              <span class="text-gray-400 text-sm">Expired</span>
+            {% else %}
+                <form method="post"
+                    action="{% url 'admin_offer_toggle' 'category' offer.id %}"
+                    class="inline"
+                    id="toggle-form-product-{{ offer.id }}">
+                  {% csrf_token %}
+                  <button type="button"
+                          onclick="confirmToggle(
+                              'toggle-form-product-{{ offer.id }}',
+                              '{% if offer.is_active %}Deactivate{% else %}Activate{% endif %} this offer?'
+                          )"
+                          class="{% if offer.is_active %}
+                                  text-red-600
+                                {% else %}
+                                  text-green-600
+                                {% endif %} hover:underline">
+                      {% if offer.is_active %}Deactivate{% else %}Activate{% endif %}
+                  </button>
+                </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+
+        {% if not product_offers and not category_offers %}
+        <tr>
+          <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+            No offers created yet.
+          </td>
+        </tr>
+        {% endif %}
+
+      </tbody>
+    </table>
+
+  </div>
+</div>
+{% endblock %}

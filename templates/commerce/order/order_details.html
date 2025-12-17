@@ -2,7 +2,7 @@
 {% block title %}Order {{ order.order_id }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 mt-6">
+<div class="max-w-4xl mx-auto px-4 mt-6 mb-4">
 
     <!-- Page Title -->
     <h1 class="text-2xl font-semibold text-gray-800 mb-6">Order Details</h1>
@@ -75,8 +75,8 @@
 
                 <!-- Image -->
                 <div class="w-20 h-20">
-                    {% if item.product.images.first %}
-                        <img src="{{ item.product.images.first.image.url }}"
+                    {% if item.product.product.images.first %}
+                        <img src="{{ item.product.product.images.first.image.url }}"
                              class="w-full h-full object-cover rounded-md border" />
                     {% else %}
                         <div class="w-full h-full bg-gray-100 flex items-center justify-center 

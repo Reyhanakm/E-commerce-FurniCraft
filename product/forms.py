@@ -1,6 +1,6 @@
 from django import forms
 import re
-from .models import Category, Product, ProductVariant, ProductImage
+from .models import Category, Product, ProductVariant, ProductImage,ProductOffer,CategoryOffer
 
 
 class MultiFileInput(forms.ClearableFileInput):
@@ -172,3 +172,109 @@ class ProductImageForm(forms.ModelForm):
             'is_primary': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
 
         }
+
+class ProductOfferForm(forms.ModelForm):
+    class Meta:
+        model = ProductOffer
+        fields = [
+            "name",
+            "product",
+            "discount_type",
+            "discount_value",
+            "max_discount_amount",
+            "start_date",
+            "end_date",
+            "is_active",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+                "placeholder": "e.g. Diwali Sofa Offer",
+            }),
+            "product": forms.Select(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "discount_type": forms.Select(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "discount_value": forms.NumberInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+                "step": "0.01",
+            }),
+            "max_discount_amount": forms.NumberInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+                "step": "0.01",
+            }),
+            "start_date": forms.DateTimeInput(attrs={
+                "type": "datetime-local",
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "end_date": forms.DateTimeInput(attrs={
+                "type": "datetime-local",
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        start = cleaned.get("start_date")
+        end = cleaned.get("end_date")
+        discount_type = cleaned.get("discount_type")
+        discount_value = cleaned.get("discount_value")
+
+        if start and end and start >= end:
+            self.add_error("end_date", "End date must be after start date.")
+
+        if discount_type == "percentage" and discount_value:
+            if discount_value > 100:
+                self.add_error("discount_value", "Percentage discount cannot exceed 100%.")
+
+        return cleaned
+    
+class CategoryOfferForm(forms.ModelForm):
+    class Meta:
+        model = CategoryOffer
+        fields = [
+            "name",
+            "category",
+            "discount_type",
+            "discount_value",
+            "max_discount_amount",
+            "start_date",
+            "end_date",
+            "is_active",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "category": forms.Select(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "discount_type": forms.Select(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "discount_value": forms.NumberInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+                "step": "0.01",
+            }),
+            "max_discount_amount": forms.NumberInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+                "step": "0.01",
+            }),
+            "start_date": forms.DateTimeInput(attrs={
+                "type": "datetime-local",
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "end_date": forms.DateTimeInput(attrs={
+                "type": "datetime-local",
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("start_date") and cleaned.get("end_date"):
+            if cleaned["start_date"] >= cleaned["end_date"]:
+                self.add_error("end_date", "End date must be after start date.")
+        return cleaned

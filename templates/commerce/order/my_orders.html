@@ -31,8 +31,8 @@
 
                         <!-- Product Image -->
                         <div class="w-16 h-16">
-                            {% if item.product.images.first %}
-                                <img src="{{ item.product.images.first.image.url }}"
+                            {% if item.product.product.images.first %}
+                                <img src="{{ item.product.product.images.first.image.url }}"
                                      class="w-full h-full object-cover rounded-md border" />
                             {% else %}
                                 <div class="w-full h-full bg-gray-100 flex items-center justify-center 

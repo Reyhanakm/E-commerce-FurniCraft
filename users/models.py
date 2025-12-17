@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 from django.contrib.auth.models import AbstractBaseUser,PermissionsMixin,BaseUserManager
 from django.utils import timezone
 from cloudinary.models import CloudinaryField 
@@ -25,7 +26,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique= True,max_length= 100)
     phone_number = models.CharField(max_length=15,blank= True, null= True)
-    referralcode = models.CharField(max_length=50,blank=True,null= True)
+    referralcode = models.CharField(max_length=50,blank=True,null= True,unique=True)
     referredby = models.ForeignKey('self',on_delete=models.SET_NULL,blank= True,null= True,related_name='referrals')
 
     image = CloudinaryField('image',folder="profile_images",default='gejrgsa4pnhygnhq32hi',null=True,blank=True)

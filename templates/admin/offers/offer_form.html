@@ -1,0 +1,45 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ title }} | FurniCraft Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
+
+    <!-- Title -->
+    <h1 class="text-2xl font-semibold text-[#8b7b5b] mb-6">
+      {{ title }}
+    </h1>
+
+    <!-- Form -->
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% for field in form %}
+        {% include "components/form_field.html" with field=field %}
+      {% endfor %}
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
+        <a href="{% url 'admin_offer_list' %}"
+           class="px-5 py-2 rounded-md border text-gray-700
+                  hover:bg-gray-100 transition">
+          Cancel
+        </a>
+
+        <button type="submit"
+                class="px-6 py-2 rounded-md bg-[#b82d2d] text-white
+                       hover:bg-[#9f2626] transition font-medium">
+          Save Offer
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-4">
+        If both category and product offers apply, the higher discount will be used.
+      </p>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

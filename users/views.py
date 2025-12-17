@@ -3,6 +3,8 @@ from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.urls import reverse
 import re
+from django.db import transaction
+from users.utils import generate_unique_referral_code
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -59,7 +61,7 @@ def user_register(request):
             
             otp=create_and_send_otp(
             email=email,
-            purpose="Register",
+            purpose="register",
             subject="Your Furnicraft Registration OTP"
             )
 
@@ -87,7 +89,7 @@ def verify_otp(request):
             messages.error(request, "Email missing. Please register again.")
             return redirect('user_register')
 
-        valid,msg = validate_otp(email,"Register",entered_otp)
+        valid,msg = validate_otp(email,"register",entered_otp)
 
         if not valid:
             messages.error(request,msg)
@@ -110,44 +112,26 @@ def verify_otp(request):
             last_name=reg['last_name'],
             phone_number=reg['phone_number'],
             password=reg['password'],
+            referralcode=generate_unique_referral_code(),
             is_blocked=False
         )
 
         Wallet.objects.get_or_create(user=user)
-        referrer_id=reg.get('referrer_id')
+
+        referrer_id=reg.get('referredby')
         if referrer_id:
             try:
-                referredby=User.objects.get(id=referrer_id)
-                if referredby and referredby!=user:
-                    user.referredby=referredby
-                    user.save()
+                referrer=User.objects.get(id=referrer_id)
+                if referrer!=user:
+                    user.referredby=referrer
+                    user.save(update_fields=["referredby"])
 
-                    referral,created=Referral.objects.get_or_create(
-                        referrer=referredby,
+                    Referral.objects.get_or_create(
+                        referrer=referrer,
                         referred_user=user,
-                        defaults={'reward_amound':100}
+                        defaults={'reward_amount':100}
                     )
-                    if created and not referral.reward_given:
-                        # get or create referrer wallet
-                        ref_wallet, _ = Wallet.objects.get_or_create(user=referredby)
-
-                        # credit amount
-                        reward_amount = referral.reward_amount
-                        ref_wallet.balance += reward_amount
-                        ref_wallet.save()
-
-                        # transaction log
-                        WalletTransaction.objects.create(
-                            wallet=ref_wallet,
-                            amount=reward_amount,
-                            transaction_type='credit',
-                            source='referral',
-                            is_paid=True,
-                            description=f"Referral bonus for {user.email}"
-                        )
-
-                        referral.reward_given = True
-                        referral.save()
+                    
             except User.DoesNotExist:
                 pass
                 
@@ -183,7 +167,7 @@ def resend_register_otp(request):
 
     # COOLDOWN LIMIT
     if elapsed < 60:
-        messages.error(request, f"Please wait {int(60 - elapsed)} seconds before resending OTP.")
+        messages.error(request, f"Please wait {int(100 - elapsed)} seconds before resending OTP.")
         return redirect("verify_otp")
 
     new_otp = create_and_send_otp(
@@ -663,23 +647,17 @@ def set_default_address(request, pk):
 @login_required
 def my_profile(request):
     user=request.user
+    if not user.referralcode:
+        with transaction.atomic():
+            # re-check inside transaction
+            user.refresh_from_db()
+            if not user.referralcode:
+                user.referralcode=generate_unique_referral_code()
+                user.save(update_fields=["referralcode"])
     if request.headers.get("HX-Request"):
         return render(request,"user/profile/_profile_partial.html",{"user":user})
     return render(request,'user/profile/my_profile.html',{'user':user})
 
-# @login_required
-# def edit_image(request):
-#     user=request.user
-#     if request.method=='POST':
-#         if "image" in request.FILES:
-#             user.image=request.FILES["image"]
-#             user.save()
-        
-#         if request.headers.get("HX-Request"):
-#             return render(request,"user/profile/_profile_partial.html",{'user':user})
-        
-#         return redirect("my_profile")
-#     return render(request,"user/profile/_edit_image_partial.html",{"user":user})
 
 @login_required
 def edit_profile(request):

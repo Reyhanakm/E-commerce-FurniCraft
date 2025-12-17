@@ -1,5 +1,8 @@
 from django.db import models
 from cloudinary.models import CloudinaryField
+from users.models import User
+from commerce.models import Orders
+from django.utils import timezone
 
 class CategoryManager(models.Manager):
 
@@ -124,10 +127,6 @@ class ProductVariant(models.Model):
     is_deleted=models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True)
 
-    def discount_percent(self):
-        if self.regular_price > 0:
-            return int(((self.regular_price - self.sales_price) / self.regular_price) * 100)
-        return 0
 
     objects=VariantManager()
 
@@ -188,6 +187,105 @@ class ProductImage(models.Model):
 
         super().save(*args, **kwargs)
     
+class Coupon(models.Model):
+    DISCOUT_CHOICES=[
+        ('percentage','Percentage'),
+        ('flat','Flat Amount')
+    ]
+    code =models.CharField(max_length=20,unique=True)
+    discount_type=models.CharField(max_length=20,choices=DISCOUT_CHOICES)
+    discount_value=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
+    minimum_purchase_amount=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
+    maximum_discount_limit=models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
+    usage_limit=models.PositiveIntegerField(help_text="Total usage limit across all users")
+    per_user_limit = models.PositiveIntegerField(default=1,help_text="How many times a user can use this coupon")
+    valid_from = models.DateTimeField()
+    valid_until = models.DateTimeField()
+    is_active=models.BooleanField(default=True)
+    is_deleted=models.BooleanField(default=False)
+
+    description = models.TextField(blank=True,null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    update_at  = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.code
     
 
+class CouponUsage(models.Model):
+    coupon = models.ForeignKey(Coupon,related_name="usages",on_delete=models.CASCADE)
+    user = models.ForeignKey(User,related_name="coupon_usages",on_delete=models.CASCADE)
+    order = models.ForeignKey(Orders,related_name="coupon_usage",on_delete=models.SET_NULL,null=True,blank=True)
+    used_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('coupon','user','order')
+    
+class CategoryOffer(models.Model):
+    name=models.CharField(max_length=200,blank=True,null=True)
+    category = models.ForeignKey(Category,related_name='category_offers',on_delete=models.CASCADE)
+    discount_type = models.CharField(max_length=20,choices=[('percentage','Percentage'),('flat','Flat Amount')],
+                                    default='percentage')
+    discount_value=models.DecimalField(max_digits=10,decimal_places=2)
+    max_discount_amount=models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
+    start_date=models.DateTimeField()
+    end_date= models.DateTimeField()
+    is_active=models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_active','end_date'])
+        ]
+    @property
+    def status(self):
+        now = timezone.now()
+
+        if not self.is_active:
+            return "inactive"
+        if self.start_date > now:
+            return "upcoming"
+        if self.end_date < now:
+            return "expired"
+        return "active"
+    
+    def __str__(self):
+        return f"{self.category.name} offer"
+
+class ProductOffer(models.Model):
+    name = models.CharField(max_length=200,blank=True,null=True)
+    product=models.ForeignKey(Product,related_name='product_offers',on_delete=models.CASCADE)
+    discount_type = models.CharField(max_length=20,choices=[('percentage','Percentage'),('flat','Flat Amount')])
+    discount_value = models.DecimalField(max_digits=10,decimal_places=2)
+    max_discount_amount = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
+    
+    start_date=models.DateTimeField()
+    end_date=models.DateTimeField()
+    is_active= models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_active','end_date'])
+        ]
+
+    @property
+    def status(self):
+        now = timezone.now()
+
+        if not self.is_active:
+            return "inactive"
+        if self.start_date > now:
+            return "upcoming"
+        if self.end_date < now:
+            return "expired"
+        return "active"
+
+    def __str__(self):
+        return f"{self.product.name} offer"
+    
+    
 

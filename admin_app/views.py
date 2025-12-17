@@ -14,9 +14,10 @@ from .forms import BannerForm
 from .models import Banner
 from commerce.models import Orders,OrderItem
 from users.models import User,UserManager
-from product.models import Category,Product,ProductVariant,ProductImage
-from product.forms import CategoryForm,ProductForm,ProductVariantForm
-
+from product.models import Category,Product,ProductVariant,ProductImage,ProductOffer,CategoryOffer
+from product.forms import CategoryForm,ProductForm,ProductVariantForm,ProductOfferForm,CategoryOfferForm
+from commerce.utils.orders import is_first_successful_order
+from commerce.utils.referral import process_referral_after_first_order 
 
 def admin_login(request):
     if request.method == 'POST':
@@ -543,9 +544,111 @@ def admin_order_details(request,order_id):
         item=get_object_or_404(OrderItem,id=item_id,order=order)
         print("POSTED ITEM ID:", item_id)
         print("NEW STATUS:", new_status)
+
+        is_first_delivery=False
+        if new_status=='delivered':
+            is_first_delivery=is_first_successful_order(order.user)
+
         item.status=new_status
-        item.save()
+        item.save(update_fields=["status"])
+
+        if new_status=="delivered" and is_first_delivery:
+            process_referral_after_first_order(order.user)
         messages.success(request,"Order Item status updated successfully.")
         return redirect("order_details",order_id=order_id)
     
     return render(request,"admin/order_details.html",{"order":order,"items":items})
+
+def create_product_offer(request):
+    if request.method=='POST':
+        ProductOffer.objects.create(
+            name=request.POST.get('name'),
+            product_id=request.POST['product'],
+            discount_type=request.POST['discount_type'],
+            discount_value=request.POST['discount_value'],
+            max_discount_amount=request.POST.get('max_discount_amount') or None,
+            start_date=request.POST['start_date'],
+            end_date=request.POST['end_date'],
+            is_active=True
+        )
+        messages.success(request,"Product offer created.")
+        return redirect('admin_product_offer_list')
+    
+@login_required
+def admin_offer_list(request):
+    product_offers = ProductOffer.objects.all().order_by("-created_at")
+    category_offers = CategoryOffer.objects.all().order_by("-created_at")
+
+    return render(request, "admin/offers/offer_list.html", {
+        "product_offers": product_offers,
+        "category_offers": category_offers,
+    })
+@login_required
+def admin_product_offer_create(request):
+    form = ProductOfferForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Product offer created successfully.")
+        return redirect("admin_offer_list")
+
+    return render(request, "admin/offers/offer_form.html", {
+        "form": form,
+        "title": "Add Product Offer",
+    })
+
+@login_required
+def admin_category_offer_create(request):
+    form = CategoryOfferForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Category offer created successfully.")
+        return redirect("admin_offer_list")
+
+    return render(request, "admin/offers/offer_form.html", {
+        "form": form,
+        "title": "Add Category Offer",
+    })
+@login_required
+def admin_product_offer_edit(request, pk):
+    offer = get_object_or_404(ProductOffer, pk=pk)
+    form = ProductOfferForm(request.POST or None, instance=offer)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Product offer updated successfully.")
+        return redirect("admin_offer_list")
+
+    return render(request, "admin/offers/offer_form.html", {
+        "form": form,
+        "title": "Edit Product Offer",
+    })
+@login_required
+def admin_category_offer_edit(request, pk):
+    offer = get_object_or_404(CategoryOffer, pk=pk)
+    form = CategoryOfferForm(request.POST or None, instance=offer)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Category offer updated successfully.")
+        return redirect("admin_offer_list")
+
+    return render(request, "admin/offers/offer_form.html", {
+        "form": form,
+        "title": "Edit Category Offer",
+    })
+
+@login_required
+@require_POST
+def admin_offer_toggle(request, offer_type, pk):
+    model = ProductOffer if offer_type == "product" else CategoryOffer
+    offer = get_object_or_404(model, pk=pk)
+
+    offer.is_active = not offer.is_active
+    offer.save(update_fields=["is_active"])
+
+    status = "activated" if offer.is_active else "deactivated"
+    messages.success(request, f"Offer {status} successfully.")
+    return redirect("admin_offer_list")
+

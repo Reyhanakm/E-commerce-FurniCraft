@@ -1,6 +1,5 @@
 from django.db import models
 import uuid
-from product.models import Product,ProductVariant,ProductImage
 from users.models import User,UserAddress
 from cloudinary.models import CloudinaryField
 
@@ -15,8 +14,8 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     cart=models.ForeignKey(Cart,on_delete=models.CASCADE,related_name='items')
-    product=models.ForeignKey(Product,on_delete=models.CASCADE,related_name='cart_items')
-    variant=models.ForeignKey(ProductVariant,on_delete=models.CASCADE,related_name='cart_items',null=False,blank=False)
+    product=models.ForeignKey("product.Product",on_delete=models.CASCADE,related_name='cart_items')
+    variant=models.ForeignKey("product.ProductVariant",on_delete=models.CASCADE,related_name='cart_items',null=False,blank=False)
     quantity= models.PositiveIntegerField(default=1)
     created_at= models.DateTimeField(auto_now_add=True)
     updated_at= models.DateTimeField(auto_now=True)
@@ -64,7 +63,7 @@ class OrderItem(models.Model):
         ('returned','Returned')
     ]
     order=models.ForeignKey(Orders,related_name='items',on_delete=models.CASCADE)
-    product=models.ForeignKey(ProductVariant,related_name='order_items',on_delete=models.CASCADE)
+    product=models.ForeignKey("product.ProductVariant",related_name='order_items',on_delete=models.CASCADE)
     quantity=models.PositiveIntegerField()
     unit_price=models.DecimalField(max_digits=10,decimal_places=2,default=0)
     price=models.DecimalField(max_digits=10,decimal_places=2)
@@ -104,7 +103,7 @@ class Wishlist(models.Model):
     
 class WishlistItem(models.Model):
     wishlist=models.ForeignKey(Wishlist,related_name='wishlist_items',on_delete=models.CASCADE)
-    product=models.ForeignKey(ProductVariant,related_name='wishlist_product',on_delete=models.CASCADE)
+    product=models.ForeignKey("product.ProductVariant",related_name='wishlist_product',on_delete=models.CASCADE)
 
     class Meta:
         unique_together=('wishlist','product')

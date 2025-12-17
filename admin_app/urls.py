@@ -37,5 +37,15 @@ urlpatterns=[
     path("orders/<str:order_id>/",views.admin_order_details,name="order_details"),
 
 
+    path("offers/",views.admin_offer_list, name="admin_offer_list"),
+
+    path("offers/product/add/", views.admin_product_offer_create, name="admin_product_offer_create"),
+    path("offers/category/add/", views.admin_category_offer_create, name="admin_category_offer_create"),
+
+    path("offers/product/<int:pk>/edit/", views.admin_product_offer_edit, name="admin_product_offer_edit"),
+    path("offers/category/<int:pk>/edit/", views.admin_category_offer_edit, name="admin_category_offer_edit"),
+
+    path("offers/<str:offer_type>/<int:pk>/toggle/", views.admin_offer_toggle, name="admin_offer_toggle"),
+
  
 ]
