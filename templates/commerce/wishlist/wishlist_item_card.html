@@ -1,12 +1,15 @@
-{% with v=product %}
-    <div id="wishlist-item-{{ product.id }}" 
+{% load product_filters %}
+{% with v=variant %}
+    <div id="wishlist-item-{{ variant.id }}" 
          class="flex items-center bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-4">
 
         <a href="{% url 'product_details' v.product.id %}" class="flex-shrink-0 mr-4">
-            {% with image=v.product.images.all.0 %} 
-            <img src="{{ image.image.url }}" 
-                 alt="{{ v.product.name }}" 
-                 class="w-20 h-20 object-cover rounded-lg border border-gray-100">
+            {% with primary_image=v.product.images.all|get_primary_image %}            
+            {% if primary_image %}              
+                <img src="{{ primary_image.image.url }}" class="w-20 h-20 object-cover rounded-lg border border-gray-100">
+                {% else %}
+                    <img src="https://via.placeholder.com/150" class="w-20 h-20 object-cover rounded-lg border border-gray-100">
+                {% endif %}
             {% endwith %}
         </a>
 
@@ -19,10 +22,28 @@
                     </h3>
                 </a>
                 
-                <p class="text-xl font-extrabold text-[#A89289] mt-1">
+                {% comment %} <p class="text-xl font-extrabold text-[#A89289] mt-1">
                     ₹{{ v.sales_price }}
-                </p>
-                
+                </p> {% endcomment %}
+                <div class="mt-1">
+    {% if pricing.is_offer_applied %}
+        <p class="text-sm text-gray-400 line-through">
+            ₹{{ pricing.base_price }}
+        </p>
+        <p class="text-xl font-extrabold text-[#A89289]">
+            ₹{{ pricing.current_price }}
+        </p>
+        <span class="inline-block mt-1 px-2 py-0.5
+                     bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+            {{ pricing.offer_percent }}% OFF
+        </span>
+    {% else %}
+        <p class="text-xl font-extrabold text-[#A89289]">
+            ₹{{ pricing.base_price }}
+        </p>
+    {% endif %}
+</div>
+
                 <p class="text-sm text-gray-500">
                     {% if v.stock > 0 %}
                         <i class="fas fa-check-circle text-green-500 mr-1"></i> In Stock

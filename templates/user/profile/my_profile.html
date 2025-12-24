@@ -127,7 +127,6 @@
                             Copy
                         </button>
                     </div>
-
                     <p 
                         id="copy-msg"
                         class="text-xs text-green-600 mt-1 hidden">
@@ -139,7 +138,7 @@
             </div>
             <div class="p-3 bg-gray-50 rounded-lg">
                 <span class="text-xs text-gray-500 uppercase font-bold">Phone</span>                               
-                <p class="text-gray-800 font-medium">{% if user.phone_number %}{{ user.phone_number }}{% endif %}</p>
+                <p class="text-gray-800 font-medium">{% if user.phone_number %}{{ user.phone_number }}{% else %}Not provided{% endif %}</p>
             </div>
         </div>
     </div>

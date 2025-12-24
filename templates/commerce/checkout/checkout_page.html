@@ -1,190 +1,194 @@
 {% extends "product/navbar_footer.html" %}
+{% load product_filters %}
 {% block content %}
 
 <div class="max-w-6xl mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
 
-    <!-- LEFT SIDE: DELIVERY ADDRESS + PAYMENT METHOD -->
+    <!-- LEFT SIDE -->
     <div class="md:col-span-2 space-y-6">
 
-        <!-- ADDRESS SECTION -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
-            <div id="address-container">
-            {% if addresses %}
-                <form action="{% url 'place_order' %}" method="POST">
-                    {% csrf_token %}
+        <!-- SINGLE CHECKOUT FORM  -->
+        <form action="{% url 'place_order' %}" method="POST">
+            {% csrf_token %}
 
-                    <div class="space-y-4">
+            <!-- ADDRESS SECTION -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
+
+                {% if has_address %}
+                    <div id="address-container" class="space-y-4">
                         {% for address in addresses %}
-                            <label class="flex gap-3 items-start border rounded-lg p-4 cursor-pointer hover:border-[#A89289]">
-
-                                <input type="radio" name="address" value="{{ address.id }}" required>
-
-                                <div>
-                                    <p class="font-semibold">{{ address.name }}</p>
-                                    <p class="text-gray-600">{{ address.phone_no }}</p>
-                                    <p class="text-gray-600 text-sm">
-                                        {{ address.house }},
-                                        {{ address.street }},
-                                        {{ address.district }},
-                                        {{ address.state }} - {{ address.pincode }}
-                                    </p>
-                                </div>
-                            </label>
+                        <label class="flex gap-3 items-start border rounded-lg p-4 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="address"
+                                value="{{ address.id }}"
+                                {% if address.is_default %}checked{% endif %}
+                                required
+                            >
+                            <div>
+                                <p class="font-semibold">{{ address.name }}</p>
+                                <p class="text-sm text-gray-600">{{ address.phone_no }}</p>
+                                <p class="text-sm text-gray-600">
+                                    {{ address.house }}, {{ address.street }},
+                                    {{ address.district }}, {{ address.state }} - {{ address.pincode }}
+                                </p>
+                            </div>
+                        </label>
                         {% endfor %}
-                        <div id="add-address">
-
-                        </div>
                     </div>
-                </div>
-                    <a href="{% url 'add_address' %}" 
-                       hx-get="{% url 'add_address' %}" 
-                       hx-swap='innerHTML'
-                       hx-target='#add-address'
-                       class="mt-4 inline-block text-[#A89289] font-medium hover:underline">
-                        + Add New Address
-                    </a>
-            {% else %}
-                <p>No address found.</p>
-                <a href="{% url 'add_checkout_address' %}" class="text-[#A89289] hover:underline">
-                    + Add Address
-                </a>
-            {% endif %}
-        </div>
+                {% else %}
+                    <p class="text-red-600 font-medium">
+                        ⚠ Please add an address to continue checkout.
+                    </p>
+                {% endif %}
 
-        <!-- PAYMENT METHOD -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Payment Method</h2>
-
-            <div class="space-y-3">
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" name="payment_method" value="wallet" required>
-                    <span>Wallet</span>
-                </label>
-
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" name="payment_method" value="razor_pay" required>
-                    <span>RazorPay</span>
-                </label>
-
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="radio" name="payment_method" value="cash_on_delivery" checked>
-                    <span>Cash On Delivery</span>
-                </label>
+                <!-- Add Address Button -->
+                <button
+                    type="button"
+                    hx-get="{% url 'add_address' %}?from=checkout"
+                    hx-target="#add-address"
+                    hx-swap="innerHTML"
+                    class="mt-4 text-[#A89289] font-medium">
+                    + Add New Address
+                </button>
             </div>
-        </div>
+
+            <div id="add-address"></div>
+
+
+            <!-- PAYMENT METHOD -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Payment Method</h2>
+
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="payment_method" value="wallet" required>
+                        Wallet
+                    </label>
+                      <span class="text-sm text-gray-600">Pay using Wallet (Balance: ₹{{ request.user.wallet.balance }})</span>
+
+
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="payment_method" value="razorpay" required>
+                        RazorPay
+                    </label>
+
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="payment_method" value="cod" checked>
+                        Cash On Delivery
+                    </label>
+                </div>
+            </div>
+
+            <!-- PLACE ORDER BUTTON -->
+            <button
+                type="button"
+                class="mt-6 w-full bg-[#A89289] text-white font-semibold py-3 rounded-lg
+                    {% if not has_address %}opacity-50 cursor-not-allowed{% endif %}"
+                onclick="confirmPlaceOrder()"
+                {% if not has_address %}disabled{% endif %}
+            >
+                Place Order
+            </button>
+
+        </form>
+
+        <!-- ADD ADDRESS FORM -->
+        <div id="add-address"></div>
 
     </div>
 
     <!-- RIGHT SIDE: ORDER SUMMARY -->
     <div class="space-y-6">
 
-        <!-- ORDER SUMMARY -->
         <div class="bg-white shadow rounded-lg p-6">
             <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
 
-            <div class="divide-y">
-                {% for item in products %}
-                <div class="flex justify-between py-3">
-
-                    <div class="flex gap-3">
-                        {% with image=item.product.images.first %}
-                            {% if image %}
-                                <img src="{{ image.image.url }}" class="w-16 h-16 rounded object-cover">
+            {% for item in products %}
+            <div class="flex justify-between py-3 border-b">
+                <div class="flex gap-3">
+                    {% with primary_image=item.product.images.all|get_primary_image %}
+                            {% if primary_image %}
+                                <img src="{{ primary_image.image.url }}" class="w-16 h-16 object-cover border rounded-md">
+                            {% else %}
+                                <div class="w-16 h-16 bg-gray-100 flex items-center justify-center 
+                                            text-gray-400 text-xs border rounded-md">
+                                    No Image
+                                </div>
                             {% endif %}
-                        {% endwith %}
+                            {% endwith %}
 
-                        <div>
-                            <p class="font-medium">{{ item.product.name }}</p>
-                            <p class="text-gray-600 text-sm">
-                                {{ item.variant.material_type }}
-                            </p>
-                            <p class="text-sm">Qty: {{ item.quantity }}</p>
-                        </div>
+                    <div>
+                        <p class="font-medium">{{ item.product.name }}</p>
+                        <p class="text-sm text-gray-600">{{ item.variant.material_type }}</p>
+                        <p class="text-sm">Qty: {{ item.quantity }}</p>
                     </div>
-
-                    <p class="font-semibold">₹{{ item.variant.sales_price }}</p>
                 </div>
-                {% endfor %}
+
+                {% if item.offer_percent > 0 %}
+                    <div class="text-right">
+                        <p class="font-semibold text-[#A89289]">
+                            ₹{{ item.discounted_price|floatformat:2 }}
+                        </p>
+                        <p class="text-sm text-gray-400 line-through">
+                            ₹{{ item.variant.sales_price }}
+                        </p>
+                        <p class="text-xs text-green-600">
+                            {{ item.offer_percent }}% OFF applied
+                        </p>
+                    </div>
+                {% else %}
+                    <p class="font-semibold">₹{{ item.variant.sales_price }}</p>
+                {% endif %}
             </div>
+            {% endfor %}
         </div>
 
-        <!-- PRICE DETAILS -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Price Details</h2>
-
-            <p class="flex justify-between">
-                <span>Subtotal:</span>
-                <span>₹{{ subtotal }}</span>
-            </p>
-
-            <p class="flex justify-between">
-                <span>Shipping:</span>
-                <span>
-                    {% if shipping_cost == 0 %}
-                        Free
-                    {% else %}
-                        ₹{{ shipping_cost }}
-                    {% endif %}
-                </span>
-            </p>
-
-            <hr class="my-3">
-
-            <p class="flex justify-between text-lg font-semibold">
-                <span>Total:</span>
-                <span>₹{{ total }}</span>
-            </p>
-
-            <button type="submit"
-                class="mt-5 w-full bg-[#A89289] text-white font-semibold py-3 rounded-lg hover:bg-[#8f7a73] transition">
-                Place Order
-            </button>
-
-            </form>
-        </div>
+        <div id="coupon-section">
+            {% include "commerce/checkout/_coupon_totals.html" %}
+        </div>       
+       
 
     </div>
-
 </div>
+<script>
+function confirmPlaceOrder() {
+    const paymentMethod = document.querySelector(
+        'input[name="payment_method"]:checked'
+    )?.value;
 
+    if (!paymentMethod) {
+        alert("Please select a payment method");
+        return;
+    }
+
+    let message = "Are you sure you want to place this order?";
+    let confirmText = "Place Order";
+    let color = "#2563eb";
+
+    if (paymentMethod === "razorpay") {
+        message = "You will be redirected to Razorpay to complete the payment. Continue?";
+        confirmText = "Pay Now";
+    } 
+    else if (paymentMethod === "wallet") {
+        message = "Wallet balance will be used to place this order. Continue?";
+        confirmText = "Pay with Wallet";
+        color = "#16a34a";
+    } 
+    else if (paymentMethod === "cod") {
+        message = "You will pay in cash when the order is delivered. Continue?";
+        confirmText = "Confirm Order";
+        color = "#ca8a04";
+    }
+
+    confirmAction(
+        message,
+        confirmText,
+        () => document.querySelector("form").submit(),
+        color
+    );
+}
+</script>
 {% endblock %}
 
-{% comment %} {% extends "product/navbar_footer.html" %}
-
-{% block content %}
-
-<div>    
-    {% for address in addresses %}
-        <p>{{address.name}}</p>
-        <p>{{address.phone_no}}</p>
-        <p>{{address.house}},{{address.street}},{{address.district}},{{address.state}},{{address.pincode}}</p>
-    {% endfor %}
-    <button on click="{% url 'add_address' %}">
-        Add Address
-    </button>
-</div>
-<div>
-    <h2>Order Summary</h2>
-    {% for p in items %}
-    <img src="{{p.images.image.url}}" alt="">
-        {{p.name}}
-        {{variant.material_type}}
-        {{variant.sales_price}}
-     {% endfor %}</div>
-     <div>
-        <h2>Price Details</h2>
-       <p>Sub total :Rs.{{subtotal}}</p>
-       <p>shhpping charges :Rs.{{shipping_cost}}</p>
-       <p>Total :{{total}}</p>
-     </div>
-     <div>
-        <h2>Payment Method</h2>
-        <ul>
-            <li>Wallet</li>
-            <li>RazorPay</li>
-            <li>Cash On Delivery</li>
-        </ul>
-     </div>
-{% endblock content %}
-     {% endcomment %}

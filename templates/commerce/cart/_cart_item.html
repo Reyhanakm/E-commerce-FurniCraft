@@ -19,7 +19,26 @@
                 <p class="text-sm text-gray-500 mb-3">Variant: {{ item.variant.material_type }}</p>
                 
                 <div class="flex items-center gap-4 mb-4">
-                    <span class="text-2xl font-bold text-[#A89289]">₹{{ item.variant.sales_price }}</span>
+                    {% if item.offer_percent > 0 %}
+                        <div class="flex items-center gap-3">
+                            <!-- Discounted price -->
+                            <span class="text-2xl font-bold text-[#A89289]">
+                                ₹{{ item.discounted_price|floatformat:2 }}
+                            </span>
+
+                            <!-- Original price (striked) -->
+                            <span class="text-sm text-gray-400 line-through">
+                                ₹{{ item.variant.sales_price }}
+                            </span>
+                        </div>
+                        <p class="text-green-700 text-sm">
+                            {{ item.offer_percent }}% OFF applied
+                        </p>
+                    {% else %}
+                        <span class="text-2xl font-bold text-[#A89289]">
+                            ₹{{ item.variant.sales_price }}
+                        </span>
+                    {% endif %}
                 </div>
             </div>
 

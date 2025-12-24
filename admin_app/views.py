@@ -1,23 +1,42 @@
+from decimal import Decimal
 import json
+import logging
+
 from django.shortcuts import render,redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login,logout
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
+from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q,Prefetch
 from cloudinary.utils import cloudinary_url
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Count
+from django.utils.timezone import now
+from datetime import timedelta, timezone
+from openpyxl import Workbook
+
+
+from admin_app.services.sales_report import get_date_range, get_sold_items
+from commerce.utils.coupons import calculate_item_coupon_share
+
 from .forms import BannerForm
 from .models import Banner
-from commerce.models import Orders,OrderItem
+from commerce.models import Orders,OrderItem,OrderReturn
 from users.models import User,UserManager
-from product.models import Category,Product,ProductVariant,ProductImage,ProductOffer,CategoryOffer
-from product.forms import CategoryForm,ProductForm,ProductVariantForm,ProductOfferForm,CategoryOfferForm
+from product.models import Category,Product,ProductVariant,ProductImage,ProductOffer,CategoryOffer,Coupon,CouponUsage
+from product.forms import CategoryForm,ProductForm,ProductVariantForm,ProductOfferForm,CategoryOfferForm,CouponForm
 from commerce.utils.orders import is_first_successful_order
 from commerce.utils.referral import process_referral_after_first_order 
+from commerce.services.returns import approve_return_service
+from .services.order_status import update_order_payment_status,update_order_item_status
+
+logger = logging.getLogger("admin_app")
+
 
 def admin_login(request):
     if request.method == 'POST':
@@ -527,38 +546,119 @@ def admin_order_list(request):
 
 
 @login_required(login_url='admin_login')
-def admin_order_details(request,order_id):
-    order=get_object_or_404(Orders,order_id=order_id)
-    items=order.items.select_related("product","product__product")
+def admin_order_details(request, order_id):
+    order = get_object_or_404(Orders, order_id=order_id)
+    items = order.items.select_related("product", "product__product")
 
-    if request.method=="POST":
-        item_id=request.POST.get("item_id")
-        new_status=request.POST.get("status")
+    if request.method == "POST":
 
+        # PAYMENT STATUS UPDATE
         if "payment_status" in request.POST:
-            order.is_paid = request.POST["payment_status"]
-            order.save()
-            messages.success(request, "Payment status updated.")
+            new_payment_status = request.POST["payment_status"]
+
+            logger.info(
+                f"[ADMIN] {request.user.email} updating payment status "
+                f"Order={order.order_id} Status={new_payment_status}"
+            )
+
+            try:
+                update_order_payment_status(order, new_payment_status)
+                messages.success(request, "Payment status updated.")
+            except ValidationError as e:
+                logger.warning(
+                    f"[PAYMENT BLOCKED] Order={order.order_id} Reason={str(e)}"
+                )
+                messages.error(request, str(e))
+
             return redirect("order_details", order_id=order_id)
 
-        item=get_object_or_404(OrderItem,id=item_id,order=order)
-        print("POSTED ITEM ID:", item_id)
-        print("NEW STATUS:", new_status)
+        # ITEM STATUS UPDATE
+        item_id = request.POST.get("item_id")
+        new_status = request.POST.get("status")
 
-        is_first_delivery=False
-        if new_status=='delivered':
-            is_first_delivery=is_first_successful_order(order.user)
+        item = get_object_or_404(OrderItem, id=item_id, order=order)
 
-        item.status=new_status
-        item.save(update_fields=["status"])
+        logger.info(
+            f"[ADMIN] {request.user.email} attempting item status update "
+            f"Order={order.order_id} Item={item.id} "
+            f"From={item.status} To={new_status}"
+        )
 
-        if new_status=="delivered" and is_first_delivery:
-            process_referral_after_first_order(order.user)
-        messages.success(request,"Order Item status updated successfully.")
-        return redirect("order_details",order_id=order_id)
-    
-    return render(request,"admin/order_details.html",{"order":order,"items":items})
+        try:
+            update_order_item_status(item, new_status)
+            messages.success(request, "Order item status updated successfully.")
 
+            logger.info(
+                f"[ITEM UPDATED] Order={order.order_id} "
+                f"Item={item.id} Status={new_status}"
+            )
+
+        except ValidationError as e:
+            logger.warning(
+                f"[ITEM UPDATE BLOCKED] Order={order.order_id} "
+                f"Item={item.id} Reason={str(e)}"
+            )
+            messages.error(request, str(e))
+
+        return redirect("order_details", order_id=order_id)
+
+    return render(
+        request,
+        "admin/order_details.html",
+        {"order": order, "items": items}
+    )
+@require_POST
+@staff_member_required(login_url='admin_login')
+def approve_return(request, return_id):
+    return_request = get_object_or_404(
+        OrderReturn,
+        id=return_id,
+        approval_status="pending"
+    )
+
+    refund_amount = approve_return_service(return_request)
+
+    messages.success(
+        request,
+        f"Return approved. ₹{refund_amount} refunded to wallet."
+    )
+
+    return redirect("admin_return_list")
+
+@require_POST
+@staff_member_required(login_url="admin_login")
+def reject_return(request, return_id):
+    return_request = get_object_or_404(
+        OrderReturn,
+        id=return_id,
+        approval_status="pending"
+    )
+
+    admin_note = request.POST.get("admin_note", "").strip()
+
+    return_request.approval_status = "rejected"
+    return_request.admin_note = admin_note
+    return_request.save(update_fields=["approval_status", "admin_note"])
+
+    messages.success(request, "Return request rejected.")
+    return redirect("admin_return_list")
+  
+@staff_member_required(login_url='admin_login')
+def admin_return_list(request):
+    returns = (
+        OrderReturn.objects
+        .select_related("user", "item__order")
+        .order_by("approval_status", "-created_at")
+    )
+
+    return render(
+        request,
+        "admin/returns/return_list.html",
+        {"returns": returns}
+    )
+
+
+@login_required(login_url='admin_login')
 def create_product_offer(request):
     if request.method=='POST':
         ProductOffer.objects.create(
@@ -573,73 +673,110 @@ def create_product_offer(request):
         )
         messages.success(request,"Product offer created.")
         return redirect('admin_product_offer_list')
-    
-@login_required
+
+
+@login_required(login_url='admin_login')
 def admin_offer_list(request):
+    search_query = request.GET.get("q", "").strip()
+
     product_offers = ProductOffer.objects.all().order_by("-created_at")
     category_offers = CategoryOffer.objects.all().order_by("-created_at")
 
+    if search_query:
+        product_offers = product_offers.filter(
+            Q(name__icontains=search_query) |
+            Q(product__name__icontains=search_query)
+        )
+        category_offers = category_offers.filter(
+            Q(name__icontains=search_query) |
+            Q(category__name__icontains=search_query)
+        )
+
+    paginator = Paginator(product_offers,8)
+    page_number = request.GET.get("page")
+    product_page_obj = paginator.get_page(page_number)
+
+
+    params = request.GET.copy()
+    if "page" in params:
+        params.pop("page")
+    clean_querystring = params.urlencode()
+
     return render(request, "admin/offers/offer_list.html", {
-        "product_offers": product_offers,
+        "product_offers": product_page_obj,
         "category_offers": category_offers,
+        "page_obj": product_page_obj,
+        "search_query": search_query,
+        "querystring": clean_querystring,
     })
-@login_required
-def admin_product_offer_create(request):
-    form = ProductOfferForm(request.POST or None)
 
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Product offer created successfully.")
-        return redirect("admin_offer_list")
+@login_required(login_url='admin_login')
+def admin_offer_create(request):
+    offer_type = request.POST.get("offer_type") or request.GET.get("type") or "product"
+
+    if offer_type == "product":
+        product_form = ProductOfferForm(request.POST or None)
+        category_form = None
+    else:
+        product_form = None
+        category_form = CategoryOfferForm(request.POST or None)
+
+    if request.method == "POST":
+        if offer_type == "product" and product_form.is_valid():
+            product_form.save()
+            messages.success(request, "Product offer created successfully.")
+            return redirect("admin_offer_list")
+
+        if offer_type == "category" and category_form.is_valid():
+            category_form.save()
+            messages.success(request, "Category offer created successfully.")
+            return redirect("admin_offer_list")
 
     return render(request, "admin/offers/offer_form.html", {
-        "form": form,
-        "title": "Add Product Offer",
+        "title": "Add Offer",
+        "show_offer_type": True,
+        "offer_type": offer_type,
+        "product_form": product_form,
+        "category_form": category_form,
     })
 
-@login_required
-def admin_category_offer_create(request):
-    form = CategoryOfferForm(request.POST or None)
-
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Category offer created successfully.")
-        return redirect("admin_offer_list")
-
-    return render(request, "admin/offers/offer_form.html", {
-        "form": form,
-        "title": "Add Category Offer",
-    })
-@login_required
+@login_required(login_url='admin_login')
 def admin_product_offer_edit(request, pk):
     offer = get_object_or_404(ProductOffer, pk=pk)
     form = ProductOfferForm(request.POST or None, instance=offer)
 
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, "Product offer updated successfully.")
+        messages.success(request, "Product offer updated.")
         return redirect("admin_offer_list")
 
     return render(request, "admin/offers/offer_form.html", {
-        "form": form,
         "title": "Edit Product Offer",
+        "show_offer_type": False,   
+        "offer_type": "product",
+        "product_form": form,      
+        "category_form": None,      
     })
-@login_required
+
+@login_required(login_url='admin_login')
 def admin_category_offer_edit(request, pk):
     offer = get_object_or_404(CategoryOffer, pk=pk)
     form = CategoryOfferForm(request.POST or None, instance=offer)
 
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, "Category offer updated successfully.")
+        messages.success(request, "Category offer updated.")
         return redirect("admin_offer_list")
 
     return render(request, "admin/offers/offer_form.html", {
-        "form": form,
         "title": "Edit Category Offer",
+        "show_offer_type": False,   
+        "offer_type": "category",
+        "product_form": None,
+        "category_form": form,
     })
 
-@login_required
+@login_required(login_url='admin_login')
 @require_POST
 def admin_offer_toggle(request, offer_type, pk):
     model = ProductOffer if offer_type == "product" else CategoryOffer
@@ -652,3 +789,167 @@ def admin_offer_toggle(request, offer_type, pk):
     messages.success(request, f"Offer {status} successfully.")
     return redirect("admin_offer_list")
 
+
+@login_required(login_url="admin_login")
+def admin_coupon_list(request):
+    coupons = (
+        Coupon.objects
+        .filter(is_deleted=False)
+        .annotate(used_count=Count("usages"),per_user_count=Count('coupon_usages'))
+        .order_by("-created_at")
+    )
+
+    return render(request, "admin/coupons/list.html", {
+        "coupons": coupons
+    })
+
+@login_required(login_url="admin_login")
+def admin_coupon_create(request):
+    form = CouponForm(request.POST or None)
+
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Coupon created successfully")
+        return redirect("admin_coupon_list")
+
+    return render(request, "admin/coupons/form.html", {
+        "form": form,
+        "title": "Create Coupon"
+    })
+
+@login_required(login_url="admin_login")
+def admin_coupon_edit(request, pk):
+    coupon = get_object_or_404(Coupon, pk=pk, is_deleted=False)
+    form = CouponForm(request.POST or None, instance=coupon)
+
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Coupon updated successfully")
+        return redirect("admin_coupon_list")
+
+    return render(request, "admin/coupons/form.html", {
+        "form": form,
+        "title": "Edit Coupon"
+    })
+@login_required(login_url="admin_login")
+def admin_coupon_toggle(request, pk):
+    coupon = get_object_or_404(Coupon, pk=pk)
+    coupon.is_active = not coupon.is_active
+    coupon.save(update_fields=["is_active"])
+
+    messages.success(request, "Coupon status updated")
+    return redirect("admin_coupon_list")
+
+@login_required(login_url="admin_login")
+def admin_coupon_delete(request, pk):
+    coupon = get_object_or_404(Coupon, pk=pk)
+    coupon.is_deleted = True
+    coupon.is_active = False
+    coupon.save(update_fields=["is_deleted", "is_active"])
+
+    messages.success(request, "Coupon deleted")
+    return redirect("admin_coupon_list")
+
+
+@login_required(login_url="admin_login")
+def sales_report(request):
+
+    range_type = request.GET.get("range")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    start, end = get_date_range(range_type, start_date, end_date)
+
+    sold_items = get_sold_items(start, end)
+
+    total_sales = Decimal("0.00")
+    product_discount = Decimal("0.00")
+    coupon_discount = Decimal("0.00")
+
+    for item in sold_items:
+        total_sales += item.price
+        product_discount += (item.unit_price * item.quantity) - item.price
+        coupon_discount += calculate_item_coupon_share(item.order, item)
+
+    context = {
+        "sold_items": sold_items,
+        "order_count": sold_items.values("order_id").distinct().count(),
+        "total_sales": total_sales,
+        "product_discount": product_discount,
+        "coupon_discount": coupon_discount,
+        "overall_discount": product_discount + coupon_discount,
+        "start_date": start,
+        "end_date": end,
+        "range_type": range_type,
+    }
+
+    return render(request, "admin/sales_report.html", context)
+
+
+@login_required(login_url="admin_login")
+def sales_report_excel(request):
+
+  
+    range_type = request.GET.get("range")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    start, end = get_date_range(range_type, start_date, end_date)
+
+    sold_items = get_sold_items(start, end)
+
+   
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Sales Report"
+
+    headers = [
+        "Order ID",
+        "Order Date",
+        "Product",
+        "Quantity",
+        "Net Price",
+        "Product Discount",
+        "Coupon Discount",
+    ]
+    ws.append(headers)
+
+
+    total_sales = Decimal("0.00")
+    product_discount = Decimal("0.00")
+    coupon_discount = Decimal("0.00")
+
+    for item in sold_items:
+        prod_discount = (item.unit_price * item.quantity) - item.price
+        coup_discount = calculate_item_coupon_share(item.order, item)
+
+        ws.append([
+            item.order.order_id,
+            item.order.created_at.strftime("%Y-%m-%d"),
+            str(item.product),
+            item.quantity,
+            float(item.price),
+            float(prod_discount),
+            float(coup_discount),
+        ])
+
+        total_sales += item.price
+        product_discount += prod_discount
+        coupon_discount += coup_discount
+
+    ws.append([])
+    ws.append(["TOTAL SALES", "", "", "", float(total_sales), "", ""])
+    ws.append(["PRODUCT DISCOUNT", "", "", "", "", float(product_discount), ""])
+    ws.append(["COUPON DISCOUNT", "", "", "", "", "", float(coupon_discount)])
+    ws.append([
+        "OVERALL DISCOUNT", "", "", "", "",
+        float(product_discount + coupon_discount), ""
+    ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="sales_report.xlsx"'
+
+    wb.save(response)
+    return response

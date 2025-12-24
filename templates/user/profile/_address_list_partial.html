@@ -2,6 +2,87 @@
 
     <h2 class="text-2xl font-semibold text-gray-800">Your Addresses</h2>
 
+    {% if addresses %}
+    <div class="grid grid-cols-1 gap-5">
+        {% for address in addresses %}
+        <div class="bg-white border {% if address.is_default %}border-amber-500{% else %}border-gray-200{% endif %}
+                    rounded-xl p-5 relative">
+
+            {% if address.is_default %}
+            <span class="absolute top-3 right-3 bg-amber-500 text-white text-xs px-2 py-1 rounded">
+                Default
+            </span>
+            {% endif %}
+
+            <p class="font-semibold text-gray-900">
+                {{ address.name }} <br>
+                {{ address.house }}, {{ address.street }}
+            </p>
+
+            <p class="text-sm text-gray-600">
+                {{ address.district }}, {{ address.state }} - {{ address.pincode }}
+            </p>
+
+            <p class="text-sm text-gray-500">Phone: {{ address.phone_no }}</p>
+
+            <div class="mt-4 flex gap-3">
+
+                <button
+                    hx-get="{% url 'edit_address' address.id %}"
+                    hx-target="#profile-content"
+                    hx-swap="innerHTML"
+                    class="px-4 py-1 bg-gray-100 rounded">
+                    Edit
+                </button>
+
+                <button
+                    onclick="confirmDelete('{{ address.id }}')"
+                    class="px-4 py-1 bg-red-100 text-red-600 rounded">
+                    Delete
+                </button>
+
+                {% if not address.is_default %}
+                <button
+                    hx-post="{% url 'set_default_address' address.id %}"
+                    hx-target="#profile-content"
+                    hx-swap="innerHTML"
+                    class="px-4 py-1 bg-amber-100 text-amber-700 rounded">
+                    Make Default
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No addresses added yet.</p>
+    {% endif %}
+</div>
+ <script>
+function confirmDelete(id) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "This address will be permanently deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            htmx.ajax('DELETE', `/profile/address/delete/${id}/`, {
+                target: "#profile-content",
+                swap: "innerHTML"
+            });
+        }
+    });
+}
+</script> 
+
+{% comment %} <div class="space-y-6">
+
+    <h2 class="text-2xl font-semibold text-gray-800">Your Addresses</h2>
+
     {% include 'components/messages.html' %}
 
     {% if addresses %}
@@ -46,10 +127,7 @@
 
                     <!-- Delete with SweetAlert -->
                     <button
-                        hx-get="{% url 'delete_address' address.id %}"
-                        hx-target="#profile-content"
-                        hx-swap="innerHTML"
-                        onclick="confirmDelete('{% url 'delete_address' address.id %}','{{ address.id }}')"
+                        onclick="confirmDelete('{{ address.id }}')"
                         class="px-4 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
                         Delete
                     </button>
@@ -83,27 +161,8 @@
 
 </div>
 
-{% comment %} <script>
-function confirmDelete(id) {
-    Swal.fire({
-        title: "Are you sure?",
-        text: "This address will be permanently deleted.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Yes, delete it"
-    }).then((result) => {
-        if (result.isConfirmed) {
-            htmx.ajax('DELETE', `/profile/address/delete/${id}/`, {
-                target: "#profile-content",
-                swap: "innerHTML"
-            });
-        }
-    });
-}
-</script> {% endcomment %}
 
+ {% endcomment %}
 
 {% comment %} <div class="space-y-6">
 

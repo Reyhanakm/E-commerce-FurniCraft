@@ -36,16 +36,31 @@ urlpatterns=[
     path('orders/',views.admin_order_list,name="order_list"),
     path("orders/<str:order_id>/",views.admin_order_details,name="order_details"),
 
+    path("returns/",views.admin_return_list, name="admin_return_list"),
+    path("returns/approve/<int:return_id>/",views.approve_return, name="approve_return"),
+    path("returns/reject/<int:return_id>/",views.reject_return, name="reject_return"),
+
 
     path("offers/",views.admin_offer_list, name="admin_offer_list"),
 
-    path("offers/product/add/", views.admin_product_offer_create, name="admin_product_offer_create"),
-    path("offers/category/add/", views.admin_category_offer_create, name="admin_category_offer_create"),
+    # path("offers/product/add/", views.admin_product_offer_create, name="admin_product_offer_create"),
+    # path("offers/category/add/", views.admin_category_offer_create, name="admin_category_offer_create"),
+    path("offers/add/",views.admin_offer_create, name="admin_offer_create"),
+
 
     path("offers/product/<int:pk>/edit/", views.admin_product_offer_edit, name="admin_product_offer_edit"),
     path("offers/category/<int:pk>/edit/", views.admin_category_offer_edit, name="admin_category_offer_edit"),
 
     path("offers/<str:offer_type>/<int:pk>/toggle/", views.admin_offer_toggle, name="admin_offer_toggle"),
+
+    path("coupons/",views.admin_coupon_list, name="admin_coupon_list"),
+    path("coupons/create/",views.admin_coupon_create, name="admin_coupon_create"),
+    path("coupons/<int:pk>/edit/",views.admin_coupon_edit, name="admin_coupon_edit"),
+    path("coupons/<int:pk>/toggle/",views.admin_coupon_toggle, name="admin_coupon_toggle"),
+    path("coupons/<int:pk>/delete/",views.admin_coupon_delete, name="admin_coupon_delete"),
+
+    path("sales-report/excel/", views.sales_report_excel, name="sales_report_excel"),
+    path("sales-report/",views.sales_report,name="sales_report"),
 
  
 ]

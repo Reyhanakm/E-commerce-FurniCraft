@@ -47,7 +47,6 @@
         <span class="text-gray-700 font-medium">{{ product.name }}</span>
     </nav>
 <div id="cart-message"></div>
-product_details
     {% if product.is_active %}
         <div class="bg-white rounded-2xl shadow-xl p-10 border border-gray-200 fade-in">
             <!-- Main Product Section -->
@@ -101,13 +100,10 @@ product_details
                         <span class="text-xs text-gray-500">(238 reviews)</span>
                     </div>
 
-                    <div id="variantInfo"
-                        hx-get="{% url 'load_variant_info' product.variants.first.id %}" 
-                        hx-trigger="update-cart from:body"
-                        hx-swap="innerHTML"  
+                    <div id="variantInfo" 
                         class="bg-gradient-to-br from-[#F5F1EF] to-[#EEDDD8] rounded-2xl p-6 shadow-md mb-8 border border-[#E8DFD7]">
                         
-                         {% include "product/components/variant_info.html" with variant=product.variants.first is_in_wishlist=is_in_wishlist %}
+                         {% include "product/components/variant_info.html" with variant=product.variants.first is_in_wishlist=is_in_wishlist pricing=pricing%}
 
                     </div>
 
@@ -123,7 +119,6 @@ product_details
                                     hx-get="{% url 'load_variant_info' v.id %}"
                                     hx-target="#variantInfo"
                                     hx-swap="innerHTML"
-                                    hx-trigger="click, update-cart from:body"
                                     class="px-5 py-3 rounded-full border-2 border-gray-300 bg-white 
                                            hover:border-[#A89289] hover:bg-[#F5F1EF] hover:text-[#A89289] 
                                            transition-all duration-200 font-medium text-sm cursor-pointer">
@@ -183,7 +178,7 @@ product_details
 
             </div>
 
-            <!-- Related Products -->
+        <!-- Related Products -->
             <div class="mt-16">
                 <h2 class="text-2xl font-bold text-gray-800 mb-8">Related Products</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -206,7 +201,15 @@ product_details
                                     <h3 class="font-bold text-sm text-gray-800 line-clamp-2">{{ p.name }}</h3>
                                     {% with v=p.variants.all.0 %}
                                         {% if v %}
-                                            <p class="text-lg font-bold text-[#A89289]">₹{{ v.sales_price }}</p>
+                                            <p class="text-lg font-bold text-[#A89289]">
+                                                ₹{{ p.display_price }}
+                                            </p>
+                                            {% if p.pricing and p.pricing.is_offer_applied %}
+                                                <span class="text-xs text-red-600 font-semibold">
+                                                    {{ p.pricing.offer_percent }}% OFF
+                                                </span>
+                                            {% endif %}
+
                                         {% endif %}
                                     {% endwith %}
                                 </div>
@@ -214,7 +217,7 @@ product_details
                         </a>
                     {% endfor %}
                 </div>
-            </div>
+            </div> 
 
         </div>
 

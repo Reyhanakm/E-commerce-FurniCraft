@@ -1,0 +1,73 @@
+<!-- Coupon UI -->
+<div class="mb-4 bg-white shadow rounded-lg p-6">
+    <h3 class="font-semibold mb-2">Apply Coupon</h3>
+
+    {% if coupon %}
+        <div class="flex justify-between items-center text-green-600">
+            <span>Coupon <strong>{{ coupon.code }}</strong> applied</span>
+
+            <button
+                hx-post="{% url 'remove_coupon' %}"
+                hx-target="#coupon-section"
+                hx-swap="innerHTML"
+                class="text-red-500 text-sm underline"
+            >
+                Remove
+            </button>
+        </div>
+    {% else %}
+        <form
+            hx-post="{% url 'apply_coupon' %}"
+            hx-target="#coupon-section"
+            hx-swap="innerHTML"
+            class="space-y-2"
+        >
+            {% csrf_token %}
+            <input
+                type="text"
+                name="coupon_code"
+                placeholder="Enter coupon code"
+                class="border rounded px-3 py-2 w-full"
+            >
+            <button class="w-full bg-gray-800 text-white py-2 rounded">
+                Apply Coupon
+            </button>
+        </form>
+    {% endif %}
+</div>
+
+<!-- Price Details -->
+<div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-xl font-semibold mb-4">Price Details</h2>
+
+    <p class="flex justify-between">
+        <span>Subtotal</span>
+        <span>₹{{ subtotal }}</span>
+    </p>
+
+    {% if offer_discount > 0 %}
+    <p class="flex justify-between text-green-600">
+        <span>Offer Discount</span>
+        <span>- ₹{{ offer_discount }}</span>
+    </p>
+    {% endif %}
+
+    {% if coupon %}
+    <p class="flex justify-between text-green-600">
+        <span>Coupon ({{ coupon.code }})</span>
+        <span>- ₹{{ coupon_discount }}</span>
+    </p>
+    {% endif %}
+
+    <p class="flex justify-between">
+        <span>Shipping</span>
+        <span>{% if shipping_cost == 0 %}Free{% else %}₹{{ shipping_cost }}{% endif %}</span>
+    </p>
+
+    <hr class="my-3">
+
+    <p class="flex justify-between text-lg font-semibold">
+        <span>Total</span>
+        <span>₹{{ total }}</span>
+    </p>
+</div>

@@ -1,0 +1,22 @@
+{% extends "product/navbar_footer.html" %}
+{% block content %}
+
+<div class="max-w-md mx-auto mt-16 bg-white shadow rounded-lg p-6 text-center">
+    <h1 class="text-2xl font-bold text-red-600 mb-3">Payment Failed</h1>
+
+    <p class="text-gray-600 mb-6">
+        Your payment for order <b>{{ order.order_id }}</b> was not completed.
+    </p>
+
+    <a href="{% url 'razorpay_start' order.order_id %}"
+       class="block bg-[#A89289] text-white py-2 rounded-lg font-semibold mb-3">
+        Retry Payment
+    </a>
+
+    <a href="{% url 'my_orders_page' %}"
+       class="text-sm text-gray-500 underline">
+        Go to My Orders
+    </a>
+</div>
+
+{% endblock %}

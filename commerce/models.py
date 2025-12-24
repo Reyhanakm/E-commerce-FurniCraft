@@ -28,13 +28,15 @@ def generate_order_id():
 
 class Orders(models.Model):
     PAYMENT_METHODS=[
-        ('cash_on_delivery','Cash on Delivery'),
-        ('razor_pay','Razor Pay'),
+        ('cod','Cash on Delivery'),
+        ('razorpay','Razor Pay'),
         ('wallet','Wallet')
     ]
     PAYMENT_STATUS_CHOICES=[
         ('pending','Pending'),
         ('paid','Paid'),
+        ('refunded', 'Refunded'),            
+        ('partially_refunded', 'Partially Refunded'),
         ('failed','Failed')
     ]
 
@@ -42,15 +44,24 @@ class Orders(models.Model):
     user= models.ForeignKey(User,related_name='user_orders',on_delete=models.CASCADE)
     address=models.ForeignKey(UserAddress,related_name='address_orders',on_delete=models.CASCADE)
     total_price_before_discount=models.DecimalField(max_digits=10,decimal_places=2,default=0)
+    coupon =models.ForeignKey("product.Coupon",null=True,blank=True,on_delete=models.SET_NULL)
+    coupon_discount=models.DecimalField(max_digits=10,decimal_places=2,default=0)
+    offer_discount=models.DecimalField(max_digits=10,decimal_places=2,default=0)
     total_price=models.DecimalField(max_digits=10,decimal_places=2)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
-    payment_method=models.CharField(choices=PAYMENT_METHODS,default='cash_on_delivery')
+    payment_method=models.CharField(choices=PAYMENT_METHODS,default='cod')
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True,db_index=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True,db_index=True)
+    payment_status = models.CharField(max_length=20,choices=PAYMENT_STATUS_CHOICES,default='pending')
+    razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
     delivery_charge=models.DecimalField(max_digits=6,decimal_places=2,default=0.00)
-    is_paid=models.CharField(choices=PAYMENT_STATUS_CHOICES,default='pending')
 
     def __str__(self):
         return f"order {self.order_id} by {self.user.first_name}"
+    @property
+    def is_paid(self):
+        return self.payment_status
     
 
 class OrderItem(models.Model):
@@ -67,6 +78,7 @@ class OrderItem(models.Model):
     quantity=models.PositiveIntegerField()
     unit_price=models.DecimalField(max_digits=10,decimal_places=2,default=0)
     price=models.DecimalField(max_digits=10,decimal_places=2)
+    offer_percent = models.PositiveIntegerField(default=0)
     cancellation_reason=models.TextField(blank=True,null=True)
     status=models.CharField(max_length=20,choices=STATUS_CHOICES,default='order_received')
 
@@ -90,10 +102,11 @@ class OrderReturn(models.Model):
     approval_status=models.CharField(max_length=100,choices=APPROVAL_CHOICES,blank=True,null=True)
     return_reason=models.TextField()
     image=CloudinaryField('returned_image',blank=True,null=True)
+    admin_note=models.TextField(blank=True,null=True)
     created_at=models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Return request for {self.product.product.name} is {self.approval_status}"
+        return f"Return request for {self.item.product.product.name} is {self.approval_status}"
     
 
 class Wishlist(models.Model):
@@ -114,7 +127,7 @@ class WishlistItem(models.Model):
 
 
 class Wallet(models.Model):
-    user=models.ForeignKey(User,related_name='wallet_user',on_delete=models.CASCADE)
+    user=models.OneToOneField(User,related_name='wallet',on_delete=models.CASCADE)
     balance=models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
     updated_at=models.DateTimeField(auto_now=True)
 
@@ -133,14 +146,14 @@ class WalletTransaction(models.Model):
         ('referral','Referral Bonus'),
     ]
     transaction_id=models.CharField(max_length=20,unique=True,default=generate_transaction_id)
-    wallet=models.ForeignKey(Wallet,related_name="transaction",on_delete=models.CASCADE)
-    order=models.ForeignKey(Orders,related_name='order_wallet',on_delete=models.CASCADE)
-    amount=models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
+    wallet=models.ForeignKey(Wallet,related_name="transactions",on_delete=models.CASCADE)
+    order=models.ForeignKey(Orders,related_name='wallet_transactions',null=True,blank=True,on_delete=models.SET_NULL)
+    amount=models.DecimalField(max_digits=10,decimal_places=2)
     transaction_type=models.CharField(max_length=100,choices=[
         ('credit','Credit'),('debit','Debit')
     ])
-    is_paid=models.BooleanField(default=False)
     razorpay_order_id=models.CharField(max_length=255,blank=True,null=True)
     source=models.CharField(max_length=150,choices=SOURCE_CHOICES,default="null")
     created_at=models.DateTimeField(auto_now_add=True)
-    
+    class Meta:
+        unique_together = ('wallet', 'order', 'source')

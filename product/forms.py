@@ -1,6 +1,7 @@
 from django import forms
 import re
-from .models import Category, Product, ProductVariant, ProductImage,ProductOffer,CategoryOffer
+from .models import Category, Product, ProductVariant, ProductImage,ProductOffer,CategoryOffer,Coupon
+from django.utils import timezone
 
 
 class MultiFileInput(forms.ClearableFileInput):
@@ -278,3 +279,38 @@ class CategoryOfferForm(forms.ModelForm):
             if cleaned["start_date"] >= cleaned["end_date"]:
                 self.add_error("end_date", "End date must be after start date.")
         return cleaned
+    
+class CouponForm(forms.ModelForm):
+    class Meta:
+        model = Coupon
+        exclude = ("is_deleted", "created_at", "update_at")
+        widgets = {
+            "valid_from": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            "valid_until": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+    def clean(self):
+        cleaned_data = super().clean()
+        valid_from = cleaned_data.get("valid_from")
+        valid_until = cleaned_data.get("valid_until")
+
+        now = timezone.now()
+
+        if valid_from and valid_until:
+
+            if valid_until <= valid_from:
+                raise forms.ValidationError(
+                    "Valid until must be later than valid from."
+                )
+
+            if valid_until <= now:
+                raise forms.ValidationError(
+                    "Valid until must be a future date."
+                )
+
+            if valid_from < now:
+                raise forms.ValidationError(
+                    "Valid from cannot be in the past."
+                )
+
+        return cleaned_data
+

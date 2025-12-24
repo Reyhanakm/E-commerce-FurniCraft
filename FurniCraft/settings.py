@@ -94,7 +94,7 @@ CACHES = {
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_CACHE_ALIAS = "default"
-# SESSION_COOKIE_AGE = 3000     #1 hr
+SESSION_COOKIE_AGE = 3000     #1 hr
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 
@@ -162,6 +162,10 @@ DATABASES = {
     }
 }
 
+RAZORPAY_KEY_ID = config("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET")
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -230,3 +234,50 @@ SITE_ID = 1
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'simple': {
+            'format': '[{levelname}] {asctime} {name}: {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/app.log'),
+            'formatter': 'simple',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'product': {   
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },   
+        "commerce": {
+            "handlers": ["console",'file'],
+            "level": "INFO",
+        },
+        "admin_app": {
+            "handlers": ["console",'file'],
+            "level": "INFO",
+        },
+    },
+}

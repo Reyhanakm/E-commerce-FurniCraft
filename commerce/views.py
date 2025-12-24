@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render,redirect,get_object_or_404
 from django.db import transaction
 from django.urls import reverse
@@ -5,32 +6,64 @@ import json
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from urllib.parse import urlencode
+import razorpay
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from commerce.utils.offers import get_discount_percentage
 from users.decorators import block_check
 from django.contrib import messages
-from .models import Cart,CartItem,OrderItem,Orders,Wishlist,WishlistItem,Wallet,WalletTransaction
+from .models import Cart,CartItem,OrderItem,Orders,Wishlist,WishlistItem,Wallet,WalletTransaction,OrderReturn
 from users.models import User,UserAddress
 from product.models import Category,Product,ProductVariant
-from .utils.trigger import trigger
+from .utils.trigger import trigger,attach_trigger
 from decimal import Decimal
+from commerce.utils.pricing import get_pricing_context
+from .utils.checkout import render_checkout_summary
+from commerce.utils.coupons import validate_and_calculate_coupon,calculate_item_coupon_share
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle,Spacer
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from .utils.pdf_styles import get_invoice_styles
+from .services.wallet import pay_using_wallet
 
-@block_check
-@login_required
+logger = logging.getLogger("commerce")
+
+
 def load_wishlist_items(request):
-    """Loads the list of wishlist item cards (the partial) via HTMX."""
     wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
-    
-    # Efficiently fetch WishlistItem objects, selecting the related ProductVariant
-    wishlist_items = WishlistItem.objects.filter(wishlist=wishlist).select_related('product')
-    
-    # Pass the actual ProductVariant objects to the template loop
-    products = [item.product for item in wishlist_items]
-    
-    return render(request, "commerce/wishlist/wishlist_items.html", {"products": products})
+
+    wishlist_items = (
+        WishlistItem.objects
+        .filter(wishlist=wishlist)
+        .select_related("product", "product__product")
+        .prefetch_related(
+            "product__product__product_offers",
+            "product__product__category__category_offers",
+        )
+    )
+
+    wishlist_data = []
+    for item in wishlist_items:
+        variant = item.product
+        pricing = get_pricing_context(variant)
+
+        wishlist_data.append({
+            "variant": variant,
+            "pricing": pricing,
+        })
+
+    return render(
+        request,
+        "commerce/wishlist/wishlist_items.html",
+        {"wishlist_data": wishlist_data}
+    )
 
 @block_check
 @login_required
 def wishlist(request):
-    """Loads the main wishlist page (the parent container)."""
     return render(request, "commerce/wishlist/wishlist.html", {})
 
 
@@ -43,35 +76,26 @@ def toggle_wishlist(request, p_id):
     item_qs = WishlistItem.objects.filter(wishlist=wishlist, product=variant)
     
     if item_qs.exists():
-        # --- ACTION: REMOVE ---
         item_qs.delete()
         
-        # 1. Set the new icon (Hollow heart)
-        icon_html = '<i class="far fa-heart"></i>' # Or 'far fa-heart' depending on your icon set
+        icon_html = '<i class="far fa-heart"></i>' 
         
-        # 2. Set Message and Type (INFO for removal)
         message = f"{variant.product.name} removed from wishlist."
-        toast_type = "warning" # This will likely be Blue or Gray depending on your JS mapping
+        toast_type = "warning" 
         
     else:
-        # --- ACTION: ADD ---
         WishlistItem.objects.create(wishlist=wishlist, product=variant)
         
-        # 1. Set the new icon (Solid Red heart)
         icon_html = '<i class="fas fa-heart text-red-500"></i>'
         
-        # 2. Set Message and Type (SUCCESS for addition)
         message = f"{variant.product.name} added to wishlist!"
-        toast_type = "success" # Green
-
-    # Return the HTML for the icon to update the button
+        toast_type = "success" 
     response = HttpResponse(icon_html, status=200)
 
-    # Build the header with the DYNAMIC toast type
     header_data = {
         "toast": {
             "message": message,
-            "type": toast_type  # <--- FIXED: Now dynamic
+            "type": toast_type  
         },
         "wishlistUpdated": True 
     }
@@ -82,54 +106,39 @@ def toggle_wishlist(request, p_id):
 
 @block_check
 @login_required
-@transaction.atomic # CRITICAL: Ensures atomic add-to-cart and delete-from-wishlist
+@transaction.atomic 
 def move_to_cart(request, p_id):
     """Moves an item from the wishlist to the cart."""
     variant = get_object_or_404(ProductVariant, id=p_id)
     wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
 
-    # 1. Use the existing logic to add/update the item in the cart
-    # This automatically handles stock/quantity checks and returns a trigger response.
     cart_response = add_to_cart_logic(request, variant.product, variant)
     
-    # 2. Check if the cart operation was successful (status 204 means success with no content swap)
     if cart_response.status_code == 204:
-        # Cart addition succeeded: Delete from wishlist
         wishlist_item_qs = WishlistItem.objects.filter(wishlist=wishlist, product=variant)
         wishlist_item_qs.delete()
         
-        # 3. Augment the HTMX header from add_to_cart_logic
         header_data = json.loads(cart_response["HX-Trigger"])
         
-        # Add the new global trigger for the wishlist container/badge
         header_data["wishlistUpdated"] = True
         cart_response["HX-Trigger"] = json.dumps(header_data)
         
-        # The 204 status code already tells HTMX to remove the card (hx-swap="outerHTML")
         return cart_response
         
     else:
-        # Cart addition failed (e.g., out of stock). Return the error response 
-        # generated by add_to_cart_logic, and DO NOT delete from the wishlist.
         return cart_response
     
-    # commerce/views.py (Add this function)
 
 @block_check
 @login_required
 def wishlist_count(request):
-    """Returns the current count of wishlist items for the navbar badge."""
     if not request.user.is_authenticated:
         return HttpResponse("0")
 
-    # 1. Get the user's Wishlist
     wishlist, created = Wishlist.objects.get_or_create(user=request.user)
     
-    # 2. Count the number of associated WishlistItem objects (using the related name)
-    # Assuming 'wishlist_items' is the related_name on the Wishlist model
     count = wishlist.wishlist_items.count() 
 
-    # 3. Return the count as a plain HttpResponse
     return HttpResponse(count)
 
 
@@ -201,6 +210,15 @@ def cart_page(request):
     
     if validation_required:
         return redirect('cart_page')
+    for item in cart_items:
+        item.offer_percent=get_discount_percentage(item.variant)
+        price=Decimal(item.variant.sales_price)
+        if item.offer_percent>0:
+            item.discounted_price=price-(price* Decimal(item.offer_percent)/100)
+            item.offer_percent=round(item.offer_percent)
+        else:
+            item.discounted_price=price
+
     return render(request, "commerce/cart/cart_page.html", {
         "cart": cart,
         "cart_items": cart_items,
@@ -253,6 +271,15 @@ def increase_quantity(request, item_id):
         "toast": {"message": message, "type": "info"},
         "update-cart": True 
     }
+    item.offer_percent = get_discount_percentage(item.variant)
+
+    price = Decimal(item.variant.sales_price)
+    if item.offer_percent > 0:
+        item.discounted_price = price - (price * Decimal(item.offer_percent) / 100)
+        item.offer_percent=round(item.offer_percent)
+
+    else:
+        item.discounted_price = price
     response = render(request, "commerce/cart/_cart_item.html", {
         "item": item
     })
@@ -279,7 +306,14 @@ def decrease_quantity(request, item_id):
         "toast": {"message": message, "type": "warning"},
         "update-cart": True 
     }
-    
+    item.offer_percent = get_discount_percentage(item.variant)
+
+    price = Decimal(item.variant.sales_price)
+    if item.offer_percent > 0:
+        item.discounted_price = price - (price * Decimal(item.offer_percent) / 100)
+        item.offer_percent=round(item.offer_percent)
+    else:
+        item.discounted_price = price
     response = render(request, "commerce/cart/_cart_item.html", {
         "item": item
     })
@@ -332,19 +366,27 @@ def cart_totals(request):
         return HttpResponse("")
 
     subtotal =Decimal(0)
-
+    discount = Decimal(0)
     for i in items:
         if not i.variant or i.variant.sales_price is None:
             continue
-        subtotal += Decimal(i.variant.sales_price) * i.quantity
+
+        price = Decimal(i.variant.sales_price)
+        offer_percent = get_discount_percentage(i.variant)
+
+        if offer_percent:
+            discounted_price = price - (price * Decimal(offer_percent) / 100)
+            discount += (price - discounted_price) * i.quantity
+        else:
+            discounted_price = price
+
+        subtotal += discounted_price * i.quantity
 
     if subtotal ==Decimal(0):
         shipping_cost=Decimal("0")
     else:
         shipping_cost = Decimal("0") if subtotal >= 1000 else Decimal("80")
-
-    discount = Decimal("0")
-    total = subtotal + shipping_cost - discount
+    total = subtotal + shipping_cost
 
     context = {
         "subtotal": subtotal,
@@ -360,89 +402,385 @@ def checkout(request):
     user=request.user
     cart,_=Cart.objects.get_or_create(user=user)
     
-    products=cart.items.select_related("variant",'product').all()
+    products=cart.items.select_related("variant",'product')
     if not products.exists():
         messages.error(request,"Your cart is empty!")
         return redirect('cart_page')
     
-    addresses=user.addresses.filter(is_deleted=False)
+    addresses=user.addresses.all()
+    has_address=addresses.exists()
+    subtotal = Decimal("0")
+    offer_discount = Decimal("0")
 
-    subtotal=sum((i.variant.sales_price * i.quantity) for i in products)
+    for item in products:
+        price = Decimal(item.variant.sales_price)
+        offer_percent = get_discount_percentage(item.variant)
+        item.offer_percent=offer_percent
+        item.discounted_price = price - (price * Decimal(offer_percent) / 100)
+        subtotal += item.discounted_price * item.quantity
+        offer_discount += (price - item.discounted_price) * item.quantity
+    
+    coupon_code=request.session.get('applied_coupon')
+    coupon_discount=Decimal('0')
+    coupon=None
+    if coupon_code:
+        coupon,coupon_discount,error=validate_and_calculate_coupon(coupon_code,user,subtotal)
+        if error:
+            messages.error(request, error)
+            request.session.pop("applied_coupon", None)
+            coupon = None
+            coupon_discount = Decimal("0")
+
     shipping_cost= 0 if subtotal>=1000 else 80
-    total = subtotal + shipping_cost
+    total = subtotal -coupon_discount + shipping_cost
     request.session["checkout_cart_update_at"]=cart.updated_at.timestamp()
     context={
         "products":products,
         "addresses":addresses,
+        "has_address":has_address,
+
         "subtotal":subtotal,
+        "offer_discount":offer_discount,
+        "coupon":coupon,
+        "coupon_discount":coupon_discount,
         "shipping_cost":shipping_cost,
         "total":total
     }
     return render(request,'commerce/checkout/checkout_page.html',context)
 
+
+@login_required
+def apply_coupon(request):
+    if request.method != "POST":
+        return redirect("checkout")
+
+    user = request.user
+    coupon_code = request.POST.get("coupon_code", "").strip()
+
+    cart = Cart.objects.filter(user=user).first()
+    if not cart or not cart.items.exists():
+        messages.error(request, "Your cart is empty.")
+        if request.headers.get("HX-Request"):
+            return render_checkout_summary(request)
+        return redirect("checkout")
+
+    if not coupon_code:
+        messages.error(request, "Please enter a coupon code.")
+        if request.headers.get("HX-Request"):
+            return render_checkout_summary(request)
+        return redirect("checkout")
+
+    subtotal = Decimal("0.00")
+
+    for item in cart.items.select_related("variant"):
+        price = Decimal(item.variant.sales_price)
+        offer_percent = get_discount_percentage(item.variant) or 0
+        discounted_price = price - (price * Decimal(offer_percent) / 100)
+        subtotal += discounted_price * item.quantity
+
+    coupon, discount, error = validate_and_calculate_coupon(
+        coupon_code, user, subtotal
+    )
+
+    if error:
+        request.session.pop("applied_coupon", None)
+        if request.headers.get("HX-Request"):
+            response = render_checkout_summary(request)
+            return attach_trigger(response, error, "error")
+        messages.error(request, error)
+    else:
+        request.session["applied_coupon"] = coupon.code
+        if request.headers.get("HX-Request"):
+            response = render_checkout_summary(request)
+            return attach_trigger(
+                response,
+                f"Coupon '{coupon.code}' applied successfully",
+                "success"
+            )
+        messages.success(request, f"Coupon '{coupon.code}' applied successfully")
+
+
+    if request.headers.get("HX-Request"):
+        return render_checkout_summary(request)
+
+    return redirect("checkout")
+
+
+@login_required
+def remove_coupon(request):
+    request.session.pop("applied_coupon", None)
+
+    if request.headers.get("HX-Request"):
+        response = render_checkout_summary(request)
+        return attach_trigger(response, "Coupon removed.", "info")
+
+    messages.info(request, "Coupon removed.")
+    return redirect("checkout")
+
 @login_required
 def place_order(request):
-    if request.method!="POST":
-        return redirect('checkout')
+    if request.method != "POST":
+        return redirect("checkout")
 
+    if not request.POST.get("address"):
+        messages.error(request, "Please select an address.")
+        return redirect("checkout")
 
-    user=request.user
-    cart,_=Cart.objects.get_or_create(user=user)
+    user = request.user
+    cart, _ = Cart.objects.get_or_create(user=user)
 
-    last_checkout_time=request.session.get("checkout_cart_updated_at")
+    last_checkout_time = request.session.get("checkout_cart_update_at")
+    if last_checkout_time and float(last_checkout_time) != float(cart.updated_at.timestamp()):
+        messages.error(request, "Your cart was updated. Please review checkout again.")
+        return redirect("checkout")
 
-    if last_checkout_time and float(last_checkout_time)!=float(cart.updated_at.timestamp()):
-        messages.error(request,"Your cart was updated. Please review checkout again.")
-        return request('checkout')
-    
     with transaction.atomic():
-        items = cart.items.select_related("variant","product").select_for_update()
+        items = (
+            cart.items
+            .select_related("variant", "product")
+            .select_for_update()
+        )
 
         if not items.exists():
-            messages.error(request,"Your cart is empty!")
+            messages.error(request, "Your cart is empty!")
             return redirect("cart_page")
 
-        address_id=request.POST.get('address')
-        payment_method=request.POST.get('payment_method')
+        address = get_object_or_404(
+            UserAddress,
+            id=request.POST.get("address"),
+            user=user
+        )
 
-        address=get_object_or_404(UserAddress,id=address_id,user=user)
+        payment_method = request.POST.get("payment_method")
+
+        #  STOCK VALIDATION 
+        for item in items:
+            if item.quantity > item.variant.stock:
+                messages.error(
+                    request,
+                    f"Only {item.variant.stock} left for {item.variant.material_type}."
+                )
+                return redirect("cart_page")
+
+        # PRICE CALCULATION 
+        subtotal = Decimal("0")
+        offer_discount = Decimal("0")
 
         for item in items:
-            if item.quantity>item.variant.stock:
-                messages.error(request,
-                f"Only {item.variant.stock} left for {item.variant.material_type}. Please update your cart.")
-                return redirect('cart_page')
-            
-        subtotal= sum(item.variant.sales_price*item.quantity for item in items)
-        delivery_charge= 0 if subtotal >=1000 else 80
-        total = subtotal+delivery_charge
+            unit_price = Decimal(item.variant.sales_price)
+            offer_percent = get_discount_percentage(item.variant)
+            discounted_price = unit_price - (unit_price * Decimal(offer_percent) / 100)
+
+            subtotal += discounted_price * item.quantity
+            offer_discount += (unit_price - discounted_price) * item.quantity
+
+        coupon = None
+        coupon_discount = Decimal("0")
+
+        coupon_code = request.session.get("applied_coupon")
+        if coupon_code:
+            coupon, coupon_discount, error = validate_and_calculate_coupon(
+                coupon_code, user, subtotal
+            )
+            if error:
+                coupon = None
+                coupon_discount = Decimal("0")
+
+        delivery_charge = 0 if subtotal >= 1000 else 80
+        total = subtotal - coupon_discount + delivery_charge
+
 
         order = Orders.objects.create(
             user=user,
             address=address,
-            total_price_before_discount=subtotal,
+            total_price_before_discount=subtotal + offer_discount,
+            offer_discount=offer_discount,
+            coupon=coupon,
+            coupon_discount=coupon_discount,
             total_price=total,
             payment_method=payment_method,
             delivery_charge=delivery_charge,
-            
+            payment_status="pending"
         )
+
         for item in items:
+            unit_price = Decimal(item.variant.sales_price)
+            offer_percent = get_discount_percentage(item.variant)
+            final_price = unit_price - (unit_price * Decimal(offer_percent) / 100)
+
             OrderItem.objects.create(
                 order=order,
                 product=item.variant,
                 quantity=item.quantity,
-                unit_price=item.variant.sales_price,
-                price=item.variant.sales_price * item.quantity,
-
+                unit_price=unit_price,
+                price=final_price * item.quantity,
+                offer_percent=offer_percent
             )
-            item.variant.stock -=item.quantity
-            item.variant.save(update_fields=['stock'])
+
+        # WALLET
+        if payment_method == "wallet":
+            try:
+                pay_using_wallet(user=user, order=order, amount=total)
+            except ValueError:
+                messages.error(request, "Insufficient wallet balance.")
+                raise transaction.Rollback()
+
+            # reduce stock + clear cart
+            for item in items:
+                item.variant.stock -= item.quantity
+                item.variant.save(update_fields=["stock"])
+
+            items.delete()
+            order.payment_status = "paid"
+            order.save(update_fields=["payment_status"])
+
+            request.session.pop("checkout_cart_update_at", None)
+            request.session.pop("applied_coupon", None)
+
             messages.success(request, "Your order was placed successfully!")
+            return redirect("order_success", order_id=order.order_id)
 
-    items.delete()
+        if payment_method == "cod":
+            for item in items:
+                item.variant.stock -= item.quantity
+                item.variant.save(update_fields=["stock"])
 
-    request.session.pop('checkout_cart_updated_at',None)
-    return redirect("order_success",order_id=order.order_id)
+            items.delete()
+            order.payment_status = "pending"
+            order.save(update_fields=["payment_status"])
+
+            request.session.pop("checkout_cart_update_at", None)
+            request.session.pop("applied_coupon", None)
+
+            messages.success(request, "Your order was placed successfully!")
+            return redirect("order_success", order_id=order.order_id)
+
+        if payment_method == "razorpay":
+            return redirect("razorpay_start", order_id=order.order_id)
+
+    return redirect("checkout")
+
+
+
+@login_required
+def start_razorpay_payment(request, order_id):
+    order = get_object_or_404(
+        Orders, order_id=order_id, user=request.user
+    )
+
+    if order.payment_status == "paid":
+        return redirect("order_success", order_id=order.order_id)
+
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
+
+    razorpay_order = client.order.create({
+        "amount": int(order.total_price * 100),
+        "currency": "INR",
+        "payment_capture": 1
+    })
+
+    order.razorpay_order_id = razorpay_order["id"]
+    order.save(update_fields=["razorpay_order_id"])
+
+    return render(request, "commerce/payments/razorpay_checkout.html", {
+        "order": order,
+        "razorpay_key": settings.RAZORPAY_KEY_ID,
+        "razorpay_order_id": razorpay_order["id"],
+    })
+
+    
+@csrf_exempt
+@login_required
+def razorpay_success(request):
+    data = json.loads(request.body)
+
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
+
+    try:
+        client.utility.verify_payment_signature({
+            "razorpay_order_id": data["razorpay_order_id"],
+            "razorpay_payment_id": data["razorpay_payment_id"],
+            "razorpay_signature": data["razorpay_signature"],
+        })
+
+        with transaction.atomic():
+            order = Orders.objects.select_for_update().get(
+                razorpay_order_id=data["razorpay_order_id"],
+                payment_status="pending"
+            )
+
+            payment = client.payment.fetch(data["razorpay_payment_id"])
+            if payment["status"] == "authorized":
+                client.payment.capture(
+                    data["razorpay_payment_id"],
+                    int(order.total_price * 100)
+                )
+
+            for item in order.items.select_related("product"):
+                if item.quantity > item.product.stock:
+                    raise ValueError("Stock mismatch during Razorpay success")
+
+                item.product.stock -= item.quantity
+                item.product.save(update_fields=["stock"])
+
+            CartItem.objects.filter(cart__user=order.user).delete()
+
+            order.payment_status = "paid"
+            order.payment_method = "razorpay"
+            order.razorpay_payment_id = data["razorpay_payment_id"]
+            order.razorpay_signature = data["razorpay_signature"]
+            order.save(update_fields=[
+                "payment_status",
+                "payment_method",
+                "razorpay_payment_id",
+                "razorpay_signature"
+            ])
+
+        return JsonResponse({"success": True})
+
+    except Orders.DoesNotExist:
+        return JsonResponse({"success": True})
+
+    except razorpay.errors.SignatureVerificationError:
+        return JsonResponse({"success": False}, status=400)
+
+    except Exception as e:
+        logger.exception("Razorpay success processing failed")
+        return JsonResponse({"success": False}, status=500)
+
+
+@csrf_exempt
+@login_required
+def razorpay_failed(request):
+    logger.error("razorpay_failed view HIT")
+    data = json.loads(request.body)
+
+    try:
+        order = Orders.objects.get(
+            order_id=data["order_id"],
+            payment_status="pending"
+        )
+        order.payment_status = "failed"
+        order.save(update_fields=["payment_status"])
+    except Orders.DoesNotExist:
+        pass
+    
+    return JsonResponse({"success": True})
+
+@login_required
+def payment_failed(request,order_id):
+    order = get_object_or_404(
+        Orders,
+        order_id=order_id,
+        user=request.user,
+        payment_status__in=["failed",'pending']
+    )
+    return render(request, "commerce/payments/payment_failed.html", {"order": order})
+
 
 @login_required
 def order_success(request,order_id):
@@ -468,14 +806,218 @@ def user_order_detail(request, order_id):
         "items": items,
     })
 
+
+@login_required
+def download_invoice(request, order_id):
+    styles = get_invoice_styles()
+
+    order = get_object_or_404(
+        Orders.objects.prefetch_related("items__product"),
+        order_id=order_id,
+        user=request.user,
+        payment_status="paid"
+    )
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="Invoice_{order.order_id}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    elements = []
+
+    # Title 
+    elements.append(Paragraph("FURNICRAFT INVOICE", styles["title"]))
+    elements.append(Spacer(1, 10))
+
+    # Order Meta 
+    meta_table = Table(
+        [
+            ["Order ID:", order.order_id, "Date:", order.created_at.strftime("%d %b %Y")]
+        ],
+        colWidths=[70, 180, 50, 120]
+    )
+    elements.append(meta_table)
+    elements.append(Spacer(1, 15))
+
+    #  Billing Address 
+    addr = order.address
+    elements.append(Paragraph("Bill To", styles["bold"]))
+    elements.append(Spacer(1, 5))
+    elements.append(Paragraph(addr.name, styles["value"]))
+    elements.append(Paragraph(f"{addr.house}, {addr.street}", styles["value"]))
+    elements.append(Paragraph(f"{addr.district}, {addr.state} - {addr.pincode}", styles["value"]))
+    elements.append(Spacer(1, 20))
+
+    # Items Table 
+    table_data = [["Product", "Qty", "Unit Price", "Final Price"]]
+
+    for item in order.items.all():
+        table_data.append([
+            f"{item.product.product.name} ({item.product.material_type})",
+            item.quantity,
+            f"₹{item.unit_price}",
+            f"₹{item.price}",
+        ])
+
+    table = Table(table_data, colWidths=[230, 50, 90, 90])
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONT", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+        ("TOPPADDING", (0, 0), (-1, 0), 10),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 20))
+
+    #  Summary 
+    summary_data = [
+        ["Subtotal", f"₹{order.total_price_before_discount}"],
+    ]
+
+    if order.offer_discount > 0:
+        summary_data.append(["Offer Discount", f"- ₹{order.offer_discount}"])
+
+    if order.coupon:
+        summary_data.append([f"Coupon ({order.coupon.code})", f"- ₹{order.coupon_discount}"])
+
+    summary_data.append(["Shipping", f"₹{order.delivery_charge}"])
+    summary_data.append(["", ""])
+    summary_data.append(["TOTAL PAID", f"₹{order.total_price}"])
+
+    summary_table = Table(summary_data, colWidths=[300, 160], hAlign="RIGHT")
+    summary_table.setStyle(TableStyle([
+        ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+        ("FONT", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, -1), (-1, -1), 12),
+        ("LINEABOVE", (0, -1), (-1, -1), 1.2, colors.black),
+        ("TOPPADDING", (0, -1), (-1, -1), 10),
+    ]))
+
+    elements.append(summary_table)
+    elements.append(Spacer(1, 25))
+
+    elements.append(
+        Paragraph(
+            "This is a system-generated invoice and does not require a signature.",
+            styles["label"]
+        )
+    )
+
+    doc.build(elements)
+    return response
+
+
 @login_required
 def my_orders_page(request):
     orders=Orders.objects.filter(user=request.user).order_by("-created_at")
     return render(request,"commerce/order/my_orders_page.html",{"orders":orders})
 
 @login_required
+def cancel_order_item(request,item_id):
+    item=get_object_or_404(OrderItem.objects.select_related("order","product"),
+                           id=item_id,
+                           order__user=request.user)
+    if item.status!='order_received':
+        messages.error(request,"This item cannot be cancelled!")
+        return redirect("user_order_detail",item.order.order_id)
+    with transaction.atomic():
+        order=item.order
+        item.status="cancelled"
+        item.save(update_fields=["status"])
+
+        item.product.stock+=item.quantity
+        item.product.save(update_fields=['stock'])
+
+        wallet,_=Wallet.objects.get_or_create(user=request.user)
+
+        coupon_share = calculate_item_coupon_share(order, item)
+
+        refund_amount=item.price - coupon_share
+
+        wallet.balance+=refund_amount
+        wallet.save(update_fields=["balance"])
+
+        WalletTransaction.objects.create(
+            wallet=wallet,
+            order=order,
+            amount=refund_amount,
+            transaction_type='credit',
+            source='order_cancel'
+        )
+        remaining_items=order.items.exclude(status="cancelled")
+        new_total=sum(i.price for i in remaining_items)
+        if new_total==0:
+            order.payment_status='refunded'
+        else:
+            order.payment_status='partially_refunded'
+        order.total_price=new_total+order.delivery_charge
+        order.save(update_fields=['total_price','payment_status'])
+
+        messages.success(
+            request,f"Item cancelled. ₹{refund_amount} refunded to your wallet."
+        )
+    return redirect("user_order_detail",order.order_id)
+
+@login_required
+def request_return(request, item_id):
+    item = get_object_or_404(
+        OrderItem,
+        id=item_id,
+        order__user=request.user,
+        status="delivered"
+    )
+
+    # Prevent duplicate returns
+    if OrderReturn.objects.filter(item=item).exists():
+        messages.error(request, "Return already requested for this item.")
+        return redirect("user_order_detail", item.order.order_id)
+
+    if request.method == "POST":
+        reason = request.POST.get("return_reason")
+        return_type = request.POST.get("return_status")
+        image = request.FILES.get("image")
+
+        if not reason:
+            messages.error(request, "Please select a return reason.")
+            return redirect(request.path)
+
+        OrderReturn.objects.create(
+            user=request.user,
+            item=item,
+            return_reason=reason,
+            return_status=return_type,
+            approval_status="pending",
+            image=image
+        )
+
+        messages.success(request, "Return request submitted.")
+        return redirect("user_order_detail", item.order.order_id)
+
+    return render(
+        request,
+        "commerce/order/return_request.html",
+        {"item": item}
+    )
+
+
+@login_required
 def my_wallet(request):
     wallet,_=Wallet.objects.get_or_create(user=request.user)
-    return render(request,"commerce/wallet/wallet.html",{'wallet':wallet})
+    transactions = wallet.transactions.select_related("order").order_by("-created_at")
+
+    paginator=Paginator(transactions,3)
+    page_obj=paginator.get_page(request.GET.get('page'))
+
+    context = {
+            "wallet": wallet,
+            "page_obj": page_obj,
+        }
+    if request.headers.get("HX-Request"):
+        return render(request, "commerce/wallet/wallet.html", context)
+    return render(request,"commerce/wallet/my_wallet.html",context)
+
+
 def add_checkout_address(request):
     return render(request,"commerce/checkout/add_checkout_address.html")

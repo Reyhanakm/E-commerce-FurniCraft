@@ -1,0 +1,103 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-6 py-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Coupons</h1>
+
+    <a href="{% url 'admin_coupon_create' %}"
+       class="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition">
+      + Create Coupon
+    </a>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white shadow rounded-xl overflow-hidden border border-gray-200">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3 text-left">Code</th>
+          <th class="px-4 py-3 text-left">Discount</th>
+          <th class="px-4 py-3 text-center">Usage</th>
+          <th class="px-4 py-3 text-center">Status</th>
+          <th class="px-4 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y">
+        {% for coupon in coupons %}
+        <tr class="hover:bg-gray-50">
+
+          <!-- Code -->
+          <td class="px-4 py-3 font-medium">
+            {{ coupon.code }}
+          </td>
+
+          <!-- Discount -->
+          <td class="px-4 py-3">
+            {% if coupon.discount_type == "percentage" %}
+              {{ coupon.discount_value }}%
+            {% else %}
+              ₹{{ coupon.discount_value }}
+            {% endif %}
+          </td>
+
+          <!-- Usage -->
+          <td class="px-4 py-3 text-center">
+            {{ coupon.used_count }}
+            {% if coupon.usage_limit %}
+              / {{ coupon.usage_limit }}
+            {% else %}
+              / ∞
+            {% endif %}
+          </td>
+
+          <!-- Status -->
+          <td class="px-4 py-3 text-center">
+            {% if coupon.is_active %}
+              <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                Active
+              </span>
+            {% else %}
+              <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                Inactive
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Actions -->
+          <td class="px-4 py-3 text-right space-x-3">
+            <a href="{% url 'admin_coupon_edit' coupon.id %}"
+               class="text-gray-700 hover:underline">
+              Edit
+            </a>
+
+            <a href="{% url 'admin_coupon_toggle' coupon.id %}"
+               class="text-gray-700 hover:underline">
+              {% if coupon.is_active %}Disable{% else %}Enable{% endif %}
+            </a>
+
+            <a href="{% url 'admin_coupon_delete' coupon.id %}"
+               class="text-red-600 hover:underline"
+               onclick="return confirm('Delete this coupon?')">
+              Delete
+            </a>
+          </td>
+
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-4 py-6 text-center text-gray-500">
+            No coupons found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+{% endblock %}

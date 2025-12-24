@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from users.views import add_address
 
 urlpatterns = [
     path('wishlist/',views.wishlist,name="wishlist"),
@@ -20,13 +21,23 @@ urlpatterns = [
     path('stock-status/variant/<int:variant_id>/',views.stock_status_for_variant,name="stock_status_for_variant"),
 
     path('checkout/',views.checkout,name='checkout'),
-    path('checkout/address/',views.add_checkout_address,name='add_checkout_address'),
+    path('checkout/address/',add_address,name='add_address'),
     path('checkout/placeorder/',views.place_order,name='place_order'),
+    path("checkout/apply-coupon/",views.apply_coupon,name="apply_coupon"),
+    path('checkout/remove-coupon/',views.remove_coupon,name="remove_coupon"),
 
+    path("pay/razorpay/<str:order_id>/", views.start_razorpay_payment, name="razorpay_start"),
+    path("pay/razorpay/success/", views.razorpay_success, name="razorpay_success"),
+    path("pay/razorpay/failed/", views.razorpay_failed, name="razorpay_failed"),
+
+    path('order/payment-failed/<str:order_id>/',views.payment_failed,name='payment_failed'),
     path('order/success/<str:order_id>/',views.order_success,name="order_success"),
     path('orders-page/',views.my_orders_page,name="my_orders_page"),
     path('orders/',views.my_orders,name="my_orders"),
+    path('order/item/cancel/<int:item_id>/',views.cancel_order_item,name="cancel_order_item"),
     path("orders/<str:order_id>/", views.user_order_detail, name="user_order_detail"),
+    path("order/invoice/<str:order_id>/", views.download_invoice, name="download_invoice"),
+    path("order/item/return/<int:item_id>/", views.request_return, name="return_request"),
 
     path('wallet/',views.my_wallet,name='my_wallet'),
     

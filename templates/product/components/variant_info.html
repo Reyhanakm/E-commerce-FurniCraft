@@ -1,18 +1,116 @@
 <div class="flex items-baseline gap-3 mb-2">
-    <p class="text-4xl font-bold text-[#A89289]">
-        ₹{{ variant.sales_price }}
-    </p>
-    {% if variant.regular_price and variant.regular_price > variant.sales_price %}
+    {% if pricing.is_offer_applied %}
+        <p class="text-4xl font-bold text-[#A89289]">
+            ₹{{ pricing.current_price }}
+        </p>
         <p class="text-xl text-gray-500 line-through">
-            ₹{{ variant.regular_price }}
+            ₹{{ pricing.base_price }}
         </p>
         <span class="px-3 py-1 bg-red-100 text-red-700 text-sm font-bold rounded-full">
-            {{ variant.discount_percent }}% OFF
+            {{ pricing.offer_percent }}% OFF
         </span>
+    {% else %}
+        <p class="text-4xl font-bold text-[#A89289]">
+            ₹{{ pricing.base_price }}
+        </p>
     {% endif %}
 </div>
+
 <p class="text-lg ms-4 text-gray-600">(Inclusive of all taxes)</p>
 
+<div class="mb-4 pt-3 border-t border-[#D8C6C0]">
+    <p class="text-xs text-green-700 font-semibold mb-2">
+        <i class="fas fa-gift mr-1"></i>Special offers available
+    </p>
+    <div class="text-xs text-gray-600">
+        <p>✓ Free shipping on orders above ₹1000</p>
+        <p>✓ Use code: <span class="font-bold text-[#A89289]">WELCOME10</span> for 10% off</p>
+    </div>
+</div>
+
+<div class="pt-4 border-t border-[#D8C6C0]">
+    
+    <div id="stock-info-{{ variant.id }}" 
+         hx-get="{% url 'stock_status_for_variant' variant.id %}"
+         hx-trigger="load, reload-stock, update-cart from:body"
+         hx-swap="innerHTML">
+         <p class="text-sm text-gray-400 animate-pulse">Checking stock...</p>
+    </div>
+
+    {% if variant.stock > 0 %}
+    <div class="flex mt-4">
+        <form 
+            hx-post="{% url 'add_cart_variant' variant.id %}"
+            hx-swap="none"
+            hx-indicator="#add-to-cart-btn-{{ variant.id }}" 
+            hx-trigger="submit" 
+            hx-on:htmx:after-request="htmx.trigger('#stock-info-{{ variant.id }}', 'reload-stock')"
+            onsubmit="return false;"
+            class="w-full mr-3"
+        >
+            {% csrf_token %}
+            
+            <button type="submit"
+                id="add-to-cart-btn-{{ variant.id }}"  
+                class="w-full bg-[#A89289] text-white py-4 rounded-xl text-lg font-semibold
+                    hover:bg-[#8f7a73] transition-all duration-200 shadow-lg hover:shadow-xl
+                    active:scale-95
+                    disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none">
+                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+            </button>
+        </form>
+        
+        <button 
+            id="wishlist-btn-{{ variant.id }}"
+            hx-post="{% url 'toggle_wishlist' variant.id %}"
+            hx-swap="innerHTML"
+            hx-target="this" 
+            class="text-[#A89289] text-2xl ms-3 hover:text-[#8f7a73] transition-all duration-200 flex-shrink-0"
+            title="Add to Wishlist"
+        >
+            {% if is_in_wishlist %}
+                <i class="fas fa-heart text-red-500"></i>
+            {% else %}
+                <i class="far fa-heart"></i>
+            {% endif %}
+        </button>
+    </div>
+    
+    {% else %}
+    <div class="flex mt-3">
+        <button disabled class="w-full bg-gray-400 text-white py-4 rounded-xl text-lg font-semibold cursor-not-allowed mr-3">
+            <i class="fas fa-ban mr-2"></i>Out of Stock
+        </button>
+        <button disabled class="text-gray-400 text-2xl cursor-not-allowed flex-shrink-0">
+            <i class="fas fa-heart"></i>
+        </button>
+    </div>
+    {% endif %}
+    
+</div>
+
+{% comment %} 
+<div class="flex items-baseline gap-3 mb-2">
+    {% if pricing.is_offer_applied %}
+        <p class="text-4xl font-bold text-[#A89289]">
+            ₹{{ pricing.current_price }}
+        </p>
+
+        <p class="text-xl text-gray-500 line-through">
+            ₹{{ pricing.base_price }}
+        </p>
+
+        <span class="px-3 py-1 bg-red-100 text-red-700 text-sm font-bold rounded-full">
+            {{ pricing.offer_percent }}% OFF
+        </span>
+    {% else %}
+        <p class="text-4xl font-bold text-[#A89289]">
+            ₹{{ pricing.base_price }}
+        </p>
+    {% endif %}
+</div>
+
+<p class="text-lg ms-4 text-gray-600">(Inclusive of all taxes)</p>
 <div class="mb-4 pt-3 border-t border-[#D8C6C0]">
     <p class="text-xs text-green-700 font-semibold mb-2">
         <i class="fas fa-gift mr-1"></i>Special offers available
@@ -52,10 +150,7 @@
                 <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
             </button>
         </form>
-        
-        {% comment %} <button class="text-[#A89289] text-2xl hover:text-[#8f7a73] transition-all duration-200 flex-shrink-0">
-            <i class="fas fa-heart"></i>
-        </button> {% endcomment %}
+     
         <button 
             id="wishlist-btn-{{ variant.id }}"
             hx-post="{% url 'toggle_wishlist' variant.id %}"
@@ -83,4 +178,4 @@
     </div>
     {% endif %}
     
-</div>
+</div> {% endcomment %}

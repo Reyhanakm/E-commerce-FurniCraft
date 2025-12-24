@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto">
-
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
 
     <!-- Title -->
@@ -12,16 +11,47 @@
       {{ title }}
     </h1>
 
-    <!-- Form -->
     <form method="post" novalidate>
       {% csrf_token %}
 
-      {% for field in form %}
-        {% include "components/form_field.html" with field=field %}
-      {% endfor %}
+      {% if show_offer_type %}
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Offer Type
+        </label>
+        <select id="offer-type"
+                name="offer_type"
+                class="w-full border rounded-md px-3 py-2">
+          <option value="product" {% if offer_type == "product" %}selected{% endif %}>
+            Product Offer
+          </option>
+          <option value="category" {% if offer_type == "category" %}selected{% endif %}>
+            Category Offer
+          </option>
+        </select>
+      </div>
+      {% endif %}
+
+     <!-- Product Offer Form -->
+        {% if product_form %}
+        <div id="product-form" class="{% if offer_type == 'category' %}hidden{% endif %}">
+          {% for field in product_form %}
+            {% include "components/form_field.html" with field=field %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Category Offer Form -->
+        {% if category_form %}
+        <div id="category-form" class="{% if offer_type == 'product' %}hidden{% endif %}">
+          {% for field in category_form %}
+            {% include "components/form_field.html" with field=field %}
+          {% endfor %}
+        </div>
+        {% endif %}
 
       <!-- Actions -->
-      <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
+      <div class="flex justify-end gap-4 pt-6 border-t border-gray-200 mt-6">
         <a href="{% url 'admin_offer_list' %}"
            class="px-5 py-2 rounded-md border text-gray-700
                   hover:bg-gray-100 transition">
@@ -39,7 +69,25 @@
         If both category and product offers apply, the higher discount will be used.
       </p>
     </form>
-
   </div>
 </div>
+
+<!-- Simple toggle script -->
+<script>
+  const typeSelect = document.getElementById("offer-type");
+  const productForm = document.getElementById("product-form");
+  const categoryForm = document.getElementById("category-form");
+
+  if (typeSelect) {
+    typeSelect.addEventListener("change", () => {
+      if (typeSelect.value === "product") {
+        productForm.classList.remove("hidden");
+        categoryForm.classList.add("hidden");
+      } else {
+        categoryForm.classList.remove("hidden");
+        productForm.classList.add("hidden");
+      }
+    });
+  }
+</script>
 {% endblock %}
