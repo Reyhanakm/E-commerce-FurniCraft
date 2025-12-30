@@ -25,11 +25,11 @@ urlpatterns = [
     path('checkout/placeorder/',views.place_order,name='place_order'),
     path("checkout/apply-coupon/",views.apply_coupon,name="apply_coupon"),
     path('checkout/remove-coupon/',views.remove_coupon,name="remove_coupon"),
-
-    path("pay/razorpay/<str:order_id>/", views.start_razorpay_payment, name="razorpay_start"),
+    
     path("pay/razorpay/success/", views.razorpay_success, name="razorpay_success"),
     path("pay/razorpay/failed/", views.razorpay_failed, name="razorpay_failed"),
-
+    path("pay/razorpay/<str:order_id>/", views.start_razorpay_payment, name="razorpay_start"),
+    
     path('order/payment-failed/<str:order_id>/',views.payment_failed,name='payment_failed'),
     path('order/success/<str:order_id>/',views.order_success,name="order_success"),
     path('orders-page/',views.my_orders_page,name="my_orders_page"),

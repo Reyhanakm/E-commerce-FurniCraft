@@ -32,7 +32,7 @@ var options = {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                window.location.href = "/orders/success/{{ order.order_id }}/";
+                window.location.href = "/commerce/order/success/{{ order.order_id }}/";
             } else {
                 window.location.href ="{% url 'payment_failed' order.order_id %}";
             }

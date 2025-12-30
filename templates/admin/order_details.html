@@ -38,18 +38,16 @@
                 {% endif %}
             </p>
           
-            <form method="POST">
+            {% comment %} <form method="POST">
             {% csrf_token %}
             <select name="payment_status" class="border rounded px-2 py-1">
                 <option value="pending" {% if order.payment_status == "pending" %}selected{% endif %}>Pending</option>
                 <option value="paid" {% if order.payment_status == "paid" %}selected{% endif %}>Paid</option>
-                <option value="refunded" {% if order.payment_status == "refunded" %}selected{% endif %}>Refunded</option>
-                <option value="partially_refunded" {% if order.payment_status == "partially_refunded" %}selected{% endif %}>Partially Refunded</option>
                 <option value="failed" {% if order.payment_status == "failed" %}selected{% endif %}>Failed</option>
             </select>
 
             <button class="bg-[#b82d2d] text-white px-3 py-1 rounded hover:bg-[#a22727] transition">Update</button>
-            </form>
+            </form> {% endcomment %}
 
             <p><span class="font-medium">Order Date:</span> 
                 {{ order.created_at|date:"d M Y, h:i A" }}
@@ -101,79 +99,138 @@
             {% for item in items %}
             <tr class="border-b">
 
-    <!-- PRODUCT -->
-    <td class="px-6 py-4">
-        {{ item.product.product.name }} — ({{ item.product.material_type }})
-    </td>
+            <!-- PRODUCT -->
+            <td class="px-6 py-4">
+                {{ item.product.product.name }} — ({{ item.product.material_type }})
+            </td>
 
-    <!-- QTY -->
-    <td class="px-6 py-4">
-        {{ item.quantity }}
-    </td>
+            <!-- QTY -->
+            <td class="px-6 py-4">
+                {{ item.quantity }}
+            </td>
 
-    <!-- UNIT PRICE -->
-    <td class="px-6 py-4">
-        ₹{{ item.unit_price }}
-    </td>
+            <!-- UNIT PRICE -->
+            <td class="px-6 py-4">
+                ₹{{ item.unit_price }}
+            </td>
 
-    <!-- TOTAL -->
-    <td class="px-6 py-4">
-        ₹{{ item.price }}
-    </td>
+            <!-- TOTAL -->
+            <td class="px-6 py-4">
+                ₹{{ item.price }}
+            </td>
 
-    <!-- STATUS -->
-    <td class="px-6 py-4 font-bold">
-        {{ item.get_status_display }}
-    </td>
+            {% comment %} <!-- STATUS -->
+            <td class="px-6 py-4 font-bold">
+                {{ item.get_status_display }}
+            </td>
 
-    <!-- ACTIONS (EVERYTHING GOES INSIDE THIS TD) -->
-    <td class="px-6 py-4 text-center">
+            <!-- ACTIONS  -->
+            <td class="px-6 py-4 text-center">
 
-        <div class="flex flex-col items-center gap-2">
+                <div class="flex flex-col items-center gap-2">
 
-            <!-- STATUS UPDATE FORM -->
+                    <!-- STATUS UPDATE FORM -->
+                    <form method="POST" class="flex gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_id" value="{{ item.id }}">
+
+                        <select name="status" class="border rounded px-2 py-1">
+                            {% for value,label in item.STATUS_CHOICES %}
+                                {% if value not in "cancelled returned" %}
+                                    <option value="{{ value }}"
+                                        {% if value == item.status %}selected{% endif %}
+                                    >
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+
+                        <button
+                            class="bg-[#b82d2d] text-white px-3 py-1 rounded hover:bg-[#a22727]">
+                            Update
+                        </button>
+                    </form>
+
+                    <!-- RETURN MANAGEMENT -->
+                    {% with return_request=item.return_items.first %}
+                        {% if return_request %}
+                            {% if return_request.approval_status == "pending" %}
+                                <a href="{% url 'admin_return_list' %}"
+                                class="text-sm text-blue-600 hover:underline">
+                                    Manage Return
+                                </a>
+                            {% else %}
+                                <span class="text-sm font-semibold text-gray-600">
+                                    Return {{ return_request.approval_status|capfirst }}
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                    {% endwith %}
+
+                </div>
+
+            </td> {% endcomment %}
+            <!-- STATUS -->
+<td class="px-6 py-4 font-bold">
+    {{ item.get_status_display }}
+</td>
+
+<!-- ACTIONS -->
+<td class="px-6 py-4 text-center">
+    <div class="flex flex-col items-center gap-2">
+        
+        {% if item.status == "cancelled" or item.status == "returned" %}
+            <!-- Show status badge for final states -->
+            <span class="px-3 py-1 rounded-full text-sm font-semibold 
+                {% if item.status == "cancelled" %}
+                    bg-red-100 text-red-800
+                {% else %}
+                    bg-gray-100 text-gray-800
+                {% endif %}">
+                {{ item.get_status_display }}
+            </span>
+        {% else %}
+            <!-- STATUS UPDATE FORM for active states -->
             <form method="POST" class="flex gap-2">
                 {% csrf_token %}
                 <input type="hidden" name="item_id" value="{{ item.id }}">
-
                 <select name="status" class="border rounded px-2 py-1">
-                    {% for value,label in item.STATUS_CHOICES %}
+                    {% for value, label in item.STATUS_CHOICES %}
                         {% if value not in "cancelled returned" %}
                             <option value="{{ value }}"
-                                {% if value == item.status %}selected{% endif %}
-                            >
+                                {% if value == item.status %}selected{% endif %}>
                                 {{ label }}
                             </option>
                         {% endif %}
                     {% endfor %}
                 </select>
-
-                <button
-                    class="bg-[#b82d2d] text-white px-3 py-1 rounded hover:bg-[#a22727]">
+                <button class="bg-[#b82d2d] text-white px-3 py-1 rounded hover:bg-[#a22727]">
                     Update
                 </button>
             </form>
+        {% endif %}
 
-            <!-- RETURN MANAGEMENT -->
-            {% with return_request=item.return_items.first %}
-                {% if return_request %}
-                    {% if return_request.approval_status == "pending" %}
-                        <a href="{% url 'admin_return_list' %}"
-                           class="text-sm text-blue-600 hover:underline">
-                            Manage Return
-                        </a>
-                    {% else %}
-                        <span class="text-sm font-semibold text-gray-600">
-                            Return {{ return_request.approval_status|capfirst }}
-                        </span>
-                    {% endif %}
+        <!-- RETURN MANAGEMENT (unchanged) -->
+        {% with return_request=item.return_items.first %}
+            {% if return_request %}
+                {% if return_request.approval_status == "pending" %}
+                    <a href="{% url 'admin_return_list' %}"
+                       class="text-sm text-blue-600 hover:underline">
+                        Manage Return
+                    </a>
+                {% else %}
+                    <span class="text-sm font-semibold text-gray-600">
+                        Return {{ return_request.approval_status|capfirst }}
+                    </span>
                 {% endif %}
-            {% endwith %}
+            {% endif %}
+        {% endwith %}
+    </div>
+</td>
 
-        </div>
-
-    </td>
-</tr>
+            
+        </tr>
             {% endfor %}
         </tbody>
     </table>

@@ -27,7 +27,6 @@ def process_referral_after_first_order(user):
             amount=referral.reward_amount,
             transaction_type="credit",
             source="referral",
-            is_paid=True,
         )
 
         referral.reward_given = True

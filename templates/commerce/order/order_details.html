@@ -41,7 +41,6 @@
             <div>
                 <p class="text-gray-700 font-medium">Payment Method:</p>
                 <p class="text-gray-900">{{ order.get_payment_method_display }}</p>
-
                 <p class="text-gray-700 font-medium mt-3">Payment Status:</p>
                 {% if order.payment_status == 'paid' %}
                     <p class="text-green-600 font-semibold">Paid</p>
@@ -53,6 +52,20 @@
                     <p class="text-yellow-600 font-semibold">Partially Refunded</p>
                 {% else %}
                     <p class="text-red-600 font-semibold">Failed</p>
+                {% endif %}
+
+                {% if order.payment_method == 'razorpay' and not order.is_fully_cancelled%}
+                    {% if order.payment_status == 'failed' or order.payment_status == 'pending' %}
+                        <div class="mt-4">
+                            <a href="{% url 'razorpay_start' order.order_id %}"
+                            class="inline-flex items-center gap-2 bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition shadow-sm">
+                                <span>↻</span> Retry Payment
+                            </a>
+                            <p class="text-xs text-gray-500 mt-2">
+                                Complete your payment to process this order.
+                            </p>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
 
@@ -164,7 +177,7 @@
                 </div>
 
                 <!-- Status -->
-                <div class="text-right">
+                {% comment %} <div class="text-right">
                     <p class="text-sm font-semibold 
                         {% if item.status == 'delivered' %} text-green-600
                         {% elif item.status == 'shipped' or item.status == 'in_transit' %} text-blue-600
@@ -173,7 +186,7 @@
                         {{ item.get_status_display }}
                     </p>
                     {% if item.status == 'order_received' %}
-                        <form action="{% url 'cancel_order_item' item.id %}" method="post">
+                        <form id="cancel-form-{{ item.id }}" action="{% url 'cancel_order_item' item.id %}" method="post">
                             {% csrf_token %}
                              <button
                                 type="button"
@@ -199,6 +212,66 @@
                        class="block text-xs mt-2 px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100">
                        Request Return
                     </a>
+                    {% endif %}
+                </div> {% endcomment %}
+                <div class="text-right">
+                    
+                    <p class="text-sm font-semibold 
+                        {% if item.status == 'delivered' %} text-green-600
+                        {% elif item.status == 'returned' %} text-orange-600 
+                        {% elif item.status == 'cancelled' %} text-red-600
+                        {% else %} text-gray-600 {% endif %}">
+                        
+                        {# If delivered but a return exists, show 'Return Pending' #}
+                        {% if item.status == 'delivered' and item.return_items.exists %}
+                            Return Pending
+                        {% else %}
+                            {{ item.get_status_display }}
+                        {% endif %}
+                    </p>
+
+                    {# CASE 1: Order Received - Allow Cancel #}
+                    {% if item.status == 'order_received' %}
+                        <form id="cancel-form-{{ item.id }}" action="{% url 'cancel_order_item' item.id %}" method="post">
+                            {% csrf_token %}
+                             <button
+                                type="button"
+                                class="mt-2 text-sm text-red-600 font-bold hover:text-red-800"
+                                onclick="confirmAction(
+                                    'Are you sure you want to cancel this item?',
+                                    'Yes, cancel item',
+                                    () => document.getElementById('cancel-form-{{ item.id }}').submit()
+                                )"
+                            >
+                                Cancel Item
+                            </button>
+                        </form>
+
+                    {# CASE 2: Delivered - Allow Return only if NO return request exists #}
+                    {% elif item.status == 'delivered' %}
+                        
+                        {% if item.return_items.exists %}
+                            <p class="text-xs text-yellow-600 mt-2 font-medium">
+                                Request under review
+                            </p>
+                        {% else %}
+                            <a href="{% url 'return_request' item.id %}"
+                               class="block text-xs mt-2 px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 transition">
+                               Request Return
+                            </a>
+                        {% endif %}
+
+                    {# CASE 3: Returned - Show Refund Info #}
+                    {% elif item.status == 'returned' %}
+                        <p class="text-xs text-green-600 mt-1">
+                            Refund credited to wallet
+                        </p>
+
+                    {# CASE 4: Cancelled #}
+                    {% elif item.status == 'cancelled' %}
+                        <p class="text-xs text-green-600 mt-1">
+                            Refund credited to wallet
+                        </p>
                     {% endif %}
                 </div>
 

@@ -205,7 +205,7 @@ def forgot_password(request):
         messages.success(request, "OTP sent to your email.")
         return redirect('reset_password_verify')
 
-    return render(request, 'user/forgot_password.html', {'form': form})
+    return render(request, 'user/profile/forgot_password.html', {'form': form})
 
 
 
@@ -625,6 +625,7 @@ def delete_address(request, pk):
     source = request.GET.get("from", "profile")
 
     address = get_object_or_404(UserAddress, id=pk, user=request.user)
+    address.is_deleted = True
     address.delete()
 
     addresses = request.user.addresses.all().order_by('-created_at')
@@ -689,7 +690,8 @@ def add_address(request):
                         "commerce/checkout/_address_list_partial.html",
                         {
                             "addresses": request.user.addresses.all().order_by('-created_at'),
-                            "selected_address": address.id
+                            "selected_address": address.id,
+                            "has_address":True
                         }
                     )
 

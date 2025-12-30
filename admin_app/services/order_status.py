@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from commerce.models import OrderItem
 from commerce.utils.referral import process_referral_after_first_order
 from commerce.utils.orders import is_first_successful_order
 from .order_payment import sync_order_payment_status_from_items
@@ -80,10 +81,28 @@ def update_order_item_status(item, new_status):
     old_status = item.status
     item.status = new_status
     item.save(update_fields=["status"])
+    order = item.order
+
     if (
         old_status != "delivered"
         and new_status == "delivered"
-        and is_first_successful_order(item.order.user)
+        and order.payment_method == "cod"
+        and order.payment_status == "pending"
+    ):
+        order.payment_status = "paid"
+        order.save(update_fields=["payment_status"])
+
+    delivered_count_before = (
+        OrderItem.objects
+        .filter(order__user=item.order.user, status="delivered")
+        .exclude(id=item.id)
+        .count()
+    )
+    
+    if (
+        old_status != "delivered"
+        and new_status == "delivered"
+        and delivered_count_before == 0
     ):
         process_referral_after_first_order(item.order.user)
         

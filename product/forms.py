@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django import forms
 import re
 from .models import Category, Product, ProductVariant, ProductImage,ProductOffer,CategoryOffer,Coupon
@@ -180,7 +181,6 @@ class ProductOfferForm(forms.ModelForm):
         fields = [
             "name",
             "product",
-            "discount_type",
             "discount_value",
             "max_discount_amount",
             "start_date",
@@ -195,7 +195,73 @@ class ProductOfferForm(forms.ModelForm):
             "product": forms.Select(attrs={
                 "class": "w-full px-4 py-2 border rounded-lg",
             }),
-            "discount_type": forms.Select(attrs={
+            "discount_value": forms.NumberInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+                "step": "0.01",
+            }),
+            "max_discount_amount": forms.NumberInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+                "step": "0.01",
+            }),
+            "start_date": forms.DateTimeInput(attrs={
+                "type": "datetime-local",
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "end_date": forms.DateTimeInput(attrs={
+                "type": "datetime-local",
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+        }
+
+    def clean(self):
+        cleaned_data= super().clean()
+        product = cleaned_data.get("product")
+        percentage_value = cleaned_data.get("discount_value")
+        max_cap_amount = cleaned_data.get("max_discount_amount")
+        start = cleaned_data.get("start_date")
+        end = cleaned_data.get("end_date")
+
+        now = timezone.now()
+
+        if end and end <= now:
+            self.add_error("end_date", "End date must be a future date.")
+
+        if start and end and start >= end:
+            self.add_error("end_date", "End date must be after start date.")
+
+        if product and percentage_value is not None:
+            original_price = product.sales_price 
+
+            if percentage_value > 90:
+                self.add_error("discount_value", "Discount percentage cannot exceed 90%.")
+            
+            if max_cap_amount:
+                limit_70 = original_price * Decimal('0.70')
+                if max_cap_amount > limit_70:
+                    self.add_error(
+                        "max_discount_amount", 
+                        f"Max discount limit cannot exceed 70% of the product price (Limit: ₹{limit_70:.2f})."
+                    )
+
+        return cleaned_data
+    
+class CategoryOfferForm(forms.ModelForm):
+    class Meta:
+        model = CategoryOffer
+        fields = [
+            "name",
+            "category",
+            "discount_value",
+            "max_discount_amount",
+            "start_date",
+            "end_date",
+            "is_active",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "w-full px-4 py-2 border rounded-lg",
+            }),
+            "category": forms.Select(attrs={
                 "class": "w-full px-4 py-2 border rounded-lg",
             }),
             "discount_value": forms.NumberInput(attrs={
@@ -220,81 +286,66 @@ class ProductOfferForm(forms.ModelForm):
         cleaned = super().clean()
         start = cleaned.get("start_date")
         end = cleaned.get("end_date")
-        discount_type = cleaned.get("discount_type")
         discount_value = cleaned.get("discount_value")
-
-        if start and end and start >= end:
-            self.add_error("end_date", "End date must be after start date.")
-
-        if discount_type == "percentage" and discount_value:
-            if discount_value > 100:
-                self.add_error("discount_value", "Percentage discount cannot exceed 100%.")
-
-        return cleaned
-    
-class CategoryOfferForm(forms.ModelForm):
-    class Meta:
-        model = CategoryOffer
-        fields = [
-            "name",
-            "category",
-            "discount_type",
-            "discount_value",
-            "max_discount_amount",
-            "start_date",
-            "end_date",
-            "is_active",
-        ]
-        widgets = {
-            "name": forms.TextInput(attrs={
-                "class": "w-full px-4 py-2 border rounded-lg",
-            }),
-            "category": forms.Select(attrs={
-                "class": "w-full px-4 py-2 border rounded-lg",
-            }),
-            "discount_type": forms.Select(attrs={
-                "class": "w-full px-4 py-2 border rounded-lg",
-            }),
-            "discount_value": forms.NumberInput(attrs={
-                "class": "w-full px-4 py-2 border rounded-lg",
-                "step": "0.01",
-            }),
-            "max_discount_amount": forms.NumberInput(attrs={
-                "class": "w-full px-4 py-2 border rounded-lg",
-                "step": "0.01",
-            }),
-            "start_date": forms.DateTimeInput(attrs={
-                "type": "datetime-local",
-                "class": "w-full px-4 py-2 border rounded-lg",
-            }),
-            "end_date": forms.DateTimeInput(attrs={
-                "type": "datetime-local",
-                "class": "w-full px-4 py-2 border rounded-lg",
-            }),
-        }
-
-    def clean(self):
-        cleaned = super().clean()
-        if cleaned.get("start_date") and cleaned.get("end_date"):
-            if cleaned["start_date"] >= cleaned["end_date"]:
+        max_discount_amount = cleaned.get("max_discount_amount")
+        
+        now = timezone.now()
+        if end and end <= now:
+            self.add_error("end_date", "End date must be a future date.")
+        if start and end:
+            if start >= end:
                 self.add_error("end_date", "End date must be after start date.")
+        
+        if discount_value is not None:
+            if discount_value <= 0:
+                self.add_error("discount_value", "Discount percentage must be greater than 0.")
+            elif discount_value > 90:
+                self.add_error("discount_value", "Discount percentage cannot exceed 90%.")
+
+        if max_discount_amount is not None:
+            if max_discount_amount <= 0:
+                self.add_error("max_discount_amount", "Max discount amount must be a positive value.")
         return cleaned
     
 class CouponForm(forms.ModelForm):
     class Meta:
         model = Coupon
-        exclude = ("is_deleted", "created_at", "update_at")
+        exclude = ("is_deleted", "created_at", "update_at",)
         widgets = {
+            "discount_type": forms.Select(attrs={"id": "id_discount_type"}),
+            "maximum_discount_limit": forms.NumberInput(attrs={"id": "id_maximum_discount_limit"}),
             "valid_from": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "valid_until": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        base_class = "w-full px-4 py-2 border rounded-lg border-gray-300 focus:border-gray-800 focus:ring-gray-800"
+        for field in self.fields.values():
+            if isinstance(field.widget, forms.CheckboxInput):
+                continue
+            field.widget.attrs.setdefault("class", "")
+            field.widget.attrs["class"] += f" {base_class}"
+
+        # ONLY hide for flat - don't set initial state
+        if 'maximum_discount_limit' in self.fields:
+            if self.data and self.data.get('discount_type') == 'flat':
+                self.fields['maximum_discount_limit'].widget.attrs['style'] = 'display: none !important;'
+                self.fields['maximum_discount_limit'].required = False
+           
+
     def clean(self):
         cleaned_data = super().clean()
+        discount_type = cleaned_data.get("discount_type")
+        
+        if discount_type == 'percentage':
+            max_limit = cleaned_data.get('maximum_discount_limit')
+            if max_limit is None or max_limit <= 0:
+                raise forms.ValidationError("Maximum discount limit required for percentage coupons.")
         valid_from = cleaned_data.get("valid_from")
         valid_until = cleaned_data.get("valid_until")
 
         now = timezone.now()
-
         if valid_from and valid_until:
 
             if valid_until <= valid_from:
@@ -313,4 +364,20 @@ class CouponForm(forms.ModelForm):
                 )
 
         return cleaned_data
+    def clean_discount_value(self):
+        discount_value = self.cleaned_data.get("discount_value")
+        discount_type = self.cleaned_data.get("discount_type")
+
+        if discount_type == "percentage":
+            if discount_value is None:
+                return discount_value
+
+            if discount_value <= 0:
+                raise forms.ValidationError("Discount percentage must be greater than 0.")
+
+            if discount_value >= 100:
+                raise forms.ValidationError("Discount percentage must be less than 100.")
+
+        return discount_value
+
 

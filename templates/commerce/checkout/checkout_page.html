@@ -14,9 +14,8 @@
             <!-- ADDRESS SECTION -->
             <div class="bg-white shadow rounded-lg p-6">
                 <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
-
+                <div id="address-container" class="space-y-4">
                 {% if has_address %}
-                    <div id="address-container" class="space-y-4">
                         {% for address in addresses %}
                         <label class="flex gap-3 items-start border rounded-lg p-4 cursor-pointer">
                             <input
@@ -36,25 +35,23 @@
                             </div>
                         </label>
                         {% endfor %}
-                    </div>
                 {% else %}
                     <p class="text-red-600 font-medium">
                         ⚠ Please add an address to continue checkout.
                     </p>
                 {% endif %}
+                </div>
 
                 <!-- Add Address Button -->
                 <button
                     type="button"
                     hx-get="{% url 'add_address' %}?from=checkout"
-                    hx-target="#add-address"
+                    hx-target="#address-container"
                     hx-swap="innerHTML"
                     class="mt-4 text-[#A89289] font-medium">
                     + Add New Address
                 </button>
             </div>
-
-            <div id="add-address"></div>
 
 
             <!-- PAYMENT METHOD -->
@@ -83,6 +80,7 @@
 
             <!-- PLACE ORDER BUTTON -->
             <button
+                id="place-order-btn" 
                 type="button"
                 class="mt-6 w-full bg-[#A89289] text-white font-semibold py-3 rounded-lg
                     {% if not has_address %}opacity-50 cursor-not-allowed{% endif %}"
@@ -153,11 +151,25 @@
     </div>
 </div>
 <script>
-function confirmPlaceOrder() {
-    const paymentMethod = document.querySelector(
-        'input[name="payment_method"]:checked'
-    )?.value;
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        if (evt.detail.target.id === "address-container") {
+            const hasAddress = document.querySelector('input[name="address"]');
+            const btn = document.getElementById("place-order-btn");
 
+            if (hasAddress && btn) {
+                btn.disabled = false;
+                btn.classList.remove("opacity-50", "cursor-not-allowed");
+            }
+        }
+    });
+function confirmPlaceOrder() {
+    const selectedAddress = document.querySelector('input[name="address"]:checked');
+    if (!selectedAddress) {
+        alert("Please select a delivery address.");
+        return; 
+    }
+
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value;
     if (!paymentMethod) {
         alert("Please select a payment method");
         return;

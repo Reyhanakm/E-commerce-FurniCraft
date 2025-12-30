@@ -22,6 +22,7 @@
           <th class="px-4 py-3 text-left">Discount</th>
           <th class="px-4 py-3 text-center">Usage</th>
           <th class="px-4 py-3 text-center">Status</th>
+          <th class="px-4 py-3 text-center">Min-Purchase-amount</th>
           <th class="px-4 py-3 text-right">Actions</th>
         </tr>
       </thead>
@@ -64,6 +65,14 @@
               <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
                 Inactive
               </span>
+            {% endif %}
+          </td>
+
+          <td class="px-4 py-3 text-center">
+            {% if coupon.minimum_purchase_amount %}
+                ₹{{ coupon.minimum_purchase_amount }}
+            {% else %}
+                For all purchase
             {% endif %}
           </td>
 

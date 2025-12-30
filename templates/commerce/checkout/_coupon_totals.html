@@ -33,6 +33,56 @@
                 Apply Coupon
             </button>
         </form>
+        {% if available_coupons %}
+        <div class="mt-4 pt-3 border-t">
+            <p class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Available Offers</p>
+            
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                {% for c_data in available_coupons %}
+                <div class="border border-dashed border-gray-300 rounded p-2 flex justify-between items-center 
+                            {% if not c_data.is_eligible %}bg-gray-50 opacity-60{% else %}bg-white hover:border-gray-400{% endif %} transition">
+                    
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-gray-800">{{ c_data.obj.code }}</span>
+                            {% if not c_data.is_eligible %}
+                                <span class="text-[10px] bg-gray-200 text-gray-500 px-1 rounded">Locked</span>
+                            {% endif %}
+                        </div>
+
+                        <p class="text-xs text-green-600 font-medium">
+                            {% if c_data.obj.discount_type == 'percentage' %}
+                                Save {{ c_data.obj.discount_value|floatformat:0 }}% 
+                            {% else %}
+                                Flat ₹{{ c_data.obj.discount_value }} OFF
+                            {% endif %}
+
+                            {% if c_data.obj.maximum_discount_limit %}
+                                (up to ₹{{ c_data.obj.maximum_discount_limit }})
+                            {% endif %}
+                        </p>
+                        
+                        {% if not c_data.is_eligible %}
+                        <p class="text-[10px] text-red-500">
+                            {{ c_data.reason }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    {% if c_data.is_eligible %}
+                    <button 
+                        hx-post="{% url 'apply_coupon' %}" 
+                        hx-vals='{"coupon_code": "{{ c_data.obj.code }}"}'
+                        hx-target="#coupon-section"
+                        class="text-xs bg-gray-100 border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-800 hover:text-white transition">
+                        Apply
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     {% endif %}
 </div>
 

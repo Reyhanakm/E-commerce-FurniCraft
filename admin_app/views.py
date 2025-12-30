@@ -16,9 +16,13 @@ from django.db.models import Q,Prefetch
 from cloudinary.utils import cloudinary_url
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count
-from django.utils.timezone import now
-from datetime import timedelta, timezone
+from django.utils import timezone
+from datetime import datetime, timedelta
 from openpyxl import Workbook
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
 
 
 from admin_app.services.sales_report import get_date_range, get_sold_items
@@ -552,7 +556,7 @@ def admin_order_details(request, order_id):
 
     if request.method == "POST":
 
-        # PAYMENT STATUS UPDATE
+        # payment status update
         if "payment_status" in request.POST:
             new_payment_status = request.POST["payment_status"]
 
@@ -568,11 +572,11 @@ def admin_order_details(request, order_id):
                 logger.warning(
                     f"[PAYMENT BLOCKED] Order={order.order_id} Reason={str(e)}"
                 )
-                messages.error(request, str(e))
+                messages.error(request, e.messages[0])
 
             return redirect("order_details", order_id=order_id)
 
-        # ITEM STATUS UPDATE
+        # item status update
         item_id = request.POST.get("item_id")
         new_status = request.POST.get("status")
 
@@ -598,7 +602,7 @@ def admin_order_details(request, order_id):
                 f"[ITEM UPDATE BLOCKED] Order={order.order_id} "
                 f"Item={item.id} Reason={str(e)}"
             )
-            messages.error(request, str(e))
+            messages.error(request,e.messages[0])
 
         return redirect("order_details", order_id=order_id)
 
@@ -608,25 +612,24 @@ def admin_order_details(request, order_id):
         {"order": order, "items": items}
     )
 @require_POST
-@staff_member_required(login_url='admin_login')
+# @staff_member_required(login_url='admin_login')
 def approve_return(request, return_id):
     return_request = get_object_or_404(
         OrderReturn,
         id=return_id,
         approval_status="pending"
     )
-
     refund_amount = approve_return_service(return_request)
 
     messages.success(
         request,
         f"Return approved. ₹{refund_amount} refunded to wallet."
     )
-
     return redirect("admin_return_list")
 
+
 @require_POST
-@staff_member_required(login_url="admin_login")
+# @staff_member_required(login_url="admin_login")
 def reject_return(request, return_id):
     return_request = get_object_or_404(
         OrderReturn,
@@ -643,7 +646,6 @@ def reject_return(request, return_id):
     messages.success(request, "Return request rejected.")
     return redirect("admin_return_list")
   
-@staff_member_required(login_url='admin_login')
 def admin_return_list(request):
     returns = (
         OrderReturn.objects
@@ -658,87 +660,146 @@ def admin_return_list(request):
     )
 
 
-@login_required(login_url='admin_login')
-def create_product_offer(request):
-    if request.method=='POST':
-        ProductOffer.objects.create(
-            name=request.POST.get('name'),
-            product_id=request.POST['product'],
-            discount_type=request.POST['discount_type'],
-            discount_value=request.POST['discount_value'],
-            max_discount_amount=request.POST.get('max_discount_amount') or None,
-            start_date=request.POST['start_date'],
-            end_date=request.POST['end_date'],
-            is_active=True
-        )
-        messages.success(request,"Product offer created.")
-        return redirect('admin_product_offer_list')
+# @login_required(login_url='admin_login')
+# def create_product_offer(request):
+#     if request.method=='POST':
+#         ProductOffer.objects.create(
+#             name=request.POST.get('name'),
+#             product_id=request.POST['product'],
+#             discount_type=request.POST['discount_type'],
+#             discount_value=request.POST['discount_value'],
+#             max_discount_amount=request.POST.get('max_discount_amount') or None,
+#             start_date=request.POST['start_date'],
+#             end_date=request.POST['end_date'],
+#             is_active=True
+#         )
+#         messages.success(request,"Product offer created.")
+#         return redirect('admin_product_offer_list')
 
 
-@login_required(login_url='admin_login')
+# @login_required(login_url='admin_login')
+# def admin_offer_list(request):
+#     search_query = request.GET.get("q", "").strip()
+
+#     product_offers = ProductOffer.objects.all().order_by("-created_at")
+#     category_offers = CategoryOffer.objects.all().order_by("-created_at")
+
+#     if search_query:
+#         product_offers = product_offers.filter(
+#             Q(name__icontains=search_query) |
+#             Q(product__name__icontains=search_query)
+#         )
+#         category_offers = category_offers.filter(
+#             Q(name__icontains=search_query) |
+#             Q(category__name__icontains=search_query)
+#         )
+
+#     paginator = Paginator(product_offers,8)
+#     page_number = request.GET.get("page")
+#     product_page_obj = paginator.get_page(page_number)
+
+
+#     params = request.GET.copy()
+#     if "page" in params:
+#         params.pop("page")
+#     clean_querystring = params.urlencode()
+
+#     return render(request, "admin/offers/offer_list.html", {
+#         "product_offers": product_page_obj,
+#         "category_offers": category_offers,
+#         "page_obj": product_page_obj,
+#         "search_query": search_query,
+#         "querystring": clean_querystring,
+#     })
+
+@login_required(login_url="admin_login")
 def admin_offer_list(request):
     search_query = request.GET.get("q", "").strip()
 
-    product_offers = ProductOffer.objects.all().order_by("-created_at")
-    category_offers = CategoryOffer.objects.all().order_by("-created_at")
+    product_qs = ProductOffer.objects.all().order_by("-created_at")
+    category_qs = CategoryOffer.objects.all().order_by("-created_at")
 
     if search_query:
-        product_offers = product_offers.filter(
+        product_qs = product_qs.filter(
             Q(name__icontains=search_query) |
             Q(product__name__icontains=search_query)
         )
-        category_offers = category_offers.filter(
+        category_qs = category_qs.filter(
             Q(name__icontains=search_query) |
             Q(category__name__icontains=search_query)
         )
 
-    paginator = Paginator(product_offers,8)
-    page_number = request.GET.get("page")
-    product_page_obj = paginator.get_page(page_number)
+    product_paginator = Paginator(product_qs, 8)
+    category_paginator = Paginator(category_qs, 8)
 
+    product_page = request.GET.get("product_page")
+    category_page = request.GET.get("category_page")
 
-    params = request.GET.copy()
-    if "page" in params:
-        params.pop("page")
-    clean_querystring = params.urlencode()
+    product_offers = product_paginator.get_page(product_page)
+    category_offers = category_paginator.get_page(category_page)
 
     return render(request, "admin/offers/offer_list.html", {
-        "product_offers": product_page_obj,
+        "product_offers": product_offers,
         "category_offers": category_offers,
-        "page_obj": product_page_obj,
         "search_query": search_query,
-        "querystring": clean_querystring,
     })
 
-@login_required(login_url='admin_login')
-def admin_offer_create(request):
-    offer_type = request.POST.get("offer_type") or request.GET.get("type") or "product"
+# @login_required(login_url='admin_login')
+# def admin_offer_create(request):
+#     offer_type = request.POST.get("offer_type") or request.GET.get("type") or "product"
 
-    if offer_type == "product":
-        product_form = ProductOfferForm(request.POST or None)
-        category_form = None
-    else:
-        product_form = None
-        category_form = CategoryOfferForm(request.POST or None)
+#     if offer_type == "product":
+#         product_form = ProductOfferForm(request.POST or None)
+#         category_form = None
+#     else:
+#         product_form = None
+#         category_form = CategoryOfferForm(request.POST or None)
 
-    if request.method == "POST":
-        if offer_type == "product" and product_form.is_valid():
-            product_form.save()
-            messages.success(request, "Product offer created successfully.")
-            return redirect("admin_offer_list")
+#     if request.method == "POST":
+#         if offer_type == "product" and product_form.is_valid():
+#             product_form.save()
+#             messages.success(request, "Product offer created successfully.")
+#             return redirect("admin_offer_list")
 
-        if offer_type == "category" and category_form.is_valid():
-            category_form.save()
-            messages.success(request, "Category offer created successfully.")
-            return redirect("admin_offer_list")
+#         if offer_type == "category" and category_form.is_valid():
+#             category_form.save()
+#             messages.success(request, "Category offer created successfully.")
+#             return redirect("admin_offer_list")
 
-    return render(request, "admin/offers/offer_form.html", {
-        "title": "Add Offer",
-        "show_offer_type": True,
-        "offer_type": offer_type,
-        "product_form": product_form,
-        "category_form": category_form,
+#     return render(request, "admin/offers/offer_form.html", {
+#         "title": "Add Offer",
+#         "show_offer_type": True,
+#         "offer_type": offer_type,
+#         "product_form": product_form,
+#         "category_form": category_form,
+#     })
+@login_required(login_url="admin_login")
+def admin_product_offer_create(request):
+    form = ProductOfferForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Product offer created.")
+        return redirect("admin_offer_list")
+
+    return render(request, "admin/offers/product_offer_form.html", {
+        "title": "Add Product Offer",
+        "form": form,
     })
+@login_required(login_url="admin_login")
+def admin_category_offer_create(request):
+    form = CategoryOfferForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Category offer created.")
+        return redirect("admin_offer_list")
+
+    return render(request, "admin/offers/category_offer_form.html", {
+        "title": "Add Category Offer",
+        "form": form,
+    })
+
 
 @login_required(login_url='admin_login')
 def admin_product_offer_edit(request, pk):
@@ -795,10 +856,10 @@ def admin_coupon_list(request):
     coupons = (
         Coupon.objects
         .filter(is_deleted=False)
-        .annotate(used_count=Count("usages"),per_user_count=Count('coupon_usages'))
+        .annotate(used_count=Count("usages"))
         .order_by("-created_at")
     )
-
+      
     return render(request, "admin/coupons/list.html", {
         "coupons": coupons
     })
@@ -858,8 +919,15 @@ def sales_report(request):
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
 
-    start, end = get_date_range(range_type, start_date, end_date)
+    if start_date and end_date:
+        start = datetime.strptime(start_date, "%Y-%m-%d")
+        end = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+        range_type = None
+    else:
+        range_type = range_type or "daily"
+        start, end = get_date_range(range_type, None, None)
 
+    start, end = get_date_range(range_type, start_date, end_date)
     sold_items = get_sold_items(start, end)
 
     total_sales = Decimal("0.00")
@@ -883,41 +951,66 @@ def sales_report(request):
         "range_type": range_type,
     }
 
-    return render(request, "admin/sales_report.html", context)
+    return render(request, "admin/reports/sales_report.html", context)
 
 
 @login_required(login_url="admin_login")
 def sales_report_excel(request):
 
-  
     range_type = request.GET.get("range")
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
 
     start, end = get_date_range(range_type, start_date, end_date)
-
     sold_items = get_sold_items(start, end)
 
-   
     wb = Workbook()
     ws = wb.active
     ws.title = "Sales Report"
+
+    header_font = Font(bold=True)
+    header_fill = PatternFill("solid", fgColor="E5E7EB")
+    center_align = Alignment(horizontal="center")
+    right_align = Alignment(horizontal="right")
+
+    thin_border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+
+    total_fill = PatternFill("solid", fgColor="FEE2E2")
+    total_font = Font(bold=True)
+
 
     headers = [
         "Order ID",
         "Order Date",
         "Product",
         "Quantity",
-        "Net Price",
-        "Product Discount",
-        "Coupon Discount",
+        "Net Price (₹)",
+        "Product Discount (₹)",
+        "Coupon Discount (₹)",
     ]
+
     ws.append(headers)
 
+    for col in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center_align
+        cell.border = thin_border
+        ws.column_dimensions[get_column_letter(col)].width = 20
+
+    ws.freeze_panes = "A2"
 
     total_sales = Decimal("0.00")
     product_discount = Decimal("0.00")
     coupon_discount = Decimal("0.00")
+
+    row_num = 2
 
     for item in sold_items:
         prod_discount = (item.unit_price * item.quantity) - item.price
@@ -925,7 +1018,7 @@ def sales_report_excel(request):
 
         ws.append([
             item.order.order_id,
-            item.order.created_at.strftime("%Y-%m-%d"),
+            item.order.created_at.date(),
             str(item.product),
             item.quantity,
             float(item.price),
@@ -933,23 +1026,90 @@ def sales_report_excel(request):
             float(coup_discount),
         ])
 
+        ws.cell(row=row_num, column=2).number_format = "YYYY-MM-DD"
+        ws.cell(row=row_num, column=4).alignment = center_align
+
+        for col in (5, 6, 7):
+            ws.cell(row=row_num, column=col).number_format = '₹#,##0.00'
+            ws.cell(row=row_num, column=col).alignment = right_align
+
+        for col in range(1, 8):
+            ws.cell(row=row_num, column=col).border = thin_border
+
         total_sales += item.price
         product_discount += prod_discount
         coupon_discount += coup_discount
 
-    ws.append([])
-    ws.append(["TOTAL SALES", "", "", "", float(total_sales), "", ""])
-    ws.append(["PRODUCT DISCOUNT", "", "", "", "", float(product_discount), ""])
-    ws.append(["COUPON DISCOUNT", "", "", "", "", "", float(coupon_discount)])
-    ws.append([
-        "OVERALL DISCOUNT", "", "", "", "",
-        float(product_discount + coupon_discount), ""
-    ])
+        row_num += 1
 
+
+    row_num += 1
+
+    totals = [
+        ("TOTAL SALES", total_sales),
+        ("PRODUCT DISCOUNT", product_discount),
+        ("COUPON DISCOUNT", coupon_discount),
+        ("OVERALL DISCOUNT", product_discount + coupon_discount),
+    ]
+
+    for label, value in totals:
+        ws.append([label, "", "", "", float(value)])
+        for col in range(1, 6):
+            cell = ws.cell(row=row_num, column=col)
+            cell.font = total_font
+            cell.fill = total_fill
+            cell.border = thin_border
+
+        ws.cell(row=row_num, column=5).number_format = '₹#,##0.00'
+        ws.cell(row=row_num, column=5).alignment = right_align
+        row_num += 1
+
+   
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     response["Content-Disposition"] = 'attachment; filename="sales_report.xlsx"'
 
     wb.save(response)
+    return response
+
+def sales_report_pdf(request):
+    range_type = request.GET.get("range", "daily")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    today = timezone.now().date()
+
+    if range_type == "daily":
+        start_date = end_date = today
+
+    elif range_type == "weekly":
+        start_date = today - timedelta(days=6)
+        end_date = today
+
+    elif range_type == "monthly":
+        start_date = today.replace(day=1)
+        end_date = today
+
+    sold_items = OrderItem.objects.filter(
+        status="delivered",
+        order__created_at__date__range=(start_date, end_date)
+    ).select_related("order", "product")
+
+    total_sales = sum(i.price * i.quantity for i in sold_items)
+
+    html = render_to_string(
+        "admin/reports/sales_report_pdf.html",
+        {
+            "sold_items": sold_items,
+            "start_date": start_date,
+            "end_date": end_date,
+            "total_sales": total_sales,
+        }
+    )
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "inline; filename=sales_report.pdf"
+
+    HTML(string=html).write_pdf(response)
     return response

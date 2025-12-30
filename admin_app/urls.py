@@ -42,15 +42,12 @@ urlpatterns=[
 
 
     path("offers/",views.admin_offer_list, name="admin_offer_list"),
-
-    # path("offers/product/add/", views.admin_product_offer_create, name="admin_product_offer_create"),
-    # path("offers/category/add/", views.admin_category_offer_create, name="admin_category_offer_create"),
-    path("offers/add/",views.admin_offer_create, name="admin_offer_create"),
-
-
+    path("offers/product/add/", views.admin_product_offer_create, name="admin_product_offer_create"),
+    path("offers/category/add/", views.admin_category_offer_create, name="admin_category_offer_create"),
     path("offers/product/<int:pk>/edit/", views.admin_product_offer_edit, name="admin_product_offer_edit"),
     path("offers/category/<int:pk>/edit/", views.admin_category_offer_edit, name="admin_category_offer_edit"),
-
+    path("offers/product/<int:pk>/edit/", views.admin_product_offer_edit, name="admin_product_offer_edit"),
+    path("offers/category/<int:pk>/edit/", views.admin_category_offer_edit, name="admin_category_offer_edit"),
     path("offers/<str:offer_type>/<int:pk>/toggle/", views.admin_offer_toggle, name="admin_offer_toggle"),
 
     path("coupons/",views.admin_coupon_list, name="admin_coupon_list"),
@@ -61,6 +58,7 @@ urlpatterns=[
 
     path("sales-report/excel/", views.sales_report_excel, name="sales_report_excel"),
     path("sales-report/",views.sales_report,name="sales_report"),
+    path("sales-report/pdf/",views.sales_report_pdf,name="sales_report_pdf"),
 
- 
+
 ]

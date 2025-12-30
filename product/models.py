@@ -229,15 +229,11 @@ class CouponUsage(models.Model):
     user = models.ForeignKey(User,related_name="coupon_usages",on_delete=models.CASCADE)
     order = models.ForeignKey(Orders,related_name="coupon_usage",on_delete=models.SET_NULL,null=True,blank=True)
     used_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('coupon','user')
     
 class CategoryOffer(models.Model):
     name=models.CharField(max_length=200,blank=True,null=True)
     category = models.ForeignKey(Category,related_name='category_offers',on_delete=models.CASCADE)
-    discount_type = models.CharField(max_length=20,choices=[('percentage','Percentage'),('flat','Flat Amount')],
-                                    default='percentage')
+    discount_type = models.CharField(max_length=20,default='percentage')
     discount_value=models.DecimalField(max_digits=10,decimal_places=2)
     max_discount_amount=models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
     start_date=models.DateTimeField()
@@ -266,11 +262,11 @@ class CategoryOffer(models.Model):
         return f"{self.category.name} offer"
 
 class ProductOffer(models.Model):
-    name = models.CharField(max_length=200,blank=True,null=True)
+    name = models.CharField(max_length=200,blank=True,null=True,default='N/A')
     product=models.ForeignKey(Product,related_name='product_offers',on_delete=models.CASCADE)
-    discount_type = models.CharField(max_length=20,choices=[('percentage','Percentage'),('flat','Flat Amount')])
+    discount_type = models.CharField(max_length=20,default='percentage')
     discount_value = models.DecimalField(max_digits=10,decimal_places=2)
-    max_discount_amount = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
+    max_discount_amount = models.DecimalField(max_digits=8,decimal_places=2,null=True,blank=True)
     
     start_date=models.DateTimeField()
     end_date=models.DateTimeField()

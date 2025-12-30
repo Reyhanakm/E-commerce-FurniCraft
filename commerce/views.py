@@ -1,6 +1,8 @@
+from django.utils import timezone
 import logging
 from django.shortcuts import render,redirect,get_object_or_404
 from django.db import transaction
+from django.db.models import Q,Count
 from django.urls import reverse
 import json
 from django.http import HttpResponse
@@ -14,10 +16,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from commerce.utils.offers import get_discount_percentage
 from users.decorators import block_check
+from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from .models import Cart,CartItem,OrderItem,Orders,Wishlist,WishlistItem,Wallet,WalletTransaction,OrderReturn
 from users.models import User,UserAddress
-from product.models import Category,Product,ProductVariant
+from product.models import Category, Coupon, CouponUsage,Product,ProductVariant
 from .utils.trigger import trigger,attach_trigger
 from decimal import Decimal
 from commerce.utils.pricing import get_pricing_context
@@ -195,7 +198,7 @@ def cart_page(request):
         
         if item.variant.stock == 0:
             item.delete()
-            messages.error(request, f"⚠️ **'{item.product.name}'** is now out of stock and was removed from your cart.")
+            messages.error(request, f"'{item.product.name}-({item.variant.material_type})' is now out of stock.Removed from your cart!")
             validation_required = True
             
         elif item.quantity > item.variant.stock:
@@ -203,7 +206,7 @@ def cart_page(request):
             item.quantity = item.variant.stock
             item.save()
             messages.warning(request, 
-                f"🚨 **Quantity reduced** for '{item.product.name}'. Max available stock is now {item.variant.stock} (was {old_quantity})."
+                f"Quantity reduced! for '{item.product.name}'. Max available stock is now {item.variant.stock}."
             )
             validation_required = True
             
@@ -413,12 +416,15 @@ def checkout(request):
     offer_discount = Decimal("0")
 
     for item in products:
-        price = Decimal(item.variant.sales_price)
-        offer_percent = get_discount_percentage(item.variant)
-        item.offer_percent=offer_percent
-        item.discounted_price = price - (price * Decimal(offer_percent) / 100)
-        subtotal += item.discounted_price * item.quantity
-        offer_discount += (price - item.discounted_price) * item.quantity
+        if item.quantity>item.variant.stock:
+            messages.error(request,f"{item.product.name}-({item.variant.material_type}) is get out of stock!")
+        else:
+            price = Decimal(item.variant.sales_price)
+            offer_percent = get_discount_percentage(item.variant)
+            item.offer_percent=offer_percent
+            item.discounted_price = price - (price * Decimal(offer_percent) / 100)
+            subtotal += item.discounted_price * item.quantity
+            offer_discount += (price - item.discounted_price) * item.quantity
     
     coupon_code=request.session.get('applied_coupon')
     coupon_discount=Decimal('0')
@@ -433,6 +439,33 @@ def checkout(request):
 
     shipping_cost= 0 if subtotal>=1000 else 80
     total = subtotal -coupon_discount + shipping_cost
+    now = timezone.now()
+    
+    coupons_qs = Coupon.objects.filter(
+        is_active=True,
+        valid_from__lte=now,
+        valid_until__gte=now
+    ).annotate(
+        total_usage_count=Count('usages'),
+        user_usage_count=Count('usages', filter=Q(usages__user=user))
+    )
+
+    available_coupons = []
+    
+    for c in coupons_qs:
+        if c.usage_limit is not None and c.total_usage_count >= c.usage_limit:
+            continue
+        if c.user_usage_count >= c.per_user_limit:
+            continue
+            
+        is_eligible = subtotal >= c.minimum_purchase_amount
+        shortage = c.minimum_purchase_amount - subtotal
+        
+        available_coupons.append({
+            'obj': c,
+            'is_eligible': is_eligible,
+            'reason': None if is_eligible else f"Add ₹{shortage} more"
+        })
     request.session["checkout_cart_update_at"]=cart.updated_at.timestamp()
     context={
         "products":products,
@@ -444,65 +477,203 @@ def checkout(request):
         "coupon":coupon,
         "coupon_discount":coupon_discount,
         "shipping_cost":shipping_cost,
-        "total":total
+        "total":total,
+        "available_coupons": available_coupons,
     }
     return render(request,'commerce/checkout/checkout_page.html',context)
 
+
+# @login_required
+# def apply_coupon(request):
+#     if request.method != "POST":
+#         return redirect("checkout")
+
+#     user = request.user
+#     coupon_code = request.POST.get("coupon_code", "").strip()
+
+#     cart = Cart.objects.filter(user=user).first()
+#     if not cart or not cart.items.exists():
+#         if request.headers.get("HX-Request"):
+#             return trigger("Your cart is empty.", type="error")
+#         messages.error(request, "Your cart is empty.")
+#         return redirect("checkout")
+
+#     if not coupon_code:
+#         if request.headers.get("HX-Request"):
+#             return trigger("Please enter a coupon code.", type="error")
+#         messages.error(request, "Please enter a coupon code.")
+#         return redirect("checkout")
+
+#     subtotal = Decimal("0.00")
+
+#     for item in cart.items.select_related("variant"):
+#         price = Decimal(item.variant.sales_price)
+#         offer_percent = get_discount_percentage(item.variant) or 0
+#         discounted_price = price - (price * Decimal(offer_percent) / 100)
+#         subtotal += discounted_price * item.quantity
+
+#     coupon, discount, error = validate_and_calculate_coupon(
+#         coupon_code, user, subtotal
+#     )
+#     if coupon and not error:
+#         user_usages = coupon.usages.filter(user=user).count()
+#         total_usages = coupon.usages.count()
+        
+#         if user_usages >= coupon.per_user_limit:
+#             error = f"Per-user limit exceeded ({user_usages}/{coupon.per_user_limit})"
+#         elif total_usages >= coupon.usage_limit:
+#             error = f"Usage limit reached ({total_usages}/{coupon.usage_limit})"
+
+#     if error:
+#         request.session.pop("applied_coupon", None)
+#         if request.headers.get("HX-Request"):
+#             response = render_checkout_summary(request)
+#             return attach_trigger(response, error, "error")
+#         messages.error(request, error)
+#     else:
+#         request.session["applied_coupon"] = coupon.code
+#         if request.headers.get("HX-Request"):
+#             response = render_checkout_summary(request)
+#             return attach_trigger(
+#                 response,
+#                 f"Coupon '{coupon.code}' applied successfully",
+#                 "success"
+#             )
+#         messages.success(request, f"Coupon '{coupon.code}' applied successfully")
+
+
+#     if request.headers.get("HX-Request"):
+#         return render_checkout_summary(request)
+
+#     return redirect("checkout")
+
+
+
+# @login_required
+# def apply_coupon(request):
+#     if request.method != "POST":
+#         return redirect("checkout")
+
+#     user = request.user
+#     coupon_code = request.POST.get("coupon_code", "").strip()
+
+#     cart = Cart.objects.filter(user=user).first()
+
+#     if not cart or not cart.items.exists():
+#         if request.headers.get("HX-Request"):
+#             return trigger("Your cart is empty.", type="error")
+
+#         messages.error(request, "Your cart is empty.")
+#         return redirect("checkout")
+
+#     if not coupon_code:
+#         if request.headers.get("HX-Request"):
+#             return trigger("Please enter a coupon code.", type="error")
+
+#         messages.error(request, "Please enter a coupon code.")
+#         return redirect("checkout")
+
+#     subtotal = Decimal("0.00")
+#     for item in cart.items.select_related("variant"):
+#         price = Decimal(item.variant.sales_price)
+#         offer_percent = get_discount_percentage(item.variant) or 0
+#         discounted_price = price - (price * Decimal(offer_percent) / 100)
+#         subtotal += discounted_price * item.quantity
+
+#     coupon, discount, error = validate_and_calculate_coupon(
+#         coupon_code, user, subtotal
+#     )
+
+#     if coupon and not error:
+#         user_usages = coupon.usages.filter(user=user).count()
+#         total_usages = coupon.usages.count()
+
+#         if user_usages >= coupon.per_user_limit:
+#             error = f"Per-user limit exceeded ({user_usages}/{coupon.per_user_limit})"
+#         elif total_usages >= coupon.usage_limit:
+#             error = "Coupon usage limit reached"
+
+#     if error:
+#         request.session.pop("applied_coupon", None)
+
+#         if request.headers.get("HX-Request"):
+#             response = render_checkout_summary(request)
+#             return attach_trigger(response, error, type="error")
+
+#         messages.error(request, error)
+#         return redirect("checkout")
+
+#     request.session["applied_coupon"] = coupon.code
+
+#     if request.headers.get("HX-Request"):
+#         response = render_checkout_summary(request)
+#         return attach_trigger(
+#             response,
+#             f"Coupon '{coupon.code}' applied successfully",
+#             type="success",
+#         )
+
+#     messages.success(request, f"Coupon '{coupon.code}' applied successfully")
+#     return redirect("checkout")
+
+
+# @login_required
+# def remove_coupon(request):
+#     request.session.pop("applied_coupon", None)
+
+#     if request.headers.get("HX-Request"):
+#         response = render_checkout_summary(request)
+#         return attach_trigger(response, "Coupon removed.", "info")
+
+#     messages.info(request, "Coupon removed.")
+#     return redirect("checkout")
 
 @login_required
 def apply_coupon(request):
     if request.method != "POST":
         return redirect("checkout")
 
-    user = request.user
     coupon_code = request.POST.get("coupon_code", "").strip()
 
+    # FIX: Use render_checkout_summary to return HTML even on empty input
+    if not coupon_code:
+        if request.headers.get("HX-Request"):
+            return render_checkout_summary(request, error_message="Please enter a coupon code.")
+        messages.error(request, "Please enter a coupon code.")
+        return redirect("checkout")
+
+    user = request.user
+    
+    # We do a quick check here, or rely on the utility to validate
+    # For efficiency, we can just call the summary renderer directly if validation fails
     cart = Cart.objects.filter(user=user).first()
     if not cart or not cart.items.exists():
-        messages.error(request, "Your cart is empty.")
-        if request.headers.get("HX-Request"):
-            return render_checkout_summary(request)
-        return redirect("checkout")
+         return render_checkout_summary(request, error_message="Your cart is empty.")
 
-    if not coupon_code:
-        messages.error(request, "Please enter a coupon code.")
-        if request.headers.get("HX-Request"):
-            return render_checkout_summary(request)
-        return redirect("checkout")
-
+    # Calculate subtotal strictly for validation (copy logic briefly or refactor)
     subtotal = Decimal("0.00")
-
     for item in cart.items.select_related("variant"):
         price = Decimal(item.variant.sales_price)
         offer_percent = get_discount_percentage(item.variant) or 0
         discounted_price = price - (price * Decimal(offer_percent) / 100)
         subtotal += discounted_price * item.quantity
 
-    coupon, discount, error = validate_and_calculate_coupon(
-        coupon_code, user, subtotal
-    )
+    coupon, discount, error = validate_and_calculate_coupon(coupon_code, user, subtotal)
 
     if error:
         request.session.pop("applied_coupon", None)
         if request.headers.get("HX-Request"):
-            response = render_checkout_summary(request)
-            return attach_trigger(response, error, "error")
+            return render_checkout_summary(request, error_message=error)
+            
         messages.error(request, error)
-    else:
-        request.session["applied_coupon"] = coupon.code
-        if request.headers.get("HX-Request"):
-            response = render_checkout_summary(request)
-            return attach_trigger(
-                response,
-                f"Coupon '{coupon.code}' applied successfully",
-                "success"
-            )
-        messages.success(request, f"Coupon '{coupon.code}' applied successfully")
+        return redirect("checkout")
 
+    request.session["applied_coupon"] = coupon.code
 
     if request.headers.get("HX-Request"):
-        return render_checkout_summary(request)
+        return render_checkout_summary(request, success_message=f"Coupon '{coupon.code}' applied!")
 
+    messages.success(request, f"Coupon '{coupon.code}' applied!")
     return redirect("checkout")
 
 
@@ -511,8 +682,7 @@ def remove_coupon(request):
     request.session.pop("applied_coupon", None)
 
     if request.headers.get("HX-Request"):
-        response = render_checkout_summary(request)
-        return attach_trigger(response, "Coupon removed.", "info")
+        return render_checkout_summary(request, success_message="Coupon removed.")
 
     messages.info(request, "Coupon removed.")
     return redirect("checkout")
@@ -555,7 +725,9 @@ def place_order(request):
 
         #  STOCK VALIDATION 
         for item in items:
-            if item.quantity > item.variant.stock:
+            if item.variant.stock == 0:
+                return redirect("cart_page")
+            elif item.quantity > item.variant.stock:
                 messages.error(
                     request,
                     f"Only {item.variant.stock} left for {item.variant.material_type}."
@@ -616,6 +788,20 @@ def place_order(request):
                 price=final_price * item.quantity,
                 offer_percent=offer_percent
             )
+        
+        if coupon:
+            usage_count = coupon.usages.filter(user=user).count()
+            total_usages = coupon.usages.count()
+            
+            if usage_count >= coupon.per_user_limit:
+                raise ValueError("Per user limit exceeded")
+            if total_usages >= coupon.usage_limit:
+                raise ValueError("Total usage limit exceeded")
+            CouponUsage.objects.create(
+            coupon=coupon,
+            user=user,
+            order=order
+        )
 
         # WALLET
         if payment_method == "wallet":
@@ -682,6 +868,7 @@ def start_razorpay_payment(request, order_id):
     })
 
     order.razorpay_order_id = razorpay_order["id"]
+    order.payment_status = "pending"
     order.save(update_fields=["razorpay_order_id"])
 
     return render(request, "commerce/payments/razorpay_checkout.html", {
@@ -692,7 +879,6 @@ def start_razorpay_payment(request, order_id):
 
     
 @csrf_exempt
-@login_required
 def razorpay_success(request):
     data = json.loads(request.body)
 
@@ -709,9 +895,11 @@ def razorpay_success(request):
 
         with transaction.atomic():
             order = Orders.objects.select_for_update().get(
+                Q(payment_status="pending") | Q(payment_status="failed"),
                 razorpay_order_id=data["razorpay_order_id"],
-                payment_status="pending"
-            )
+            )            
+            if not request.user.is_authenticated or order.user_id != request.user.id:
+                raise PermissionDenied
 
             payment = client.payment.fetch(data["razorpay_payment_id"])
             if payment["status"] == "authorized":
@@ -754,7 +942,6 @@ def razorpay_success(request):
 
 
 @csrf_exempt
-@login_required
 def razorpay_failed(request):
     logger.error("razorpay_failed view HIT")
     data = json.loads(request.body)
@@ -924,40 +1111,51 @@ def cancel_order_item(request,item_id):
         return redirect("user_order_detail",item.order.order_id)
     with transaction.atomic():
         order=item.order
+        if item.status == 'cancelled':
+            messages.error(request, "Item already cancelled.")
+            return redirect("user_order_detail", order.order_id)
         item.status="cancelled"
         item.save(update_fields=["status"])
 
         item.product.stock+=item.quantity
         item.product.save(update_fields=['stock'])
 
-        wallet,_=Wallet.objects.get_or_create(user=request.user)
+        if order.payment_status in ['paid','partially_refunded']:
+            wallet,_=Wallet.objects.get_or_create(user=request.user)
 
-        coupon_share = calculate_item_coupon_share(order, item)
+            coupon_share = calculate_item_coupon_share(order, item)
 
-        refund_amount=item.price - coupon_share
+            refund_amount=item.price*item.quantity - coupon_share
 
-        wallet.balance+=refund_amount
-        wallet.save(update_fields=["balance"])
+            wallet.balance+=refund_amount
+            wallet.save(update_fields=["balance"])
 
-        WalletTransaction.objects.create(
-            wallet=wallet,
-            order=order,
-            amount=refund_amount,
-            transaction_type='credit',
-            source='order_cancel'
-        )
-        remaining_items=order.items.exclude(status="cancelled")
-        new_total=sum(i.price for i in remaining_items)
-        if new_total==0:
-            order.payment_status='refunded'
-        else:
-            order.payment_status='partially_refunded'
-        order.total_price=new_total+order.delivery_charge
-        order.save(update_fields=['total_price','payment_status'])
-
-        messages.success(
+            WalletTransaction.objects.create(
+                wallet=wallet,
+                order=order,
+                amount=refund_amount,
+                transaction_type='credit',
+                source='order_cancel'
+            )
+            messages.success(
             request,f"Item cancelled. ₹{refund_amount} refunded to your wallet."
         )
+        else:
+            messages.success(
+            request,f"Item cancelled.")
+
+        remaining_items=order.items.exclude(status="cancelled")
+        new_total=sum(i.price*i.quantity for i in remaining_items)
+        if order.payment_status in ['paid', 'partially_refunded']:
+            if new_total==0:
+                order.payment_status='refunded'
+            else:
+                order.payment_status='partially_refunded'
+            order.total_price=new_total+order.delivery_charge
+            order.save(update_fields=['total_price','payment_status'])
+        else:
+            order.payment_status='failed'
+            order.save(update_fields=['payment_status'])
     return redirect("user_order_detail",order.order_id)
 
 @login_required

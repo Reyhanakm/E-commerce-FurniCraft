@@ -94,7 +94,7 @@ CACHES = {
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_CACHE_ALIAS = "default"
-SESSION_COOKIE_AGE = 3000     #1 hr
+# SESSION_COOKIE_AGE = 3000     #1 hr
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 

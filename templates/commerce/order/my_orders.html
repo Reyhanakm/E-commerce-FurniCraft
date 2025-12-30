@@ -78,6 +78,10 @@
                             <span class="text-green-600">Paid</span>
                         {% elif order.payment_status == 'pending' %}
                             <span class="text-yellow-600">Pending</span>
+                        {% elif order.payment_status == "refunded" %}
+                            <span class="text-yellow-600 font-semibold">Refunded</span>
+                        {% elif order.payment_status == "partially_refunded" %}
+                            <span class="text-orange-600 font-semibold">Partially refunded</span>
                         {% else %}
                             <span class="text-red-600">Failed</span>
                         {% endif %}
@@ -105,11 +109,22 @@
                         {% endif %}
                             
                     </p>
+                    <div class="flex items-center gap-2">
+        
+                        {% if order.payment_method == 'razorpay' %}
+                            {% if order.payment_status == 'failed' or order.payment_status == 'pending' %}
+                                <a href="{% url 'razorpay_start' order.order_id %}"
+                                class="text-sm bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition shadow-sm font-medium">
+                                Retry Payment
+                                </a>
+                            {% endif %}
+                        {% endif %}
 
-                    <a href="{% url 'user_order_detail' order.order_id %}"
-                       class="text-sm bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition">
-                        View Details
-                    </a>
+                        <a href="{% url 'user_order_detail' order.order_id %}"
+                        class="text-sm bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition">
+                            View Details
+                        </a>
+                    </div>
                 </div>
 
             </div>

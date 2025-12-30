@@ -62,6 +62,39 @@ class Orders(models.Model):
     @property
     def is_paid(self):
         return self.payment_status
+    @property
+    def is_fully_cancelled(self):
+        total_items = self.items.count()
+        cancelled_items = self.items.filter(status='cancelled').count()
+        return total_items > 0 and total_items == cancelled_items
+    
+    @property
+    def overall_status(self):
+        all_items = self.items.all() 
+        
+        if not all_items:
+            return "Pending"
+
+        if all(item.status == 'cancelled' for item in all_items):
+            return "Cancelled"
+        
+        if all(item.status == 'returned' for item in all_items):
+            return "Returned"
+
+        if all(item.status == 'delivered' for item in all_items):
+            return "Delivered"
+
+        non_cancelled_items = [item for item in all_items if item.status != 'cancelled']
+        if non_cancelled_items and all(item.status == 'delivered' for item in non_cancelled_items):
+            return "Delivered"
+
+        statuses = [item.status for item in all_items]
+        if 'in_transit' in statuses:
+            return "In Transit"
+        if 'shipped' in statuses:
+            return "Shipped"
+
+        return "Processing"
     
 
 class OrderItem(models.Model):
@@ -157,3 +190,4 @@ class WalletTransaction(models.Model):
     created_at=models.DateTimeField(auto_now_add=True)
     class Meta:
         unique_together = ('wallet', 'order', 'source')
+

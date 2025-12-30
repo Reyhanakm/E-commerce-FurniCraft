@@ -5,9 +5,10 @@
 
     <form
         method="POST"
-        hx-post="{% url 'add_address' %}?from={{ request.GET.from }}"
-        hx-target="{% if request.GET.from == 'checkout' %}#add-address{% else %}#profile-content{% endif %}"
+        hx-post="{% url 'add_address' %}?from={{ request.GET.from| default:'profile' }}"
+        hx-target="{% if request.GET.from == 'checkout' %}#address-container{% else %}#profile-content{% endif %}"
         hx-swap="innerHTML"
+        hx-on="htmx:afterRequest: this.closest('#add-address')?.remove()"
         class="bg-white border rounded-xl p-6 space-y-4" novalidate>
 
         {% csrf_token %}

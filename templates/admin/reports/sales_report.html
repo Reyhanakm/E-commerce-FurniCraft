@@ -44,6 +44,12 @@
 >
   Download Excel
 </a>
+<a
+  href="{% url 'sales_report_pdf' %}?range={{ range_type }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}"
+  class="bg-red-600 text-white px-4 py-2 rounded"
+>
+  Download PDF
+</a>
 
 </form>
 

@@ -45,6 +45,7 @@
         <th class="px-4 py-2">#</th>
         <th class="px-4 py-2">Order ID</th>
         <th class="px-4 py-2">Customer</th>
+        <th class="px-4 py-2">Order Status</th>
         <th class="px-4 py-2">Total</th>
         <th class="px-4 py-2">Payment Status</th>
         <th class="px-4 py-2">Created At</th>
@@ -69,6 +70,31 @@
         <!-- Customer -->
         <td class="px-4 py-3">
           {{ order.user.first_name }} {{ order.user.last_name }}
+        </td>
+        <td class="px-4 py-3">
+            {% with status=order.overall_status %}
+                {% if status == 'Delivered' %}
+                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold border border-green-200">
+                        Delivered
+                    </span>
+                {% elif status == 'Cancelled' %}
+                    <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold border border-red-200">
+                        Cancelled
+                    </span>
+                {% elif status == 'Returned' %}
+                    <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-semibold border border-indigo-200">
+                        Returned
+                    </span>
+                {% elif status == 'In Transit' or status == 'Shipped' %}
+                    <span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-semibold border border-orange-200">
+                        {{ status }}
+                    </span>
+                {% else %}
+                    <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-semibold border border-blue-200">
+                        {{ status }}
+                    </span>
+                {% endif %}
+            {% endwith %}
         </td>
 
         <!-- Total Price -->

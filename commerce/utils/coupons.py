@@ -22,12 +22,11 @@ def validate_and_calculate_coupon(coupon_code, user, subtotal):
 
     if subtotal < coupon.minimum_purchase_amount:
         return None, Decimal("0"), f"Minimum order value ₹{coupon.minimum_purchase_amount} required."
+    
+    if coupon.usage_limit is not None:
+        if coupon.usages.count() >= coupon.usage_limit:
+            return None, Decimal("0"), "Coupon usage limit reached."
 
-    # global usage limit
-    if coupon.usages.count() >= coupon.usage_limit:
-        return None, Decimal("0"), "Coupon usage limit reached."
-
-    # per user usage limit
     user_usage_count = CouponUsage.objects.filter(
         coupon=coupon,
         user=user
@@ -43,7 +42,7 @@ def validate_and_calculate_coupon(coupon_code, user, subtotal):
         discount = Decimal(coupon.discount_value)
 
     # apply max discount cap
-    if coupon.maximum_discount_limit:
+    if coupon.maximum_discount_limit is not None:
         discount = min(discount, coupon.maximum_discount_limit)
 
     return coupon, discount, None
