@@ -592,7 +592,7 @@ def edit_address(request, pk):
 
             if request.headers.get("HX-Request"):
                 return render(request, "user/profile/_address_list_partial.html", {
-                    "addresses": request.user.addresses.all()
+                    "addresses": request.user.addresses.filter(is_deleted=False)
                 })
 
             return redirect('my_address')
@@ -626,9 +626,9 @@ def delete_address(request, pk):
 
     address = get_object_or_404(UserAddress, id=pk, user=request.user)
     address.is_deleted = True
-    address.delete()
+    address.save()
 
-    addresses = request.user.addresses.all().order_by('-created_at')
+    addresses = request.user.addresses.filter(is_deleted=False).order_by('-created_at')
 
     if source == "checkout":
         default_address = addresses.filter(is_default=True).first()
@@ -653,7 +653,7 @@ def delete_address(request, pk):
 @login_required
 def my_address(request):
     return render(request, "user/profile/_address_list_partial.html", {
-        "addresses": request.user.addresses.all().order_by('created_at'),
+        "addresses": request.user.addresses.filter(is_deleted=False).order_by('-created_at'),
         "user": request.user
     })
 
@@ -665,7 +665,7 @@ def set_default_address(request, pk):
     address.save() 
 
     return render(request, "user/profile/_address_list_partial.html", {
-        "addresses": request.user.addresses.all().order_by('-created_at'),
+        "addresses": request.user.addresses.filter(is_deleted=False).order_by('-created_at'),
         "user": request.user
     })
 
@@ -681,32 +681,28 @@ def add_address(request):
             address.user = request.user
             address.save()
 
-            # HTMX response
             if request.headers.get("HX-Request"):
-                # 🔹 Checkout
                 if source == "checkout":
                     return render(
                         request,
                         "commerce/checkout/_address_list_partial.html",
                         {
-                            "addresses": request.user.addresses.all().order_by('-created_at'),
+                            "addresses": request.user.addresses.filter(is_deleted=False).order_by('-created_at'),
                             "selected_address": address.id,
                             "has_address":True
                         }
                     )
 
-                # 🔹 Profile
                 return render(
                     request,
                     "user/profile/_address_list_partial.html",
                     {
-                        "addresses": request.user.addresses.all().order_by('-created_at')
+                        "addresses": request.user.addresses.filter(is_deleted=False).order_by('-created_at')
                     }
                 )
 
             return redirect("my_address")
 
-        # Invalid form (HTMX)
         if request.headers.get("HX-Request"):
             return render(
                 request,
@@ -714,7 +710,6 @@ def add_address(request):
                 {"form": form}
             )
 
-    # GET request
     form = AddressForm(initial={'user':request.user})
     return render(
         request,

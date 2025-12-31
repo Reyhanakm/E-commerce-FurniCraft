@@ -14240,3 +14240,1615 @@ django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '
 [INFO] 2025-12-30 17:52:56,870 django.server: "GET /admin/offers/product/add/ HTTP/1.1" 200 10538
 [INFO] 2025-12-30 17:55:13,757 django.server: "GET /admin/offers/product/add/ HTTP/1.1" 200 11107
 [INFO] 2025-12-30 17:55:31,605 django.server: "POST /admin/offers/product/add/ HTTP/1.1" 200 11728
+[INFO] 2025-12-30 18:46:48,301 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-30 18:47:12,578 django.server: "GET /admin/offers/ HTTP/1.1" 200 15582
+[INFO] 2025-12-30 18:47:15,474 django.server: "GET /admin/offers/category/add/ HTTP/1.1" 200 10729
+[INFO] 2025-12-30 18:47:20,082 django.server: "POST /admin/offers/category/add/ HTTP/1.1" 200 11351
+[INFO] 2025-12-30 18:48:26,604 django.server: "POST /admin/offers/category/add/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 18:48:26,676 django.server: "GET /admin/offers/ HTTP/1.1" 200 16992
+[INFO] 2025-12-30 18:48:44,131 django.server: "GET /admin/offers/category/3/edit/ HTTP/1.1" 200 11496
+[INFO] 2025-12-30 18:48:52,538 django.server: "POST /admin/offers/category/3/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 18:48:52,597 django.server: "GET /admin/offers/ HTTP/1.1" 200 16992
+[INFO] 2025-12-30 18:48:55,690 django.server: "GET /admin/offers/category/3/edit/ HTTP/1.1" 200 11496
+[INFO] 2025-12-30 18:49:06,618 django.server: "POST /admin/offers/category/3/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 18:49:06,686 django.server: "GET /admin/offers/ HTTP/1.1" 200 16990
+[INFO] 2025-12-30 18:49:24,608 django.server: "POST /admin/offers/product/4/toggle/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 18:49:24,673 django.server: "GET /admin/offers/ HTTP/1.1" 200 16997
+[INFO] 2025-12-30 18:49:45,596 django.server: "GET /admin/offers/product/add/ HTTP/1.1" 200 11119
+[ERROR] 2025-12-30 18:51:15,136 django.request: Internal Server Error: /admin/offers/product/add/
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/admin_app/views.py", line 780, in admin_product_offer_create
+    if request.method == "POST" and form.is_valid():
+                                    ^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/forms/forms.py", line 206, in is_valid
+    return self.is_bound and not self.errors
+                                 ^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/forms/forms.py", line 201, in errors
+    self.full_clean()
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/forms/forms.py", line 338, in full_clean
+    self._clean_form()
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/forms/forms.py", line 354, in _clean_form
+    cleaned_data = self.clean()
+                   ^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py", line 233, in clean
+    original_price = product.sales_price
+                    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Product' object has no attribute 'sales_price'
+[ERROR] 2025-12-30 18:51:15,140 django.server: "POST /admin/offers/product/add/ HTTP/1.1" 500 102547
+[INFO] 2025-12-30 19:05:10,633 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-30 19:05:11,378 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-30 19:05:20,000 django.server: "GET /accounts/google/login/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 19:05:25,003 django.server: "GET /accounts/google/login/callback/?state=KXgg55Oual7o5JgQ&code=4%2F0ATX87lMYMiSHKhQN5hexNJt-3aUp0EOqwJwic5uAh8xESZUzAqBHNHuP7sSnbk8S3kpqvg&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=2&prompt=none HTTP/1.1" 302 0
+[INFO] 2025-12-30 19:05:25,052 django.server: "GET /home/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 19:05:25,157 django.server: "GET /login/ HTTP/1.1" 200 10775
+[WARNING] 2025-12-30 19:05:35,603 django.security.csrf: Forbidden (CSRF token from POST incorrect.): /admin/offers/product/add/
+[WARNING] 2025-12-30 19:05:35,604 django.server: "POST /admin/offers/product/add/ HTTP/1.1" 403 2503
+[INFO] 2025-12-30 19:05:41,663 django.server: "GET /admin/ HTTP/1.1" 200 3622
+[INFO] 2025-12-30 19:05:56,996 django.server: "POST /admin/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 19:05:57,041 django.server: "GET /admin/dashboard/ HTTP/1.1" 200 6921
+[INFO] 2025-12-30 19:06:00,057 django.server: "GET /admin/sales-report/ HTTP/1.1" 200 9406
+[INFO] 2025-12-30 19:06:01,773 django.server: "GET /admin/products/ HTTP/1.1" 200 22631
+[INFO] 2025-12-30 19:06:05,581 django.server: "GET /admin/customers/ HTTP/1.1" 200 15399
+[INFO] 2025-12-30 19:06:09,764 django.server: "POST /admin/customers/toggle/34/ HTTP/1.1" 200 57
+[INFO] 2025-12-30 19:06:13,450 django.server: "POST /admin/customers/toggle/33/ HTTP/1.1" 200 57
+[INFO] 2025-12-30 19:06:28,144 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-30 19:06:28,787 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-30 19:06:45,998 django.server: "GET /admin/offers/ HTTP/1.1" 200 16416
+[WARNING] 2025-12-30 19:07:21,594 django.request: Not Found: /commerce/orders/ORD-CD04576D/
+[WARNING] 2025-12-30 19:07:21,595 django.server: "GET /commerce/orders/ORD-CD04576D/ HTTP/1.1" 404 18098
+[WARNING] 2025-12-30 19:07:23,205 django.request: Not Found: /commerce/orders/ORD-CD04576D/
+[WARNING] 2025-12-30 19:07:23,205 django.server: "GET /commerce/orders/ORD-CD04576D/ HTTP/1.1" 404 18098
+[WARNING] 2025-12-30 19:07:23,428 django.request: Not Found: /commerce/orders/ORD-CD04576D/
+[WARNING] 2025-12-30 19:07:23,429 django.server: "GET /commerce/orders/ORD-CD04576D/ HTTP/1.1" 404 18098
+[WARNING] 2025-12-30 19:07:23,598 django.request: Not Found: /commerce/orders/ORD-CD04576D/
+[WARNING] 2025-12-30 19:07:23,598 django.server: "GET /commerce/orders/ORD-CD04576D/ HTTP/1.1" 404 18098
+[INFO] 2025-12-30 19:07:27,755 django.server: "GET / HTTP/1.1" 200 23287
+[INFO] 2025-12-30 19:07:30,357 django.server: "GET /login/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 19:07:30,407 django.server: "GET /home/ HTTP/1.1" 200 29770
+[INFO] 2025-12-30 19:07:30,915 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:07:30,918 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:07:37,798 product: Product listing accessed
+[INFO] 2025-12-30 19:07:37,872 product: Product pagination
+[INFO] 2025-12-30 19:07:37,896 django.server: "GET /product/products/ HTTP/1.1" 200 55721
+[INFO] 2025-12-30 19:07:38,304 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:07:38,312 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:07:42,347 product: Product listing accessed
+[INFO] 2025-12-30 19:07:42,367 product: Product pagination
+[INFO] 2025-12-30 19:07:42,367 product: HTMX product list request
+[INFO] 2025-12-30 19:07:42,393 django.server: "GET /product/products/?page=2& HTTP/1.1" 200 8768
+[INFO] 2025-12-30 19:07:53,438 product: Product listing accessed
+[INFO] 2025-12-30 19:07:53,539 product: Product pagination
+[INFO] 2025-12-30 19:07:53,540 product: HTMX product list request
+[INFO] 2025-12-30 19:07:53,582 django.server: "GET /product/products/?search=&sort=new HTTP/1.1" 200 33668
+[INFO] 2025-12-30 19:08:04,357 product: Product detail viewed
+[INFO] 2025-12-30 19:08:04,402 django.server: "GET /product/product_details/11/ HTTP/1.1" 200 26282
+[INFO] 2025-12-30 19:08:04,729 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:04,730 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:04,743 django.server: "GET /commerce/stock-status/variant/16/ HTTP/1.1" 200 1437
+[INFO] 2025-12-30 19:08:33,281 product: Category products page accessed
+[INFO] 2025-12-30 19:08:33,284 product: Products fetched for category
+[INFO] 2025-12-30 19:08:33,324 django.server: "GET /product/category_products/6/ HTTP/1.1" 200 16549
+[INFO] 2025-12-30 19:08:33,657 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:33,662 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:36,564 product: Product detail viewed
+[INFO] 2025-12-30 19:08:36,598 django.server: "GET /product/product_details/11/ HTTP/1.1" 200 26282
+[INFO] 2025-12-30 19:08:39,554 django.server: "GET /home/ HTTP/1.1" 200 29770
+[INFO] 2025-12-30 19:08:39,970 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:39,972 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:42,378 product: Product listing accessed
+[INFO] 2025-12-30 19:08:42,442 product: Product pagination
+[INFO] 2025-12-30 19:08:42,464 django.server: "GET /product/products/ HTTP/1.1" 200 55721
+[INFO] 2025-12-30 19:08:42,836 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:42,841 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:49,111 product: Product detail viewed
+[INFO] 2025-12-30 19:08:49,162 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-30 19:08:49,563 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:49,569 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:08:49,575 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-30 19:09:01,650 django.server: "GET /admin/products/ HTTP/1.1" 200 22631
+[INFO] 2025-12-30 19:09:03,710 django.server: "GET /admin/products/11/variants/ HTTP/1.1" 200 11306
+[INFO] 2025-12-30 19:09:05,993 django.server: "GET /admin/variants/edit/16/ HTTP/1.1" 200 10886
+[INFO] 2025-12-30 19:09:11,874 django.server: "POST /admin/variants/edit/16/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 19:09:11,929 django.server: "GET /admin/products/11/variants/ HTTP/1.1" 200 11888
+[INFO] 2025-12-30 19:09:14,941 django.server: "GET /admin/products/ HTTP/1.1" 200 22631
+[INFO] 2025-12-30 19:09:18,567 django.server: "GET /admin/products/10/variants/ HTTP/1.1" 200 11294
+[INFO] 2025-12-30 19:09:21,192 django.server: "GET /admin/products/ HTTP/1.1" 200 22631
+[INFO] 2025-12-30 19:09:24,723 django.server: "GET /admin/products/3/variants/ HTTP/1.1" 200 12149
+[INFO] 2025-12-30 19:09:29,033 django.server: "GET /admin/variants/edit/5/ HTTP/1.1" 200 11262
+[INFO] 2025-12-30 19:09:35,951 django.server: "POST /admin/variants/edit/5/ HTTP/1.1" 302 0
+[INFO] 2025-12-30 19:09:36,002 django.server: "GET /admin/products/3/variants/ HTTP/1.1" 200 12731
+[INFO] 2025-12-30 19:09:39,898 django.server: "GET /admin/products/ HTTP/1.1" 200 22631
+[INFO] 2025-12-30 19:09:45,197 django.server: "GET /admin/products/3/variants/ HTTP/1.1" 200 12150
+[INFO] 2025-12-30 19:09:47,979 django.server: "GET /admin/products/ HTTP/1.1" 200 22631
+[INFO] 2025-12-30 19:09:50,370 django.server: "GET /admin/orders/ HTTP/1.1" 200 22284
+[INFO] 2025-12-30 19:09:53,829 django.server: "GET /admin/customers/ HTTP/1.1" 200 15401
+[INFO] 2025-12-30 19:09:55,398 django.server: "GET /admin/orders/ HTTP/1.1" 200 22284
+[INFO] 2025-12-30 19:10:03,630 product: Variant info loaded
+[INFO] 2025-12-30 19:10:03,648 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-30 19:10:03,727 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-30 19:10:05,064 product: Variant info loaded
+[INFO] 2025-12-30 19:10:05,091 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-30 19:10:05,163 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-30 19:10:14,934 django.server: "GET /home/ HTTP/1.1" 200 29770
+[INFO] 2025-12-30 19:10:15,373 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:10:15,376 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:10:17,705 product: Product listing accessed
+[INFO] 2025-12-30 19:10:17,764 product: Product pagination
+[INFO] 2025-12-30 19:10:17,781 django.server: "GET /product/products/ HTTP/1.1" 200 56739
+[INFO] 2025-12-30 19:10:18,174 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:10:18,176 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:10:30,279 product: Product detail viewed
+[INFO] 2025-12-30 19:10:30,337 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-30 19:10:30,702 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:10:30,707 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-30 19:10:30,710 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-30 19:10:34,151 product: Variant info loaded
+[INFO] 2025-12-30 19:10:34,173 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-30 19:10:34,239 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-30 19:10:36,070 product: Variant info loaded
+[INFO] 2025-12-30 19:10:36,094 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-30 19:10:36,166 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-30 19:10:37,725 product: Variant info loaded
+[INFO] 2025-12-30 19:10:37,748 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-30 19:10:37,824 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 03:39:37,258 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 03:39:48,640 django.server: "GET /admin/customers/ HTTP/1.1" 200 15401
+[INFO] 2025-12-31 03:39:49,351 django.server: "GET /static/favicon.ico HTTP/1.1" 304 0
+[INFO] 2025-12-31 03:57:05,025 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 03:57:09,380 django.server: "GET / HTTP/1.1" 200 23287
+[WARNING] 2025-12-31 03:57:10,771 django.request: Not Found: /favicon.ico
+[WARNING] 2025-12-31 03:57:10,771 django.server: "GET /favicon.ico HTTP/1.1" 404 9905
+[INFO] 2025-12-31 03:58:30,235 django.server: "GET /login/ HTTP/1.1" 200 9180
+[INFO] 2025-12-31 03:58:35,636 django.server: "GET /accounts/google/login/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 03:58:45,363 django.server: "GET /accounts/google/login/callback/?state=UYCLDQ9p59Zjuiui&code=4%2F0ATX87lP7_eiPr4soVsP9Y5uevUvRKcQGZW5PcMvpqgsfIgfqhzjLHe0phpaV-x4fJt3rVw&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=1&prompt=none HTTP/1.1" 302 0
+[INFO] 2025-12-31 03:58:45,417 django.server: "GET /home/ HTTP/1.1" 200 30970
+[INFO] 2025-12-31 03:58:46,130 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 03:58:46,135 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 03:58:52,106 django.server: "GET /commerce/cart/ HTTP/1.1" 200 13526
+[INFO] 2025-12-31 03:58:52,413 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 03:58:52,421 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 03:58:56,122 django.server: "GET /profile/ HTTP/1.1" 200 18326
+[INFO] 2025-12-31 03:58:56,447 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 03:58:56,450 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 03:59:02,276 django.server: "GET /profile/ HTTP/1.1" 200 2891
+[INFO] 2025-12-31 03:59:03,504 django.server: "GET /profile/ HTTP/1.1" 200 2891
+[INFO] 2025-12-31 03:59:05,063 django.server: "GET /profile/address/ HTTP/1.1" 200 5909
+[INFO] 2025-12-31 04:10:38,750 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/admin_app/views.py changed, reloading.
+[INFO] 2025-12-31 04:10:39,403 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:11:08,024 django.server: "GET /profile/ HTTP/1.1" 200 18326
+[INFO] 2025-12-31 04:11:08,382 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:11:08,390 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:11:08,429 django.server: "GET /static/favicon.ico HTTP/1.1" 200 1684755
+[INFO] 2025-12-31 04:11:10,050 django.server: "GET /profile/address/ HTTP/1.1" 200 1925
+[INFO] 2025-12-31 04:11:52,607 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/users/views.py changed, reloading.
+[INFO] 2025-12-31 04:11:53,277 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:12:00,560 django.server: "GET /profile/address/ HTTP/1.1" 200 4739
+[INFO] 2025-12-31 04:12:07,926 django.server: "DELETE /profile/address/delete/10/ HTTP/1.1" 200 1925
+[INFO] 2025-12-31 04:12:28,668 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/users/views.py changed, reloading.
+[INFO] 2025-12-31 04:12:29,441 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:12:49,294 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:13:06,394 django.server: "GET /commerce/checkout/address/ HTTP/1.1" 200 3640
+[INFO] 2025-12-31 04:13:40,204 django.server: "POST /commerce/checkout/address/?from=profile HTTP/1.1" 200 3258
+[INFO] 2025-12-31 04:13:45,410 django.server: "GET /profile/address/edit/24/ HTTP/1.1" 200 5162
+[INFO] 2025-12-31 04:14:03,104 django.server: "POST /profile/address/edit/24/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:14:07,755 django.server: "GET /profile/ HTTP/1.1" 200 18326
+[INFO] 2025-12-31 04:14:08,087 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:14:08,090 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:14:09,595 django.server: "GET /profile/address/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:15:00,698 django.server: "POST /profile/address/default/51/ HTTP/1.1" 200 7234
+[INFO] 2025-12-31 04:15:17,953 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/users/views.py changed, reloading.
+[INFO] 2025-12-31 04:15:18,588 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:15:19,739 django.server: "POST /profile/address/default/21/ HTTP/1.1" 200 3415
+[INFO] 2025-12-31 04:15:23,935 django.server: "POST /profile/address/default/24/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:15:25,783 django.server: "POST /profile/address/default/51/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:15:27,511 django.server: "POST /profile/address/default/24/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:15:44,315 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/users/views.py changed, reloading.
+[INFO] 2025-12-31 04:15:44,970 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:15:55,103 django.server: "POST /profile/address/default/51/ HTTP/1.1" 200 4739
+[INFO] 2025-12-31 04:15:59,252 django.server: "POST /profile/address/default/10/ HTTP/1.1" 200 4574
+[INFO] 2025-12-31 04:16:13,067 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/users/views.py changed, reloading.
+[INFO] 2025-12-31 04:16:13,855 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:16:16,316 django.server: "GET /profile/address/ HTTP/1.1" 200 3415
+[INFO] 2025-12-31 04:16:21,677 django.server: "GET /profile/ HTTP/1.1" 200 18326
+[INFO] 2025-12-31 04:16:21,995 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:16:21,997 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:16:23,586 django.server: "GET /profile/address/ HTTP/1.1" 200 3415
+[INFO] 2025-12-31 04:16:59,839 django.server: "POST /profile/address/default/51/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:17:03,936 django.server: "POST /profile/address/default/24/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:17:06,650 django.server: "POST /profile/address/default/51/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:18:03,772 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/users/views.py changed, reloading.
+[INFO] 2025-12-31 04:18:04,615 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:18:08,170 django.server: "GET /profile/address/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:18:11,043 django.server: "GET /profile/address/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:18:12,985 django.server: "POST /profile/address/default/24/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:18:14,853 django.server: "POST /profile/address/default/51/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:18:16,716 django.server: "POST /profile/address/default/24/ HTTP/1.1" 200 3250
+[INFO] 2025-12-31 04:18:29,199 django.server: "GET /commerce/orders/ HTTP/1.1" 200 42193
+[INFO] 2025-12-31 04:18:34,317 django.server: "GET /commerce/orders/ORD-FE7CF088/ HTTP/1.1" 200 19419
+[INFO] 2025-12-31 04:18:34,646 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:18:34,649 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:19:13,328 django.server: "GET /commerce/orders/ORD-C3359B8C/ HTTP/1.1" 200 18387
+[INFO] 2025-12-31 04:19:13,685 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:19:13,687 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:19:24,907 django.server: "GET /commerce/pay/razorpay/ORD-C3359B8C/ HTTP/1.1" 200 2435
+[INFO] 2025-12-31 04:19:58,413 django.server: "POST /commerce/pay/razorpay/success/ HTTP/1.1" 200 17
+[INFO] 2025-12-31 04:19:58,483 django.server: "GET /commerce/order/success/ORD-C3359B8C/ HTTP/1.1" 200 15091
+[INFO] 2025-12-31 04:19:58,852 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:19:58,854 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:20:05,233 django.server: "GET /commerce/orders/ORD-C3359B8C/ HTTP/1.1" 200 18070
+[INFO] 2025-12-31 04:20:05,565 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:20:05,567 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:20:58,545 django.server: "GET /commerce/order/invoice/ORD-C3359B8C/ HTTP/1.1" 200 2438
+[INFO] 2025-12-31 04:21:09,300 django.server: "GET /commerce/pay/razorpay/ORD-C3359B8C/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 04:21:09,360 django.server: "GET /commerce/order/success/ORD-C3359B8C/ HTTP/1.1" 200 15091
+[INFO] 2025-12-31 04:21:09,727 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:21:09,730 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:21:12,525 django.server: "GET /commerce/order/success/ORD-C3359B8C/ HTTP/1.1" 200 15091
+[INFO] 2025-12-31 04:21:12,818 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:21:12,822 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:21:14,430 django.server: "GET /commerce/orders/ORD-C3359B8C/ HTTP/1.1" 200 18070
+[INFO] 2025-12-31 04:21:14,752 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:21:14,754 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:21:30,027 django.server: "GET /profile/ HTTP/1.1" 200 18326
+[INFO] 2025-12-31 04:21:30,361 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:21:30,364 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:21:32,612 django.server: "GET /commerce/orders/ HTTP/1.1" 200 41856
+[INFO] 2025-12-31 04:24:20,067 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 04:24:20,849 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:24:36,436 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 04:24:37,128 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:27:22,900 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 04:27:23,629 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:27:53,354 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 04:27:54,112 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:28:19,021 django.server: "GET /commerce/orders-page/ HTTP/1.1" 200 31496
+[INFO] 2025-12-31 04:28:19,381 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:28:19,391 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:28:38,446 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 04:28:39,188 django.utils.autoreload: Watching for file changes with StatReloader
+[ERROR] 2025-12-31 04:29:37,957 django.request: Internal Server Error: /commerce/orders-page/
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 171, in render
+    return self._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 65, in render
+    result = block.nodelist.render(context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 210, in render
+    return template.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 173, in render
+    return self._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 199, in render
+    template = context.template.engine.select_template(template_name)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 204, in select_template
+    raise TemplateDoesNotExist("No template names provided")
+django.template.exceptions.TemplateDoesNotExist: No template names provided
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py", line 1106, in my_orders_page
+    return render(request,"commerce/order/my_orders_page.html",
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/backends/django.py", line 109, in render
+    reraise(exc, self.backend)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/backends/django.py", line 130, in reraise
+    raise new from exc
+django.template.exceptions.TemplateDoesNotExist: No template names provided
+[ERROR] 2025-12-31 04:29:37,962 django.server: "GET /commerce/orders-page/ HTTP/1.1" 500 190470
+[INFO] 2025-12-31 04:29:54,162 django.server: "GET /commerce/orders-page/ HTTP/1.1" 200 25500
+[INFO] 2025-12-31 04:29:54,523 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:29:54,531 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:01,840 django.server: "GET /commerce/orders-page/?page=2 HTTP/1.1" 200 23947
+[INFO] 2025-12-31 04:30:02,174 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:02,177 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:04,966 django.server: "GET /commerce/orders-page/?page=3 HTTP/1.1" 200 24293
+[INFO] 2025-12-31 04:30:05,277 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:05,280 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:07,670 django.server: "GET /commerce/orders-page/?page=4 HTTP/1.1" 200 21121
+[INFO] 2025-12-31 04:30:07,978 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:07,981 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:11,956 django.server: "GET /commerce/orders-page/?page=3 HTTP/1.1" 200 24293
+[INFO] 2025-12-31 04:30:12,266 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:12,269 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:17,855 django.server: "GET /commerce/orders-page/?page=2 HTTP/1.1" 200 23947
+[INFO] 2025-12-31 04:30:18,148 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:18,152 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:20,400 django.server: "GET /commerce/orders-page/?page=1 HTTP/1.1" 200 25500
+[INFO] 2025-12-31 04:30:20,700 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:20,703 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:25,309 django.server: "GET /commerce/orders-page/?page=2 HTTP/1.1" 200 23947
+[INFO] 2025-12-31 04:30:25,628 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:25,631 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:28,475 django.server: "GET /commerce/orders-page/?page=3 HTTP/1.1" 200 24293
+[INFO] 2025-12-31 04:30:28,778 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:28,781 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:32,714 django.server: "GET /commerce/orders-page/?page=4 HTTP/1.1" 200 21121
+[INFO] 2025-12-31 04:30:33,036 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:33,039 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:51,135 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 04:30:51,772 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:30:56,600 django.server: "GET /commerce/orders-page/?page=3 HTTP/1.1" 200 17702
+[INFO] 2025-12-31 04:30:56,928 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:30:56,932 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:00,458 django.server: "GET /commerce/orders-page/?page=1 HTTP/1.1" 200 32060
+[INFO] 2025-12-31 04:31:00,772 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:00,775 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:07,358 django.server: "GET /commerce/orders-page/?page=2 HTTP/1.1" 200 31355
+[INFO] 2025-12-31 04:31:07,682 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:07,685 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:11,563 django.server: "GET /commerce/orders-page/?page=3 HTTP/1.1" 200 17702
+[INFO] 2025-12-31 04:31:11,867 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:11,871 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:19,774 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 04:31:20,502 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 04:31:22,468 django.server: "GET /commerce/orders-page/?page=2 HTTP/1.1" 200 28087
+[INFO] 2025-12-31 04:31:22,855 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:22,858 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:30,136 django.server: "GET /commerce/orders-page/?page=1 HTTP/1.1" 200 28706
+[INFO] 2025-12-31 04:31:30,471 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:30,474 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:31:39,184 django.server: "GET /commerce/pay/razorpay/ORD-0A1DD6D8/ HTTP/1.1" 200 2435
+[INFO] 2025-12-31 04:32:11,110 django.server: "POST /commerce/pay/razorpay/success/ HTTP/1.1" 200 17
+[INFO] 2025-12-31 04:32:11,181 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15083
+[INFO] 2025-12-31 04:32:11,541 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:32:11,543 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[ERROR] 2025-12-31 04:34:23,252 django.request: Internal Server Error: /commerce/order/success/ORD-0A1DD6D8/
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 180, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: 'order.delivery_charge>0'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py", line 979, in order_success
+    return render(request,"commerce/order/order_success.html",{"order":order})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/backends/django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/base.py", line 28, in get_template
+    return Template(
+           ^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 961, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 894, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 171, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 182, in translate_token
+    return self.create_var(token)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 897, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 710, in __init__
+    raise TemplateSyntaxError(
+django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '>0' from 'order.delivery_charge>0'
+[ERROR] 2025-12-31 04:34:23,256 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 500 242018
+[ERROR] 2025-12-31 04:34:35,991 django.request: Internal Server Error: /commerce/order/success/ORD-0A1DD6D8/
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 180, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: '!=0'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py", line 979, in order_success
+    return render(request,"commerce/order/order_success.html",{"order":order})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/backends/django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/base.py", line 28, in get_template
+    return Template(
+           ^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 961, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 894, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 171, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 182, in translate_token
+    return self.create_var(token)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 897, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 710, in __init__
+    raise TemplateSyntaxError(
+django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '!=0' from '!=0'
+[ERROR] 2025-12-31 04:34:35,994 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 500 240986
+[ERROR] 2025-12-31 04:35:09,444 django.request: Internal Server Error: /commerce/order/success/ORD-0A1DD6D8/
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 180, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: '{{order.delivery_charge}}'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py", line 979, in order_success
+    return render(request,"commerce/order/order_success.html",{"order":order})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/backends/django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/base.py", line 28, in get_template
+    return Template(
+           ^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 961, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 894, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 171, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 182, in translate_token
+    return self.create_var(token)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 897, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 710, in __init__
+    raise TemplateSyntaxError(
+django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '{{order.delivery_charge}}' from '{{order.delivery_charge}}'
+[ERROR] 2025-12-31 04:35:09,447 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 500 241400
+[ERROR] 2025-12-31 04:35:28,254 django.request: Internal Server Error: /commerce/order/success/ORD-0A1DD6D8/
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 180, in translate_token
+    op = OPERATORS[token]
+         ~~~~~~~~~^^^^^^^
+KeyError: '!=0'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py", line 979, in order_success
+    return render(request,"commerce/order/order_success.html",{"order":order})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/backends/django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/base.py", line 28, in get_template
+    return Template(
+           ^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 961, in do_if
+    condition = TemplateIfParser(parser, bits).parse()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 894, in __init__
+    super().__init__(*args, **kwargs)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 171, in __init__
+    mapped_tokens.append(self.translate_token(token))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/smartif.py", line 182, in translate_token
+    return self.create_var(token)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 897, in create_var
+    return TemplateLiteral(self.template_parser.compile_filter(value), value)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 710, in __init__
+    raise TemplateSyntaxError(
+django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: '!=0' from '!=0'
+[ERROR] 2025-12-31 04:35:28,257 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 500 240986
+[INFO] 2025-12-31 04:35:38,821 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15195
+[INFO] 2025-12-31 04:35:39,131 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:35:39,137 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:35:50,988 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15195
+[INFO] 2025-12-31 04:35:51,292 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:35:51,295 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[ERROR] 2025-12-31 04:39:42,223 django.request: Internal Server Error: /commerce/order/success/ORD-0A1DD6D8/
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endblock'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/contrib/auth/decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py", line 979, in order_success
+    return render(request,"commerce/order/order_success.html",{"order":order})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/backends/django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loaders/base.py", line 28, in get_template
+    return Template(
+           ^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+               ^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 518, in parse
+    raise self.error(token, e)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/defaulttags.py", line 970, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+  File "/home/reyhana/Documents/FurniCraft/E-commerce/myenv/lib/python3.12/site-packages/django/template/base.py", line 567, in invalid_block_tag
+    raise self.error(
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 133: 'endblock', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+[ERROR] 2025-12-31 04:39:42,227 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 500 219315
+[INFO] 2025-12-31 04:40:09,732 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15241
+[INFO] 2025-12-31 04:40:10,027 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:40:10,029 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:41:25,748 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15254
+[INFO] 2025-12-31 04:41:26,045 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:41:26,048 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:42:15,601 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15268
+[INFO] 2025-12-31 04:42:15,890 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:42:15,893 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:42:44,515 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15273
+[INFO] 2025-12-31 04:42:44,819 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:42:44,822 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:42:51,029 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15270
+[INFO] 2025-12-31 04:42:51,316 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:42:51,329 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:43:05,689 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15278
+[INFO] 2025-12-31 04:43:05,967 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:43:05,969 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:43:33,680 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15287
+[INFO] 2025-12-31 04:43:33,983 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:43:33,988 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:44:06,281 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15288
+[INFO] 2025-12-31 04:44:06,597 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:44:06,602 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:44:44,829 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15288
+[INFO] 2025-12-31 04:44:45,124 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:44:45,127 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:44:52,819 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15288
+[INFO] 2025-12-31 04:44:53,154 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:44:53,156 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:45:10,175 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15293
+[INFO] 2025-12-31 04:45:10,462 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:45:10,466 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:45:18,743 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15293
+[INFO] 2025-12-31 04:45:19,056 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:45:19,059 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:45:26,009 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15292
+[INFO] 2025-12-31 04:45:26,291 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:45:26,294 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:45:50,875 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15289
+[INFO] 2025-12-31 04:45:51,167 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:45:51,170 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:46:01,448 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15292
+[INFO] 2025-12-31 04:46:01,777 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:46:01,783 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:46:11,743 django.server: "GET /commerce/order/success/ORD-0A1DD6D8/ HTTP/1.1" 200 15292
+[INFO] 2025-12-31 04:46:12,038 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:46:12,040 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 04:47:48,231 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 04:47:49,051 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:08:13,157 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/utils/offers.py changed, reloading.
+[INFO] 2025-12-31 05:08:13,657 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:09:09,917 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 05:09:10,561 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:11:24,067 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/views.py changed, reloading.
+[INFO] 2025-12-31 05:11:24,707 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:11:26,497 django.server: "GET /login/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:11:26,552 django.server: "GET /home/ HTTP/1.1" 200 29770
+[INFO] 2025-12-31 05:11:27,380 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:27,384 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:29,135 django.server: "GET /commerce/cart/ HTTP/1.1" 200 17182
+[INFO] 2025-12-31 05:11:29,492 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:29,495 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:29,523 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1251
+[INFO] 2025-12-31 05:11:33,125 django.server: "GET /commerce/checkout/ HTTP/1.1" 200 22288
+[INFO] 2025-12-31 05:11:33,445 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:33,447 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:46,713 product: Product listing accessed
+[INFO] 2025-12-31 05:11:46,793 product: Product pagination
+[INFO] 2025-12-31 05:11:46,822 django.server: "GET /product/products/ HTTP/1.1" 200 56739
+[INFO] 2025-12-31 05:11:47,223 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:47,226 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:49,994 product: Product detail viewed
+[INFO] 2025-12-31 05:11:50,045 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-31 05:11:50,410 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:50,419 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:11:50,424 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:11:57,050 product: Variant info loaded
+[INFO] 2025-12-31 05:11:57,078 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:11:57,154 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:11:59,021 product: Variant info loaded
+[INFO] 2025-12-31 05:11:59,047 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:11:59,124 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:12:06,787 product: Variant info loaded
+[INFO] 2025-12-31 05:12:06,809 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:12:06,892 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:12:26,322 django.server: "GET /admin/offers/ HTTP/1.1" 200 16416
+[INFO] 2025-12-31 05:12:46,094 django.server: "GET /admin/offers/product/3/edit/ HTTP/1.1" 200 11885
+[INFO] 2025-12-31 05:13:15,780 django.server: "POST /admin/offers/product/3/edit/ HTTP/1.1" 200 12031
+[INFO] 2025-12-31 05:13:28,970 django.server: "POST /admin/offers/product/3/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:13:29,033 django.server: "GET /admin/offers/ HTTP/1.1" 200 16987
+[INFO] 2025-12-31 05:13:43,228 django.server: "GET /admin/offers/product/5/edit/ HTTP/1.1" 200 11870
+[INFO] 2025-12-31 05:13:51,440 django.server: "POST /admin/offers/product/5/edit/ HTTP/1.1" 200 12079
+[INFO] 2025-12-31 05:14:22,897 django.server: "POST /admin/offers/product/5/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:14:22,962 django.server: "GET /admin/offers/ HTTP/1.1" 200 16986
+[INFO] 2025-12-31 05:14:44,339 product: Product detail viewed
+[INFO] 2025-12-31 05:14:44,388 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-31 05:14:45,681 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:14:45,684 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:14:45,688 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:14:48,194 product: Variant info loaded
+[INFO] 2025-12-31 05:14:48,212 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:14:48,283 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:14:49,854 product: Variant info loaded
+[INFO] 2025-12-31 05:14:49,879 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:14:49,953 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:14:58,527 product: Variant info loaded
+[INFO] 2025-12-31 05:14:58,550 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:14:58,622 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:15:09,086 django.server: "GET /login/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:15:09,136 django.server: "GET /home/ HTTP/1.1" 200 29770
+[INFO] 2025-12-31 05:15:10,448 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:15:10,450 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:15:21,156 django.server: "GET /admin/offers/product/add/ HTTP/1.1" 200 11119
+[INFO] 2025-12-31 05:16:33,850 django.server: "POST /admin/offers/product/add/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:16:33,914 django.server: "GET /admin/offers/ HTTP/1.1" 200 17862
+[INFO] 2025-12-31 05:16:44,886 django.server: "GET /admin/offers/category/add/ HTTP/1.1" 200 10729
+[INFO] 2025-12-31 05:17:19,471 django.server: "POST /admin/offers/category/add/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:17:19,535 django.server: "GET /admin/offers/ HTTP/1.1" 200 18704
+[INFO] 2025-12-31 05:26:04,098 product: Product detail viewed
+[INFO] 2025-12-31 05:26:04,177 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-31 05:26:05,047 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:26:05,053 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:26:05,055 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:26:06,378 product: Product detail viewed
+[INFO] 2025-12-31 05:26:06,427 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-31 05:26:06,815 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:26:06,819 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:26:06,821 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:26:09,211 product: Variant info loaded
+[INFO] 2025-12-31 05:26:09,233 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:26:09,299 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:26:10,661 product: Variant info loaded
+[INFO] 2025-12-31 05:26:10,679 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:26:10,752 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:26:19,617 product: Variant info loaded
+[INFO] 2025-12-31 05:26:19,657 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:26:19,740 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:26:21,737 product: Variant info loaded
+[INFO] 2025-12-31 05:26:21,762 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:26:21,835 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 05:29:28,260 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-31 05:29:28,914 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:29:59,651 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-31 05:30:00,418 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:30:14,057 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-31 05:30:14,564 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:30:46,408 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-31 05:30:47,154 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:31:06,778 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-31 05:31:07,424 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:31:28,911 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-31 05:31:29,455 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:34:32,705 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/forms.py changed, reloading.
+[INFO] 2025-12-31 05:34:33,392 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 05:35:48,142 django.server: "GET /admin/offers/category/4/edit/ HTTP/1.1" 200 11502
+[INFO] 2025-12-31 05:36:05,751 django.server: "POST /admin/offers/category/4/edit/ HTTP/1.1" 200 11497
+[INFO] 2025-12-31 05:36:08,793 django.server: "POST /admin/offers/category/4/edit/ HTTP/1.1" 200 11497
+[INFO] 2025-12-31 05:36:25,799 django.server: "GET /admin/offers/ HTTP/1.1" 200 18129
+[INFO] 2025-12-31 05:36:29,236 django.server: "GET /admin/offers/category/4/edit/ HTTP/1.1" 200 11502
+[INFO] 2025-12-31 05:36:40,152 django.server: "POST /admin/offers/category/4/edit/ HTTP/1.1" 200 11496
+[INFO] 2025-12-31 05:36:41,273 django.server: "POST /admin/offers/category/4/edit/ HTTP/1.1" 200 11496
+[INFO] 2025-12-31 05:37:09,353 django.server: "GET /admin/offers/ HTTP/1.1" 200 18129
+[INFO] 2025-12-31 05:37:14,590 django.server: "GET /admin/offers/category/3/edit/ HTTP/1.1" 200 11496
+[INFO] 2025-12-31 05:37:21,513 django.server: "POST /admin/offers/category/3/edit/ HTTP/1.1" 200 11490
+[INFO] 2025-12-31 05:37:22,549 django.server: "POST /admin/offers/category/3/edit/ HTTP/1.1" 200 11490
+[INFO] 2025-12-31 05:37:25,224 django.server: "GET /admin/offers/ HTTP/1.1" 200 18129
+[INFO] 2025-12-31 05:37:28,540 django.server: "GET /admin/offers/category/2/edit/ HTTP/1.1" 200 11500
+[INFO] 2025-12-31 05:37:43,180 django.server: "POST /admin/offers/category/2/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:37:43,255 django.server: "GET /admin/offers/ HTTP/1.1" 200 18703
+[INFO] 2025-12-31 05:37:59,765 django.server: "POST /admin/offers/category/3/toggle/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:37:59,842 django.server: "GET /admin/offers/ HTTP/1.1" 200 18711
+[INFO] 2025-12-31 05:38:02,025 django.server: "POST /admin/offers/category/4/toggle/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:38:02,094 django.server: "GET /admin/offers/ HTTP/1.1" 200 18709
+[INFO] 2025-12-31 05:38:03,234 django.server: "POST /admin/offers/category/4/toggle/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:38:03,299 django.server: "GET /admin/offers/ HTTP/1.1" 200 18709
+[INFO] 2025-12-31 05:38:04,522 django.server: "GET /admin/offers/category/4/edit/ HTTP/1.1" 200 11502
+[INFO] 2025-12-31 05:38:10,125 django.server: "GET /admin/offers/ HTTP/1.1" 200 18128
+[INFO] 2025-12-31 05:38:12,408 django.server: "POST /admin/offers/category/4/toggle/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:38:12,467 django.server: "GET /admin/offers/ HTTP/1.1" 200 18709
+[INFO] 2025-12-31 05:38:13,644 django.server: "POST /admin/offers/category/3/toggle/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:38:13,712 django.server: "GET /admin/offers/ HTTP/1.1" 200 18707
+[INFO] 2025-12-31 05:38:15,982 django.server: "GET /admin/offers/category/3/edit/ HTTP/1.1" 200 11496
+[INFO] 2025-12-31 05:38:19,011 django.server: "POST /admin/offers/category/3/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 05:38:19,075 django.server: "GET /admin/offers/ HTTP/1.1" 200 18701
+[INFO] 2025-12-31 05:52:29,075 django.server: "POST /commerce/cart/add/variant/6/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 05:52:29,132 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:52:29,143 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 05:52:29,204 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 05:52:29,227 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:52:31,864 product: Product detail viewed
+[INFO] 2025-12-31 05:52:31,939 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-31 05:52:32,682 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:52:32,688 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 05:52:32,700 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 05:52:34,711 product: Variant info loaded
+[INFO] 2025-12-31 05:52:34,741 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:52:34,813 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 05:52:36,019 product: Variant info loaded
+[INFO] 2025-12-31 05:52:36,043 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 05:52:36,124 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 06:32:22,788 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/models.py changed, reloading.
+[INFO] 2025-12-31 06:32:23,417 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:46:04,687 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:46:05,323 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:46:38,178 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:46:38,780 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:46:43,679 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:46:44,475 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:46:49,517 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:46:50,327 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:46:56,101 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:46:57,209 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:47:01,534 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:47:02,439 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:47:12,931 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:47:13,624 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:47:21,317 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:47:21,860 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:47:41,327 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:47:41,969 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 06:49:00,842 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/product/views.py changed, reloading.
+[INFO] 2025-12-31 06:49:01,576 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 07:16:31,780 product: Product detail viewed
+[INFO] 2025-12-31 07:16:31,880 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-31 07:16:32,573 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:16:32,580 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:16:32,587 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:16:34,677 product: Variant info loaded
+[INFO] 2025-12-31 07:16:34,692 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 07:16:34,761 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:16:36,084 product: Variant info loaded
+[INFO] 2025-12-31 07:16:36,106 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 07:16:36,184 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:16:38,939 product: Product listing accessed
+[INFO] 2025-12-31 07:16:38,996 product: Product pagination
+[INFO] 2025-12-31 07:16:39,016 django.server: "GET /product/products/ HTTP/1.1" 200 57580
+[INFO] 2025-12-31 07:16:39,410 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:16:39,415 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:16:47,917 product: Product listing accessed
+[INFO] 2025-12-31 07:16:47,989 product: Product pagination
+[INFO] 2025-12-31 07:16:48,013 django.server: "GET /product/products/?search=&sort=&csrfmiddlewaretoken=PScrgjIzVxXk73wryZpY4rBylNVNPlNHctTroI72STNp4Syc5AkCBNdWwFnBKwxu HTTP/1.1" 200 57792
+[INFO] 2025-12-31 07:16:48,470 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:16:48,475 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:16:58,115 product: Product listing accessed
+[INFO] 2025-12-31 07:16:58,179 product: Product pagination
+[INFO] 2025-12-31 07:16:58,211 django.server: "GET /product/products/?search=&sort=&csrfmiddlewaretoken=PScrgjIzVxXk73wryZpY4rBylNVNPlNHctTroI72STNp4Syc5AkCBNdWwFnBKwxu HTTP/1.1" 200 57824
+[INFO] 2025-12-31 07:16:58,576 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:16:58,581 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:01,052 product: Product listing accessed
+[INFO] 2025-12-31 07:17:01,106 product: Product pagination
+[INFO] 2025-12-31 07:17:01,126 django.server: "GET /product/products/?search=&sort=&csrfmiddlewaretoken=fT2SMgC2pVXhUr4JU6SvsfdfpDAn75UOCuJSUF1vmhNmRg6urHN9ZBPDAv2b2gEB HTTP/1.1" 200 57824
+[INFO] 2025-12-31 07:17:01,494 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:01,497 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:24,766 django.server: "POST /commerce/wishlist/toggle/1/ HTTP/1.1" 200 41
+[INFO] 2025-12-31 07:17:24,809 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:27,539 django.server: "POST /commerce/wishlist/toggle/1/ HTTP/1.1" 200 28
+[INFO] 2025-12-31 07:17:27,587 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:31,916 product: Product detail viewed
+[INFO] 2025-12-31 07:17:31,989 django.server: "GET /product/product_details/1/ HTTP/1.1" 200 29068
+[INFO] 2025-12-31 07:17:32,364 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:32,374 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:32,389 django.server: "GET /commerce/stock-status/variant/1/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:17:36,755 product: Product listing accessed
+[INFO] 2025-12-31 07:17:36,830 product: Product pagination
+[INFO] 2025-12-31 07:17:36,854 django.server: "GET /product/products/?search=&sort=&csrfmiddlewaretoken=fT2SMgC2pVXhUr4JU6SvsfdfpDAn75UOCuJSUF1vmhNmRg6urHN9ZBPDAv2b2gEB HTTP/1.1" 200 57824
+[INFO] 2025-12-31 07:17:38,583 product: Product detail viewed
+[INFO] 2025-12-31 07:17:38,642 django.server: "GET /product/product_details/2/ HTTP/1.1" 200 31734
+[INFO] 2025-12-31 07:17:39,024 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:39,027 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:17:39,030 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1436
+[INFO] 2025-12-31 07:17:41,103 product: Variant info loaded
+[INFO] 2025-12-31 07:17:41,122 django.server: "GET /product/variant/3/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:17:41,201 django.server: "GET /commerce/stock-status/variant/3/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:17:43,329 product: Variant info loaded
+[INFO] 2025-12-31 07:17:43,353 django.server: "GET /product/variant/4/info/ HTTP/1.1" 200 1559
+[INFO] 2025-12-31 07:17:43,438 django.server: "GET /commerce/stock-status/variant/4/ HTTP/1.1" 200 1436
+[INFO] 2025-12-31 07:17:45,204 product: Variant info loaded
+[INFO] 2025-12-31 07:17:45,228 django.server: "GET /product/variant/2/info/ HTTP/1.1" 200 1559
+[INFO] 2025-12-31 07:17:45,297 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1436
+[INFO] 2025-12-31 07:17:46,776 product: Variant info loaded
+[INFO] 2025-12-31 07:17:46,800 django.server: "GET /product/variant/3/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:17:46,877 django.server: "GET /commerce/stock-status/variant/3/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:17:47,960 product: Variant info loaded
+[INFO] 2025-12-31 07:17:47,990 django.server: "GET /product/variant/4/info/ HTTP/1.1" 200 1559
+[INFO] 2025-12-31 07:17:48,060 django.server: "GET /commerce/stock-status/variant/4/ HTTP/1.1" 200 1436
+[INFO] 2025-12-31 07:17:49,838 product: Variant info loaded
+[INFO] 2025-12-31 07:17:49,860 django.server: "GET /product/variant/2/info/ HTTP/1.1" 200 1559
+[INFO] 2025-12-31 07:17:49,930 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1436
+[INFO] 2025-12-31 07:17:59,635 django.server: "GET /admin/products/ HTTP/1.1" 200 22631
+[INFO] 2025-12-31 07:18:03,993 django.server: "GET /admin/products/?page=2 HTTP/1.1" 200 13224
+[INFO] 2025-12-31 07:18:06,271 django.server: "GET /admin/products/2/variants/ HTTP/1.1" 200 12947
+[INFO] 2025-12-31 07:18:08,317 django.server: "GET /admin/variants/edit/4/ HTTP/1.1" 200 11151
+[INFO] 2025-12-31 07:18:12,552 django.server: "POST /admin/variants/edit/4/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 07:18:12,601 django.server: "GET /admin/products/2/variants/ HTTP/1.1" 200 13529
+[INFO] 2025-12-31 07:18:14,554 django.server: "GET /admin/variants/edit/4/ HTTP/1.1" 200 11152
+[INFO] 2025-12-31 07:18:17,018 django.server: "GET /admin/products/2/variants/ HTTP/1.1" 200 12948
+[INFO] 2025-12-31 07:18:19,352 django.server: "GET /admin/variants/edit/2/ HTTP/1.1" 200 11146
+[INFO] 2025-12-31 07:18:25,280 django.server: "POST /admin/variants/edit/2/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 07:18:25,325 django.server: "GET /admin/products/2/variants/ HTTP/1.1" 200 13529
+[INFO] 2025-12-31 07:18:36,273 product: Variant info loaded
+[INFO] 2025-12-31 07:18:36,305 django.server: "GET /product/variant/3/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:18:36,385 django.server: "GET /commerce/stock-status/variant/3/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:18:37,736 product: Variant info loaded
+[INFO] 2025-12-31 07:18:37,759 django.server: "GET /product/variant/4/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:18:37,829 django.server: "GET /commerce/stock-status/variant/4/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:18:39,448 product: Variant info loaded
+[INFO] 2025-12-31 07:18:39,473 django.server: "GET /product/variant/2/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:18:39,548 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:18:42,654 product: Variant info loaded
+[INFO] 2025-12-31 07:18:42,678 django.server: "GET /product/variant/3/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:18:42,750 django.server: "GET /commerce/stock-status/variant/3/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:18:43,838 product: Variant info loaded
+[INFO] 2025-12-31 07:18:43,862 django.server: "GET /product/variant/4/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:18:43,930 django.server: "GET /commerce/stock-status/variant/4/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:18:46,976 django.server: "GET /home/ HTTP/1.1" 200 29770
+[INFO] 2025-12-31 07:18:47,495 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:18:47,497 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:18:49,045 product: Product listing accessed
+[INFO] 2025-12-31 07:18:49,100 product: Product pagination
+[INFO] 2025-12-31 07:18:49,121 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:18:49,544 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:18:49,550 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:18:52,677 product: Product detail viewed
+[INFO] 2025-12-31 07:18:52,736 django.server: "GET /product/product_details/2/ HTTP/1.1" 200 32808
+[INFO] 2025-12-31 07:18:53,127 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:18:53,131 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:18:53,134 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:18:56,657 product: Variant info loaded
+[INFO] 2025-12-31 07:18:56,671 django.server: "GET /product/variant/2/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:18:56,736 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:18:58,275 product: Variant info loaded
+[INFO] 2025-12-31 07:18:58,298 django.server: "GET /product/variant/3/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:18:58,375 django.server: "GET /commerce/stock-status/variant/3/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:18:59,781 product: Variant info loaded
+[INFO] 2025-12-31 07:18:59,802 django.server: "GET /product/variant/4/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:18:59,874 django.server: "GET /commerce/stock-status/variant/4/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:19:07,445 django.server: "POST /commerce/wishlist/toggle/4/ HTTP/1.1" 200 41
+[INFO] 2025-12-31 07:19:07,496 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:09,783 django.server: "POST /commerce/wishlist/toggle/4/ HTTP/1.1" 200 28
+[INFO] 2025-12-31 07:19:09,832 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:12,919 django.server: "POST /commerce/wishlist/toggle/4/ HTTP/1.1" 200 41
+[INFO] 2025-12-31 07:19:12,960 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:14,775 product: Product listing accessed
+[INFO] 2025-12-31 07:19:14,846 product: Product pagination
+[INFO] 2025-12-31 07:19:14,869 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:19:15,271 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:15,275 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:17,990 product: Product detail viewed
+[INFO] 2025-12-31 07:19:18,058 django.server: "GET /product/product_details/2/ HTTP/1.1" 200 32808
+[INFO] 2025-12-31 07:19:18,430 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:18,433 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:18,438 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:19:21,114 product: Variant info loaded
+[INFO] 2025-12-31 07:19:21,130 django.server: "GET /product/variant/2/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:19:21,197 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:19:23,162 django.server: "POST /commerce/wishlist/toggle/2/ HTTP/1.1" 200 41
+[INFO] 2025-12-31 07:19:23,207 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:25,319 product: Product listing accessed
+[INFO] 2025-12-31 07:19:25,380 product: Product pagination
+[INFO] 2025-12-31 07:19:25,403 django.server: "GET /product/products/ HTTP/1.1" 200 58643
+[INFO] 2025-12-31 07:19:25,820 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:25,823 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:28,133 product: Product detail viewed
+[INFO] 2025-12-31 07:19:28,193 django.server: "GET /product/product_details/2/ HTTP/1.1" 200 32821
+[INFO] 2025-12-31 07:19:28,603 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:28,610 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:28,618 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:19:30,903 product: Variant info loaded
+[INFO] 2025-12-31 07:19:30,920 django.server: "GET /product/variant/3/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:19:30,987 django.server: "GET /commerce/stock-status/variant/3/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:19:32,086 product: Variant info loaded
+[INFO] 2025-12-31 07:19:32,108 django.server: "GET /product/variant/4/info/ HTTP/1.1" 200 2646
+[INFO] 2025-12-31 07:19:32,175 django.server: "GET /commerce/stock-status/variant/4/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:19:38,509 django.server: "POST /commerce/wishlist/toggle/4/ HTTP/1.1" 200 28
+[INFO] 2025-12-31 07:19:38,555 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:40,822 product: Variant info loaded
+[INFO] 2025-12-31 07:19:40,840 django.server: "GET /product/variant/2/info/ HTTP/1.1" 200 2646
+[INFO] 2025-12-31 07:19:40,913 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:19:44,620 django.server: "POST /commerce/wishlist/toggle/2/ HTTP/1.1" 200 28
+[INFO] 2025-12-31 07:19:44,659 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:46,970 product: Product listing accessed
+[INFO] 2025-12-31 07:19:47,030 product: Product pagination
+[INFO] 2025-12-31 07:19:47,051 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:19:47,466 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:47,472 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:50,774 product: Product detail viewed
+[INFO] 2025-12-31 07:19:50,859 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-31 07:19:51,266 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:51,270 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:19:51,273 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:19:53,327 product: Variant info loaded
+[INFO] 2025-12-31 07:19:53,358 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 07:19:53,433 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:19:55,150 product: Variant info loaded
+[INFO] 2025-12-31 07:19:55,175 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 07:19:55,253 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:19:57,875 product: Variant info loaded
+[INFO] 2025-12-31 07:19:57,898 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 07:19:57,975 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:20:39,704 product: Product listing accessed
+[INFO] 2025-12-31 07:20:39,760 product: Product pagination
+[INFO] 2025-12-31 07:20:39,778 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:20:40,194 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:20:40,202 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:05,722 product: Product listing accessed
+[INFO] 2025-12-31 07:21:05,779 product: Product pagination
+[INFO] 2025-12-31 07:21:05,800 django.server: "GET /product/products/?search=&sort=&csrfmiddlewaretoken=KCrCmwbAnlufL5wWA76qmqgX5RsaASwO7d8CuVA3kHkkIUyH7I14TMSlgJUYv3gB HTTP/1.1" 200 58842
+[INFO] 2025-12-31 07:21:06,426 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:06,430 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:13,324 product: Product detail viewed
+[INFO] 2025-12-31 07:21:13,383 django.server: "GET /product/product_details/1/ HTTP/1.1" 200 29068
+[INFO] 2025-12-31 07:21:13,768 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:13,769 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:13,774 django.server: "GET /commerce/stock-status/variant/1/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:21:16,310 django.server: "POST /commerce/cart/add/variant/1/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:21:16,363 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:16,368 django.server: "GET /commerce/stock-status/variant/1/ HTTP/1.1" 200 1591
+[INFO] 2025-12-31 07:21:16,425 django.server: "GET /commerce/stock-status/variant/1/ HTTP/1.1" 200 1591
+[INFO] 2025-12-31 07:21:16,462 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:26,194 product: Category products page accessed
+[INFO] 2025-12-31 07:21:26,197 product: Products fetched for category
+[INFO] 2025-12-31 07:21:26,246 django.server: "GET /product/category_products/4/ HTTP/1.1" 200 21638
+[INFO] 2025-12-31 07:21:26,613 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:26,618 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:28,902 django.server: "POST /commerce/cart/add/variant/1/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:21:28,951 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:32,428 product: Product listing accessed
+[INFO] 2025-12-31 07:21:32,489 product: Product pagination
+[INFO] 2025-12-31 07:21:32,524 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:21:32,920 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:32,924 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:34,775 product: Product listing accessed
+[INFO] 2025-12-31 07:21:34,807 product: Product pagination
+[INFO] 2025-12-31 07:21:34,807 product: HTMX product list request
+[INFO] 2025-12-31 07:21:34,818 django.server: "GET /product/products/?category=4&search=&sort=&csrfmiddlewaretoken=nxLkoJEvCKC5UENHrJH1SQFCkUjX7sJzK8skw83Yz6saRtPsYkCFpch0vMLL2Dtm HTTP/1.1" 200 8846
+[INFO] 2025-12-31 07:21:36,830 django.server: "POST /commerce/cart/add/variant/1/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:21:36,876 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:40,006 product: Product listing accessed
+[INFO] 2025-12-31 07:21:40,075 product: Product pagination
+[INFO] 2025-12-31 07:21:40,102 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:21:40,471 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:40,473 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:45,245 product: Product listing accessed
+[INFO] 2025-12-31 07:21:45,342 product: Product pagination
+[INFO] 2025-12-31 07:21:45,342 product: HTMX product list request
+[INFO] 2025-12-31 07:21:45,368 django.server: "GET /product/products/?search=&sort=low_to_high&csrfmiddlewaretoken=ilgaWKucW21zvfoFx62KvHzoEzbl1iODFWXa49TFToREs4qq4HXo23bMPrD9Wtyq HTTP/1.1" 200 37415
+[INFO] 2025-12-31 07:21:50,205 django.server: "POST /commerce/cart/add/variant/1/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:21:50,254 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:54,439 product: Product listing accessed
+[INFO] 2025-12-31 07:21:54,504 product: Product pagination
+[INFO] 2025-12-31 07:21:54,540 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:21:54,896 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:54,899 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:57,121 product: Product listing accessed
+[INFO] 2025-12-31 07:21:57,175 product: Product pagination
+[INFO] 2025-12-31 07:21:57,198 django.server: "GET /product/products/?search=&sort=&csrfmiddlewaretoken=uARGKZsT4yf0bNRik8Qo1a5Cc9u9WbwQRbyGSoRm1U558CT3RJL2ywH0n1WXRmgD HTTP/1.1" 200 58842
+[INFO] 2025-12-31 07:21:57,607 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:21:57,613 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:22:10,594 product: Product listing accessed
+[INFO] 2025-12-31 07:22:10,681 product: Product pagination
+[INFO] 2025-12-31 07:22:10,681 product: HTMX product list request
+[INFO] 2025-12-31 07:22:10,711 django.server: "GET /product/products/?search=&sort=new&csrfmiddlewaretoken=ZsXd7VsiiKKF289agxcgidaJ2w3oA1YZm3EdfkRLf6AKZXbVN87UPzM7dovcvcIM HTTP/1.1" 200 36480
+[INFO] 2025-12-31 07:22:14,566 product: Product listing accessed
+[INFO] 2025-12-31 07:22:14,593 product: Product pagination
+[INFO] 2025-12-31 07:22:14,593 product: HTMX product list request
+[INFO] 2025-12-31 07:22:14,600 django.server: "GET /product/products/?page=2&search=&sort=new&csrfmiddlewaretoken=ZsXd7VsiiKKF289agxcgidaJ2w3oA1YZm3EdfkRLf6AKZXbVN87UPzM7dovcvcIM HTTP/1.1" 200 10274
+[INFO] 2025-12-31 07:22:18,561 django.server: "POST /commerce/cart/add/variant/1/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:22:18,609 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:22:23,600 product: Product listing accessed
+[INFO] 2025-12-31 07:22:23,664 product: Product pagination
+[INFO] 2025-12-31 07:22:23,664 product: HTMX product list request
+[INFO] 2025-12-31 07:22:23,693 django.server: "GET /product/products/?search=&sort= HTTP/1.1" 200 36579
+[INFO] 2025-12-31 07:22:50,760 django.server: "POST /commerce/cart/add/variant/5/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:22:50,810 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:22:54,469 django.server: "GET /commerce/cart/ HTTP/1.1" 200 27552
+[INFO] 2025-12-31 07:22:54,847 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:22:54,863 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:22:54,929 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1258
+[INFO] 2025-12-31 07:23:15,766 django.server: "GET /commerce/cart/remove/346/ HTTP/1.1" 200 0
+[INFO] 2025-12-31 07:23:15,821 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:15,854 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1256
+[INFO] 2025-12-31 07:23:15,899 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:17,267 django.server: "GET /commerce/cart/remove/345/ HTTP/1.1" 200 0
+[INFO] 2025-12-31 07:23:17,324 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:17,350 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1256
+[INFO] 2025-12-31 07:23:17,405 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:17,971 django.server: "GET /commerce/cart/remove/347/ HTTP/1.1" 200 0
+[INFO] 2025-12-31 07:23:18,020 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:18,035 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1253
+[INFO] 2025-12-31 07:23:18,102 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:18,824 django.server: "GET /commerce/cart/remove/334/ HTTP/1.1" 200 0
+[INFO] 2025-12-31 07:23:18,898 django.server: "GET /commerce/cart/ HTTP/1.1" 200 13526
+[INFO] 2025-12-31 07:23:19,054 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:19,057 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:20,605 product: Product listing accessed
+[INFO] 2025-12-31 07:23:20,668 product: Product pagination
+[INFO] 2025-12-31 07:23:20,690 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:23:21,080 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:21,089 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:22,901 django.server: "POST /commerce/cart/add/variant/5/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:23:22,949 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:25,247 django.server: "GET /commerce/cart/ HTTP/1.1" 200 17720
+[INFO] 2025-12-31 07:23:25,614 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:25,615 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:25,634 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1253
+[INFO] 2025-12-31 07:23:28,450 django.server: "GET /commerce/cart/remove/348/ HTTP/1.1" 200 0
+[INFO] 2025-12-31 07:23:28,524 django.server: "GET /commerce/cart/ HTTP/1.1" 200 13526
+[INFO] 2025-12-31 07:23:28,655 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:28,657 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:31,718 product: Product listing accessed
+[INFO] 2025-12-31 07:23:31,778 product: Product pagination
+[INFO] 2025-12-31 07:23:31,801 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:23:32,185 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:32,191 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:39,743 django.server: "POST /commerce/cart/add/variant/5/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:23:39,794 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:42,345 django.server: "POST /commerce/cart/add/variant/9/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:23:42,389 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:44,966 django.server: "GET /commerce/cart/ HTTP/1.1" 200 21204
+[INFO] 2025-12-31 07:23:45,343 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:45,351 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:45,386 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1256
+[INFO] 2025-12-31 07:23:48,174 django.server: "GET /commerce/cart/remove/349/ HTTP/1.1" 200 0
+[INFO] 2025-12-31 07:23:48,227 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:48,240 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1253
+[INFO] 2025-12-31 07:23:48,305 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:49,381 django.server: "GET /commerce/cart/remove/350/ HTTP/1.1" 200 0
+[INFO] 2025-12-31 07:23:49,453 django.server: "GET /commerce/cart/ HTTP/1.1" 200 13526
+[INFO] 2025-12-31 07:23:49,601 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:49,603 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:52,946 product: Product listing accessed
+[INFO] 2025-12-31 07:23:52,997 product: Product pagination
+[INFO] 2025-12-31 07:23:53,017 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:23:53,436 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:23:53,442 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:25:00,166 django.server: "GET /admin/offers/ HTTP/1.1" 200 18126
+[INFO] 2025-12-31 07:25:12,705 django.server: "POST /admin/offers/product/6/toggle/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 07:25:12,772 django.server: "GET /admin/offers/ HTTP/1.1" 200 18707
+[INFO] 2025-12-31 07:25:19,963 django.server: "POST /commerce/cart/add/variant/5/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:25:20,018 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:25:22,579 django.server: "GET /commerce/cart/ HTTP/1.1" 200 17720
+[INFO] 2025-12-31 07:25:24,211 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:25:24,214 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:25:24,230 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1253
+[INFO] 2025-12-31 07:25:24,457 django.server: "GET /commerce/cart/ HTTP/1.1" 200 17720
+[INFO] 2025-12-31 07:25:24,796 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:25:24,803 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:25:24,821 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1253
+[INFO] 2025-12-31 07:25:27,317 django.server: "GET /commerce/cart/ HTTP/1.1" 200 17720
+[INFO] 2025-12-31 07:25:27,654 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:25:27,659 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:25:27,665 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1253
+[INFO] 2025-12-31 07:38:43,480 django.server: "GET /admin/offers/product/add/ HTTP/1.1" 200 11119
+[INFO] 2025-12-31 07:38:45,518 django.server: "POST /admin/offers/product/add/ HTTP/1.1" 200 11740
+[INFO] 2025-12-31 07:38:49,695 django.server: "GET /admin/offers/ HTTP/1.1" 200 18124
+[INFO] 2025-12-31 07:38:51,358 django.server: "GET /admin/offers/category/add/ HTTP/1.1" 200 10729
+[INFO] 2025-12-31 07:38:53,481 django.server: "POST /admin/offers/category/add/ HTTP/1.1" 200 11351
+[INFO] 2025-12-31 07:38:56,128 django.server: "GET /admin/offers/category/add/ HTTP/1.1" 200 10729
+[INFO] 2025-12-31 07:40:53,278 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/utils/offers.py changed, reloading.
+[INFO] 2025-12-31 07:40:54,072 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 07:40:57,636 django.server: "GET /commerce/cart/ HTTP/1.1" 200 17719
+[INFO] 2025-12-31 07:40:58,373 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:40:58,382 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:40:58,402 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1253
+[INFO] 2025-12-31 07:41:05,083 product: Product listing accessed
+[INFO] 2025-12-31 07:41:05,150 product: Product pagination
+[INFO] 2025-12-31 07:41:05,182 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:41:05,565 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:05,571 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:08,772 product: Product listing accessed
+[INFO] 2025-12-31 07:41:08,844 product: Product pagination
+[INFO] 2025-12-31 07:41:08,870 django.server: "GET /product/products/ HTTP/1.1" 200 58630
+[INFO] 2025-12-31 07:41:09,249 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:09,252 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:11,070 product: Product detail viewed
+[INFO] 2025-12-31 07:41:11,117 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30373
+[INFO] 2025-12-31 07:41:11,497 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:11,501 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:11,504 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:41:13,721 product: Variant info loaded
+[INFO] 2025-12-31 07:41:13,742 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 07:41:13,817 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:41:15,227 product: Variant info loaded
+[INFO] 2025-12-31 07:41:15,248 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 07:41:15,317 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:41:17,096 product: Variant info loaded
+[INFO] 2025-12-31 07:41:17,121 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2629
+[INFO] 2025-12-31 07:41:17,200 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:41:19,477 django.server: "POST /commerce/cart/add/variant/6/ HTTP/1.1" 204 0
+[INFO] 2025-12-31 07:41:19,531 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:41:19,535 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:19,588 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:41:19,627 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:21,373 django.server: "GET /commerce/cart/ HTTP/1.1" 200 21234
+[INFO] 2025-12-31 07:41:21,700 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:21,709 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:41:21,730 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1256
+[INFO] 2025-12-31 07:41:54,993 django.server: "GET /admin/offers/ HTTP/1.1" 200 18124
+[INFO] 2025-12-31 07:42:00,264 django.server: "GET /admin/offers/product/6/edit/ HTTP/1.1" 200 11876
+[INFO] 2025-12-31 07:42:24,889 django.server: "POST /admin/offers/product/6/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 07:42:24,961 django.server: "GET /admin/offers/ HTTP/1.1" 200 18698
+[INFO] 2025-12-31 07:42:32,985 django.server: "GET /admin/offers/category/4/edit/ HTTP/1.1" 200 11494
+[INFO] 2025-12-31 07:42:38,412 django.server: "POST /admin/offers/category/4/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 07:42:38,480 django.server: "GET /admin/offers/ HTTP/1.1" 200 18699
+[INFO] 2025-12-31 07:42:50,174 django.server: "POST /admin/offers/product/6/toggle/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 07:42:50,244 django.server: "GET /admin/offers/ HTTP/1.1" 200 18707
+[INFO] 2025-12-31 07:43:00,011 django.server: "GET /admin/offers/category/3/edit/ HTTP/1.1" 200 11496
+[INFO] 2025-12-31 07:43:05,340 django.server: "POST /admin/offers/category/3/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 07:43:05,401 django.server: "GET /admin/offers/ HTTP/1.1" 200 18701
+[INFO] 2025-12-31 07:43:14,099 django.server: "GET /admin/offers/product/6/edit/ HTTP/1.1" 200 11869
+[INFO] 2025-12-31 07:43:22,804 django.server: "POST /admin/offers/product/6/edit/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 07:43:22,874 django.server: "GET /admin/offers/ HTTP/1.1" 200 18698
+[INFO] 2025-12-31 07:43:37,204 django.server: "GET /commerce/cart/ HTTP/1.1" 200 21236
+[INFO] 2025-12-31 07:43:37,927 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:37,935 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:37,971 django.server: "GET /commerce/cart/cart-totals/ HTTP/1.1" 200 1256
+[INFO] 2025-12-31 07:43:44,172 product: Product listing accessed
+[INFO] 2025-12-31 07:43:44,239 product: Product pagination
+[INFO] 2025-12-31 07:43:44,278 django.server: "GET /product/products/ HTTP/1.1" 200 58633
+[INFO] 2025-12-31 07:43:44,710 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:44,713 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:46,277 product: Product detail viewed
+[INFO] 2025-12-31 07:43:46,325 django.server: "GET /product/product_details/3/ HTTP/1.1" 200 30376
+[INFO] 2025-12-31 07:43:46,696 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:46,702 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:46,709 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:43:48,394 product: Variant info loaded
+[INFO] 2025-12-31 07:43:48,412 django.server: "GET /product/variant/6/info/ HTTP/1.1" 200 2632
+[INFO] 2025-12-31 07:43:48,479 django.server: "GET /commerce/stock-status/variant/6/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:43:49,703 product: Variant info loaded
+[INFO] 2025-12-31 07:43:49,728 django.server: "GET /product/variant/5/info/ HTTP/1.1" 200 2632
+[INFO] 2025-12-31 07:43:49,803 django.server: "GET /commerce/stock-status/variant/5/ HTTP/1.1" 200 1592
+[INFO] 2025-12-31 07:43:51,952 product: Product listing accessed
+[INFO] 2025-12-31 07:43:52,012 product: Product pagination
+[INFO] 2025-12-31 07:43:52,040 django.server: "GET /product/products/ HTTP/1.1" 200 58633
+[INFO] 2025-12-31 07:43:52,445 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:52,453 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:53,647 product: Product detail viewed
+[INFO] 2025-12-31 07:43:53,712 django.server: "GET /product/product_details/2/ HTTP/1.1" 200 32808
+[INFO] 2025-12-31 07:43:54,100 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:54,103 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:43:54,106 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:43:56,680 product: Variant info loaded
+[INFO] 2025-12-31 07:43:56,695 django.server: "GET /product/variant/2/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:43:56,761 django.server: "GET /commerce/stock-status/variant/2/ HTTP/1.1" 200 1419
+[INFO] 2025-12-31 07:43:57,827 product: Variant info loaded
+[INFO] 2025-12-31 07:43:57,854 django.server: "GET /product/variant/3/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:43:57,925 django.server: "GET /commerce/stock-status/variant/3/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:43:58,838 product: Variant info loaded
+[INFO] 2025-12-31 07:43:58,867 django.server: "GET /product/variant/4/info/ HTTP/1.1" 200 2633
+[INFO] 2025-12-31 07:43:58,940 django.server: "GET /commerce/stock-status/variant/4/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:44:01,898 product: Product listing accessed
+[INFO] 2025-12-31 07:44:01,966 product: Product pagination
+[INFO] 2025-12-31 07:44:01,991 django.server: "GET /product/products/ HTTP/1.1" 200 58633
+[INFO] 2025-12-31 07:44:02,372 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:44:02,375 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:44:04,585 product: Product detail viewed
+[INFO] 2025-12-31 07:44:04,653 django.server: "GET /product/product_details/6/ HTTP/1.1" 200 32117
+[INFO] 2025-12-31 07:44:05,044 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:44:05,050 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:44:05,056 django.server: "GET /commerce/stock-status/variant/9/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:44:06,470 product: Variant info loaded
+[INFO] 2025-12-31 07:44:06,488 django.server: "GET /product/variant/13/info/ HTTP/1.1" 200 2641
+[INFO] 2025-12-31 07:44:06,554 django.server: "GET /commerce/stock-status/variant/13/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:44:07,879 product: Variant info loaded
+[INFO] 2025-12-31 07:44:07,901 django.server: "GET /product/variant/9/info/ HTTP/1.1" 200 2631
+[INFO] 2025-12-31 07:44:07,979 django.server: "GET /commerce/stock-status/variant/9/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:44:10,169 product: Variant info loaded
+[INFO] 2025-12-31 07:44:10,206 django.server: "GET /product/variant/13/info/ HTTP/1.1" 200 2641
+[INFO] 2025-12-31 07:44:10,283 django.server: "GET /commerce/stock-status/variant/13/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:44:12,527 product: Variant info loaded
+[INFO] 2025-12-31 07:44:12,551 django.server: "GET /product/variant/9/info/ HTTP/1.1" 200 2631
+[INFO] 2025-12-31 07:44:12,625 django.server: "GET /commerce/stock-status/variant/9/ HTTP/1.1" 200 1420
+[INFO] 2025-12-31 07:47:45,791 product: Product listing accessed
+[INFO] 2025-12-31 07:47:45,859 product: Product pagination
+[INFO] 2025-12-31 07:47:45,888 django.server: "GET /product/products/ HTTP/1.1" 200 58633
+[INFO] 2025-12-31 07:47:46,482 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:47:46,486 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:47:55,435 product: Product listing accessed
+[INFO] 2025-12-31 07:47:55,485 product: Product pagination
+[INFO] 2025-12-31 07:47:55,513 django.server: "GET /product/products/ HTTP/1.1" 200 58625
+[INFO] 2025-12-31 07:47:55,969 django.server: "GET /commerce/wishlist/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 07:47:55,971 django.server: "GET /commerce/cart/count/ HTTP/1.1" 200 1
+[INFO] 2025-12-31 08:01:37,247 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/models.py changed, reloading.
+[INFO] 2025-12-31 08:01:37,911 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:07:14,736 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/services/returns.py changed, reloading.
+[INFO] 2025-12-31 08:07:15,185 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:10:08,205 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/services/wallet.py changed, reloading.
+[INFO] 2025-12-31 08:10:08,891 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:11:51,404 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/commerce/services/returns.py changed, reloading.
+[INFO] 2025-12-31 08:11:52,009 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:12:34,064 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/admin_app/views.py changed, reloading.
+[INFO] 2025-12-31 08:12:34,613 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:16:36,166 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/admin_app/views.py changed, reloading.
+[INFO] 2025-12-31 08:16:36,925 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:16:45,958 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/admin_app/views.py changed, reloading.
+[INFO] 2025-12-31 08:16:46,713 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:19:40,157 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/admin_app/urls.py changed, reloading.
+[INFO] 2025-12-31 08:19:40,917 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:24:21,834 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/admin_app/views.py changed, reloading.
+[INFO] 2025-12-31 08:24:22,407 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:27:46,967 django.server: "GET /admin/orders/ HTTP/1.1" 200 22284
+[INFO] 2025-12-31 08:27:49,918 django.server: "GET /admin/orders/ORD-FCD88F76/ HTTP/1.1" 200 11694
+[INFO] 2025-12-31 08:27:54,104 django.server: "GET /admin/orders/ HTTP/1.1" 200 22284
+[INFO] 2025-12-31 08:27:56,183 django.server: "GET /admin/orders/?page=5 HTTP/1.1" 200 18389
+[INFO] 2025-12-31 08:27:59,190 django.server: "GET /admin/orders/ORD-BCCA5E4F/ HTTP/1.1" 200 16736
+[INFO] 2025-12-31 08:28:39,813 django.server: "GET /admin/orders/ORD-BCCA5E4F/ HTTP/1.1" 200 16766
+[INFO] 2025-12-31 08:29:16,343 django.server: "GET /admin/orders/ORD-BCCA5E4F/ HTTP/1.1" 200 16785
+[INFO] 2025-12-31 08:29:18,057 django.server: "GET /admin/orders/ORD-BCCA5E4F/ HTTP/1.1" 200 16785
+[INFO] 2025-12-31 08:29:30,754 django.server: "GET /admin/orders/ORD-BCCA5E4F/ HTTP/1.1" 200 16791
+[INFO] 2025-12-31 08:30:26,544 django.server: "GET /admin/orders/ORD-BCCA5E4F/ HTTP/1.1" 200 16814
+[INFO] 2025-12-31 08:30:41,199 django.server: "POST /admin/orders/ORD-BCCA5E4F/cancel/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 08:30:41,261 django.server: "GET /admin/orders/ORD-BCCA5E4F/ HTTP/1.1" 200 13670
+[INFO] 2025-12-31 08:30:55,101 django.server: "GET /admin/orders/ HTTP/1.1" 200 22284
+[INFO] 2025-12-31 08:31:02,692 django.server: "GET /admin/orders/?page=5 HTTP/1.1" 200 18382
+[INFO] 2025-12-31 08:31:06,773 django.server: "GET /admin/orders/ORD-BCCA5E4F/ HTTP/1.1" 200 13089
+[INFO] 2025-12-31 08:31:12,259 django.server: "GET /admin/orders/ HTTP/1.1" 200 22284
+[INFO] 2025-12-31 08:31:16,163 django.server: "GET /admin/orders/?page=5 HTTP/1.1" 200 18382
+[INFO] 2025-12-31 08:33:58,676 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/admin_app/views.py changed, reloading.
+[INFO] 2025-12-31 08:33:59,246 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:34:13,654 django.utils.autoreload: /home/reyhana/Documents/FurniCraft/E-commerce/admin_app/views.py changed, reloading.
+[INFO] 2025-12-31 08:34:14,524 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:35:12,229 django.utils.autoreload: Watching for file changes with StatReloader
+[INFO] 2025-12-31 08:35:22,444 django.server: "GET /admin/orders/?page=5 HTTP/1.1" 200 18382
+[INFO] 2025-12-31 08:35:24,842 django.server: "GET /admin/orders/ORD-EDD5D3AD/ HTTP/1.1" 200 13690
+[INFO] 2025-12-31 08:35:29,944 django.server: "POST /admin/orders/ORD-EDD5D3AD/cancel/ HTTP/1.1" 302 0
+[INFO] 2025-12-31 08:35:29,997 django.server: "GET /admin/orders/ORD-EDD5D3AD/ HTTP/1.1" 200 12310
+[INFO] 2025-12-31 08:36:50,281 django.server: "GET /admin/orders/ORD-EDD5D3AD/ HTTP/1.1" 200 11732

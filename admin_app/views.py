@@ -1,7 +1,8 @@
 from decimal import Decimal
 import json
 import logging
-
+from django.db import transaction
+from commerce.services.returns import refund_order_to_wallet
 from django.shortcuts import render,redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login,logout
@@ -612,7 +613,6 @@ def admin_order_details(request, order_id):
         {"order": order, "items": items}
     )
 @require_POST
-# @staff_member_required(login_url='admin_login')
 def approve_return(request, return_id):
     return_request = get_object_or_404(
         OrderReturn,
@@ -629,7 +629,6 @@ def approve_return(request, return_id):
 
 
 @require_POST
-# @staff_member_required(login_url="admin_login")
 def reject_return(request, return_id):
     return_request = get_object_or_404(
         OrderReturn,
@@ -1113,3 +1112,49 @@ def sales_report_pdf(request):
 
     HTML(string=html).write_pdf(response)
     return response
+
+
+FINAL_ITEM_STATUSES = {
+    "cancelled",
+    "delivered",
+    "returned",
+    "failed",
+}
+
+@transaction.atomic
+def admin_cancel_order(request, order_id):
+    order = get_object_or_404(Orders, order_id=order_id)
+
+    can_cancel = order.items.exclude(status__in=FINAL_ITEM_STATUSES).exists()
+    if not can_cancel:
+        messages.error(
+            request,
+            "Order cannot be cancelled. All items are already completed."
+        )
+        return redirect("order_details", order_id=order.order_id)
+
+    if request.method == "POST":
+        reason = request.POST.get("reason", "").strip()
+        refundable_amount = Decimal("0.00")
+
+        for item in order.items.select_for_update():
+            if item.status not in FINAL_ITEM_STATUSES:
+                item.status = "cancelled"
+                item.cancellation_reason = reason
+                item.save()
+                refundable_amount += item.price
+
+        if order.payment_status == "paid":
+            if refundable_amount > 0:
+                refund_order_to_wallet(order, refundable_amount)
+            order.payment_status = "refunded"
+        else:
+            order.payment_status = "cancelled"
+
+        order.save(update_fields=["payment_status"])
+
+
+        messages.success(request, "Order cancelled successfully.")
+        return redirect("order_details", order_id=order.order_id)
+
+    return redirect("order_details", order_id=order.order_id)

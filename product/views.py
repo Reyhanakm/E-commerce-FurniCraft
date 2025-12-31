@@ -97,7 +97,7 @@ def products(request):
             .prefetch_related(
                 'product__product_offers',
                 'product__category__category_offers'
-            ).order_by('id'))
+            ))
     )
 
     search_query = request.GET.get('search')
@@ -260,7 +260,8 @@ def product_details(request,id):
                     "in_wishlist": is_in_wishlist
                 }
             )
-        default_variant = product.variants.first()
+        variants=list(product.variants.all())
+        default_variant = variants[0] if variants else None
         pricing=get_pricing_context(default_variant) if default_variant else None
         wishlist_variant_ids = list(
             WishlistItem.objects.filter(
@@ -284,8 +285,8 @@ def product_details(request,id):
                                         'is_in_wishlist': is_in_wishlist,
                                         'pricing':pricing,
                                         'wishlist_variant_ids': wishlist_variant_ids,
-                                        'default_variant_id': product.variants.first().id 
-                                        if product.variants.first() else None,
+                                        'default_variant': default_variant,
+                                        'default_variant_id': default_variant.id if default_variant else None
     })
 
 @block_check

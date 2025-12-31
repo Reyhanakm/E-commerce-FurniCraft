@@ -1,6 +1,7 @@
 from django.db import transaction
 from commerce.models import Wallet, WalletTransaction
 
+@transaction.atomic
 def pay_using_wallet(*, user, order, amount):
     wallet = Wallet.objects.select_for_update().get(user=user)
 

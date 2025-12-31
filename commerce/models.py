@@ -37,7 +37,8 @@ class Orders(models.Model):
         ('paid','Paid'),
         ('refunded', 'Refunded'),            
         ('partially_refunded', 'Partially Refunded'),
-        ('failed','Failed')
+        ('failed','Failed'),
+        ('cancelled','Cancelled'),
     ]
 
     order_id=models.CharField(max_length=20,unique=True,default=generate_order_id)
@@ -95,6 +96,15 @@ class Orders(models.Model):
             return "Shipped"
 
         return "Processing"
+    
+    @property
+    def can_admin_cancel(self):
+        return self.items.exclude(status__in=[
+            "cancelled",
+            "delivered",
+            "returned",
+            "failed",
+        ]).exists()
     
 
 class OrderItem(models.Model):

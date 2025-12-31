@@ -132,7 +132,7 @@ class ProductVariant(models.Model):
     objects=VariantManager()
 
     class Meta:
-        ordering=['-created_at']
+        ordering=['id']
 
     def __str__(self):
         return self.material_type
@@ -266,7 +266,7 @@ class ProductOffer(models.Model):
     product=models.ForeignKey(Product,related_name='product_offers',on_delete=models.CASCADE)
     discount_type = models.CharField(max_length=20,default='percentage')
     discount_value = models.DecimalField(max_digits=10,decimal_places=2)
-    max_discount_amount = models.DecimalField(max_digits=8,decimal_places=2,null=True,blank=True)
+    max_discount_amount = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
     
     start_date=models.DateTimeField()
     end_date=models.DateTimeField()

@@ -17,8 +17,8 @@
 
         <p><strong>Order ID:</strong> {{ order.order_id }}</p>
         <p><strong>Date:</strong> {{ order.created_at|date:"d M, Y - h:i A" }}</p>
-        <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
-        <p><strong>Payment Status:</strong> {{ order.get_payment_status_display }}</p>
+        <p><strong >Payment Method:</strong> <span class ="text-blue-600 font-bold">{{ order.get_payment_method_display }}</span></p>
+        <p><strong>Payment Status:</strong> <span class="{% if order.payment_status == 'paid'%}text-green-600{% elif order.payment_status == 'failed'%}text-red-600{%endif%} font-bold">{{ order.get_payment_status_display }}</span></p>
         <a href="{% url 'user_order_detail' order.order_id %}"
             class="text-sm bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition">
             View Details
@@ -106,7 +106,14 @@
 
             <p class="flex justify-between">
                 <span>Delivery Charge:</span>
-                <span>₹{{ order.delivery_charge }}</span>
+                
+                {% if order.delivery_charge > 0 %}
+                     <span>₹{{ order.delivery_charge }}</span>
+                {% else %}
+                    <span class="text-green-600">Free</span>
+                {% endif %}
+                    
+               
             </p>
 
             <hr class="my-2">

@@ -220,6 +220,7 @@ class ProductOfferForm(forms.ModelForm):
         max_cap_amount = cleaned_data.get("max_discount_amount")
         start = cleaned_data.get("start_date")
         end = cleaned_data.get("end_date")
+        is_active = cleaned_data.get("is_active")
 
         now = timezone.now()
 
@@ -228,10 +229,25 @@ class ProductOfferForm(forms.ModelForm):
 
         if start and end and start >= end:
             self.add_error("end_date", "End date must be after start date.")
+        
+        if product and start and end and is_active:
+            overlapping_offers = ProductOffer.objects.filter(
+                product=product,
+                is_active=True,
+                start_date__lt=end,
+                end_date__gt=start
+            ).exclude(pk=self.instance.pk)
+
+            if overlapping_offers.exists():
+                self.add_error(None, f"This product already has an active offer during these dates. Please modify the dates or deactivate the existing offer.")
 
         if product and percentage_value is not None:
-            original_price = product.sales_price 
+            variants = product.variants.filter(is_deleted=False)
 
+            if variants.exists():
+                original_price = min(v.sales_price for v in variants)
+            else:
+                original_price = Decimal('0.00')
             if percentage_value > 90:
                 self.add_error("discount_value", "Discount percentage cannot exceed 90%.")
             
@@ -284,17 +300,29 @@ class CategoryOfferForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        category = cleaned.get("category")
         start = cleaned.get("start_date")
         end = cleaned.get("end_date")
         discount_value = cleaned.get("discount_value")
         max_discount_amount = cleaned.get("max_discount_amount")
-        
+        is_active = cleaned.get("is_active")
+
         now = timezone.now()
         if end and end <= now:
             self.add_error("end_date", "End date must be a future date.")
         if start and end:
             if start >= end:
                 self.add_error("end_date", "End date must be after start date.")
+        if category and start and end and is_active:
+            overlapping_offers = CategoryOffer.objects.filter(
+                category=category,
+                is_active=True,
+                start_date__lt=end,
+                end_date__gt=start
+            ).exclude(pk=self.instance.pk)
+
+            if overlapping_offers.exists():
+                self.add_error(None, f"This category already has an active offer during these dates.")
         
         if discount_value is not None:
             if discount_value <= 0:
@@ -317,6 +345,7 @@ class CouponForm(forms.ModelForm):
             "valid_from": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "valid_until": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -327,57 +356,54 @@ class CouponForm(forms.ModelForm):
             field.widget.attrs.setdefault("class", "")
             field.widget.attrs["class"] += f" {base_class}"
 
-        # ONLY hide for flat - don't set initial state
-        if 'maximum_discount_limit' in self.fields:
-            if self.data and self.data.get('discount_type') == 'flat':
-                self.fields['maximum_discount_limit'].widget.attrs['style'] = 'display: none !important;'
-                self.fields['maximum_discount_limit'].required = False
-           
+        is_flat = False
+        if self.data.get('discount_type') == 'flat':
+            is_flat = True
+        elif self.instance.pk and self.instance.discount_type == 'flat':
+            is_flat = True
+
+        if is_flat and 'maximum_discount_limit' in self.fields:
+            self.fields['maximum_discount_limit'].widget.attrs['style'] = 'display: none !important;'
+            self.fields['maximum_discount_limit'].required = False
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code')
+        if code:
+            exists = Coupon.objects.filter(code__iexact=code).exclude(pk=self.instance.pk).exists()
+            if exists:
+                raise forms.ValidationError("This coupon code already exists. Please use a unique code.")
+        return code
 
     def clean(self):
         cleaned_data = super().clean()
         discount_type = cleaned_data.get("discount_type")
-        
-        if discount_type == 'percentage':
-            max_limit = cleaned_data.get('maximum_discount_limit')
-            if max_limit is None or max_limit <= 0:
-                raise forms.ValidationError("Maximum discount limit required for percentage coupons.")
+        discount_value = cleaned_data.get("discount_value")
+        max_limit = cleaned_data.get('maximum_discount_limit')
         valid_from = cleaned_data.get("valid_from")
         valid_until = cleaned_data.get("valid_until")
+        
+        if discount_value is not None:
+            if discount_value <= 0:
+                self.add_error("discount_value", "Discount value must be greater than 0.")
+            
+            if discount_type == 'percentage':
+                if discount_value > 90: 
+                    self.add_error("discount_value", "Discount percentage cannot exceed 90%.")
+                
+                if max_limit is None or max_limit <= 0:
+                    self.add_error("maximum_discount_limit", "Maximum discount limit is required for percentage coupons.")
+            
+            elif discount_type == 'flat':
+                if discount_value > 100000: 
+                     self.add_error("discount_value", "Flat discount seems too high. Please verify.")
 
         now = timezone.now()
         if valid_from and valid_until:
-
             if valid_until <= valid_from:
-                raise forms.ValidationError(
-                    "Valid until must be later than valid from."
-                )
+                self.add_error("valid_until", "Valid until must be later than valid from.")
 
             if valid_until <= now:
-                raise forms.ValidationError(
-                    "Valid until must be a future date."
-                )
-
-            if valid_from < now:
-                raise forms.ValidationError(
-                    "Valid from cannot be in the past."
-                )
-
+                self.add_error("valid_until", "Valid until must be a future date.")
         return cleaned_data
-    def clean_discount_value(self):
-        discount_value = self.cleaned_data.get("discount_value")
-        discount_type = self.cleaned_data.get("discount_type")
-
-        if discount_type == "percentage":
-            if discount_value is None:
-                return discount_value
-
-            if discount_value <= 0:
-                raise forms.ValidationError("Discount percentage must be greater than 0.")
-
-            if discount_value >= 100:
-                raise forms.ValidationError("Discount percentage must be less than 100.")
-
-        return discount_value
 
 

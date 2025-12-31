@@ -8,6 +8,7 @@ import json
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 from django.core.paginator import Paginator
 from urllib.parse import urlencode
 import razorpay
@@ -635,7 +636,6 @@ def apply_coupon(request):
 
     coupon_code = request.POST.get("coupon_code", "").strip()
 
-    # FIX: Use render_checkout_summary to return HTML even on empty input
     if not coupon_code:
         if request.headers.get("HX-Request"):
             return render_checkout_summary(request, error_message="Please enter a coupon code.")
@@ -644,13 +644,10 @@ def apply_coupon(request):
 
     user = request.user
     
-    # We do a quick check here, or rely on the utility to validate
-    # For efficiency, we can just call the summary renderer directly if validation fails
     cart = Cart.objects.filter(user=user).first()
     if not cart or not cart.items.exists():
          return render_checkout_summary(request, error_message="Your cart is empty.")
 
-    # Calculate subtotal strictly for validation (copy logic briefly or refactor)
     subtotal = Decimal("0.00")
     for item in cart.items.select_related("variant"):
         price = Decimal(item.variant.sales_price)
@@ -847,7 +844,7 @@ def place_order(request):
     return redirect("checkout")
 
 
-
+@never_cache
 @login_required
 def start_razorpay_payment(request, order_id):
     order = get_object_or_404(
@@ -1098,8 +1095,14 @@ def download_invoice(request, order_id):
 
 @login_required
 def my_orders_page(request):
-    orders=Orders.objects.filter(user=request.user).order_by("-created_at")
-    return render(request,"commerce/order/my_orders_page.html",{"orders":orders})
+    orders_qs=Orders.objects.filter(user=request.user).order_by("-created_at")
+    paginator = Paginator(orders_qs, 4)  
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request,"commerce/order/my_orders_page.html",
+                  {"orders":page_obj,
+                   "page_obj": page_obj})
 
 @login_required
 def cancel_order_item(request,item_id):
