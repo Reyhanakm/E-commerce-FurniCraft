@@ -6,7 +6,12 @@ urlpatterns=[
     path('',views.admin_login,name='admin_login'),
     path('logout/',views.admin_logout,name='admin_logout'),
     path('dashboard/',views.admin_dashboard,name='admin_dashboard'),
+    path("dashboard/chart-data/",views.order_chart_data, name="admin_chart_data"),
+    path("dashboard/best-categories/",views.best_selling_categories_chart,name="best_selling_categories_chart"),
+    path("dashboard/best-materials/",views.best_selling_material_types_chart,name="best_selling_material_types_chart"),
+    path("dashboard/best-products/",views.best_selling_products_chart,name="best_selling_products_chart"),
 
+    
     path('banner/',views.banner_page,name='banner_page'),
     path('banner/edit/<int:id>/',views.edit_banner,name='edit_banner'),
     path('banner/delete/<int:id>',views.delete_banner,name='delete_banner'),

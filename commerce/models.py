@@ -125,6 +125,29 @@ class OrderItem(models.Model):
     cancellation_reason=models.TextField(blank=True,null=True)
     status=models.CharField(max_length=20,choices=STATUS_CHOICES,default='order_received')
 
+    def return_message(self):
+        req = self.return_items.first()
+
+        if self.status != "delivered":
+            return None
+
+        if not req:
+            return None
+
+        if req.approval_status == "pending":
+            return "Request under review"
+
+        if req.approval_status == "approved":
+            return "Return approved"
+
+        if req.approval_status == "rejected":
+            return "Return request rejected"
+
+        return None
+
+    def show_return_button(self):
+        return self.status == "delivered" and not self.return_items.exists()
+    
     def __str__(self):
         return f"Order {self.order.order_id} - {self.product}"
     

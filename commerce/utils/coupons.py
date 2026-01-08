@@ -56,14 +56,16 @@ def calculate_item_coupon_share(order, item):
         return Decimal("0.00")
 
     # Total order value AFTER offers, BEFORE coupon
-    order_items_total = sum(i.price for i in order.items.all())
+    order_items_total = sum(i.price * i.quantity for i in order.items.all())
 
     if order_items_total == 0:
         return Decimal("0.00")
+    
+    item_totals =item.price * item.quantity
 
     # Proportional coupon share
     item_coupon_share = (
-        item.price / order_items_total
+        item_totals / order_items_total
     ) * order.coupon_discount
 
     return item_coupon_share.quantize(Decimal("0.01"))

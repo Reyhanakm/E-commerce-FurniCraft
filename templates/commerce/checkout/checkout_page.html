@@ -67,14 +67,19 @@
 
 
                     <label class="flex items-center gap-3">
-                        <input type="radio" name="payment_method" value="razorpay" required>
+                        <input type="radio" name="payment_method" value="razorpay" required checked>
                         RazorPay
                     </label>
 
                     <label class="flex items-center gap-3">
-                        <input type="radio" name="payment_method" value="cod" checked>
+                        <input type="radio" name="payment_method" value="cod"{% if not cod_allowed %}disabled{% endif %} >
                         Cash On Delivery
                     </label>
+                    {% if not cod_allowed %}
+                    <p class="text-sm text-red-500 mt-1">
+                        Cash on Delivery is available only for orders up to ₹1000.
+                    </p>
+                    {% endif %}
                 </div>
             </div>
 
@@ -130,14 +135,14 @@
                             ₹{{ item.discounted_price|floatformat:2 }}
                         </p>
                         <p class="text-sm text-gray-400 line-through">
-                            ₹{{ item.variant.sales_price }}
+                            ₹{{ item.variant.sales_price|floatformat:2 }}
                         </p>
                         <p class="text-xs text-green-600">
                             {{ item.offer_percent }}% OFF applied
                         </p>
                     </div>
                 {% else %}
-                    <p class="font-semibold">₹{{ item.variant.sales_price }}</p>
+                    <p class="font-semibold">₹{{ item.variant.sales_price|floatformat:2 }}</p>
                 {% endif %}
             </div>
             {% endfor %}

@@ -164,7 +164,7 @@ class ImageManager(models.Manager):
 
 class ProductImage(models.Model):
     product=models.ForeignKey(Product,on_delete=models.CASCADE,related_name='images')
-    image=CloudinaryField()
+    image=CloudinaryField('image',resource_type='image')
     is_primary=models.BooleanField(default=False)
     is_deleted=models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True)
@@ -172,7 +172,7 @@ class ProductImage(models.Model):
     objects=ImageManager()
 
     class Meta:
-        ordering=['-created_at']
+        ordering=['-is_primary','-id']
 
     def __str__(self):
         return f"Image for {self.product.name}"
@@ -181,7 +181,7 @@ class ProductImage(models.Model):
       
         if self.is_primary:
 
-            ProductImage.objects.filter(product=self.product, is_primary=True).exclude(pk=self.pk).update(is_primary=False)
+            ProductImage.objects.all_with_deleted().filter(product=self.product, is_primary=True).exclude(pk=self.pk).update(is_primary=False)
         else:
             if not ProductImage.objects.filter(product=self.product, is_primary=True).exclude(pk=self.pk).exists():
                 self.is_primary = True

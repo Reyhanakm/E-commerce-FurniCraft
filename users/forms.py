@@ -71,30 +71,55 @@ class ForgotPasswordForm(forms.Form):
         })
     )
 
-
-class ResetPasswordVerifyForm(forms.Form):
+class ResetOTPForm(forms.Form):
     otp = forms.CharField(
         max_length=6,
         widget=forms.TextInput(attrs={
             'placeholder': '000000',
             'maxlength': '6',
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-center text-2xl tracking-widest'
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-2xl tracking-widest'
         })
     )
-
+class ResetPasswordForm(forms.Form):
     new_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'id': 'new_password',
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500'
-        })
+        widget=forms.PasswordInput(attrs={'class': 'w-full px-4 py-3 border rounded-lg'})
+    )
+    confirm_new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'w-full px-4 py-3 border rounded-lg'})
     )
 
-    confirm_new_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'id': 'confirm_new_password',
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500'
-        })
-    )
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get("new_password")
+        p2 = cleaned_data.get("confirm_new_password")
+
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("Passwords do not match.")
+        return cleaned_data
+
+# class ResetPasswordVerifyForm(forms.Form):
+#     otp = forms.CharField(
+#         max_length=6,
+#         widget=forms.TextInput(attrs={
+#             'placeholder': '000000',
+#             'maxlength': '6',
+#             'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-center text-2xl tracking-widest'
+#         })
+#     )
+
+#     new_password = forms.CharField(
+#         widget=forms.PasswordInput(attrs={
+#             'id': 'new_password',
+#             'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500'
+#         })
+#     )
+
+#     confirm_new_password = forms.CharField(
+#         widget=forms.PasswordInput(attrs={
+#             'id': 'confirm_new_password',
+#             'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500'
+#         })
+#     )
 
 
 class LoginForm(forms.Form):

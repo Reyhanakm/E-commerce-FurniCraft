@@ -128,8 +128,8 @@
             <!-- ACTIONS -->
             <td class="px-6 py-4 text-center">
                 <div class="flex flex-col items-center gap-2">
-                    
-                    {% if item.status == "cancelled" or item.status == "returned" %}
+                {% with return_request=item.return_items.all|first %}
+                    {% if item.status == "cancelled" or item.status == "returned" or return_request and return_request.approval_status != 'pending' %}
                         <!-- Show status badge for final states -->
                         <span class="px-3 py-1 rounded-full text-sm font-semibold 
                             {% if item.status == 'cancelled' %}
@@ -160,7 +160,6 @@
                     {% endif %}
 
                     <!-- RETURN MANAGEMENT -->
-                    {% with return_request=item.return_items.first %}
                         {% if return_request %}
                             {% if return_request.approval_status == "pending" %}
                                 <a href="{% url 'admin_return_list' %}"
@@ -173,7 +172,7 @@
                                 </span>
                             {% endif %}
                         {% endif %}
-                    {% endwith %}
+                {% endwith %}
                 </div>
             </td>  
         </tr>

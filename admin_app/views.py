@@ -1,4 +1,8 @@
+import calendar
+from calendar import month_name
 from decimal import Decimal
+from collections import defaultdict
+from datetime import date
 import json
 import logging
 from django.db import transaction
@@ -9,14 +13,16 @@ from django.contrib.auth import login,logout
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from django.views.decorators.cache import never_cache
+from django.views.decorators.cache import never_cache,cache_control
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django.utils.timezone import now
 from django.core.paginator import Paginator
 from django.db.models import Q,Prefetch
 from cloudinary.utils import cloudinary_url
+from django.db.models.functions import TruncMonth, TruncYear,ExtractWeek
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count
+from django.db.models import Count,Sum,F
 from django.utils import timezone
 from datetime import datetime, timedelta
 from openpyxl import Workbook
@@ -65,10 +71,226 @@ def admin_dashboard(request):
     if not request.user.is_admin:
         messages.error(request,"Unautherized access!")
         return redirect('admin_login')
-    return render(request,'admin/dashboard.html')
+    current_year = now().year
+    years = range(current_year - 5, current_year + 1)
+    months = list(month_name)[1:]
 
+    return render(request, "admin/dashboard.html", {
+        "years": years,
+        "months": months,
+        "current_month": now().month,
+        "current_year": current_year,
+    })
 
 @login_required(login_url='admin_login')
+def order_chart_data(request):
+    filter_type = request.GET.get("filter", "monthly")
+    year = request.GET.get("year")
+    month = request.GET.get("month")
+
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    qs = Orders.objects.filter(
+        payment_status__in=["paid", "partially_refunded"]
+    )
+
+    if start_date and end_date:
+        qs = qs.filter(
+            created_at__date__range=[start_date, end_date]
+        )
+
+        data = (
+            qs.annotate(day=TruncMonth("created_at"))
+              .values("day")
+              .annotate(order_count=Count("id"))
+              .order_by("day")
+        )
+
+        labels = [d["day"].strftime("%b %Y") for d in data]
+        values = [d["order_count"] for d in data]
+
+        return JsonResponse({
+            "labels": labels,
+            "values": values,
+            "current_month": now().month
+        })
+
+    if not year:
+        return JsonResponse({"labels": [], "values": []})
+
+    year = int(year)
+
+    if filter_type == "weekly":
+        if not month:
+            return JsonResponse({"labels": [], "values": []})
+
+        month = int(month)
+
+        orders = qs.filter(
+            created_at__year=year,
+            created_at__month=month
+        )
+
+        weekly_data = defaultdict(int)
+
+        for order in orders:
+            day = order.created_at.day
+            week_of_month = (day - 1) // 7 + 1
+            weekly_data[week_of_month] += 1
+
+        labels = [f"Week {i}" for i in range(1, 6)]
+        values = [weekly_data.get(i, 0) for i in range(1, 6)]
+
+    elif filter_type == "monthly":
+        data = (
+            qs.filter(created_at__year=year)
+              .annotate(month=TruncMonth("created_at"))
+              .values("month")
+              .annotate(order_count=Count("id"))
+              .order_by("month")
+        )
+
+        monthly_data = {m: 0 for m in range(1, 13)}
+        for entry in data:
+            monthly_data[entry["month"].month] = entry["order_count"]
+
+        labels = [calendar.month_abbr[m] for m in range(1, 13)]
+        values = [monthly_data[m] for m in range(1, 13)]
+
+    else:
+        data = (
+            qs.annotate(year=TruncYear("created_at"))
+              .values("year")
+              .annotate(order_count=Count("id"))
+              .order_by("year")
+        )
+
+        labels = [entry["year"].year for entry in data]
+        values = [entry["order_count"] for entry in data]
+
+    return JsonResponse({
+        "labels": labels,
+        "values": values,
+        "current_month": now().month
+    })
+
+def apply_order_time_filters(qs, request):
+    filter_type = request.GET.get("filter")
+    year = request.GET.get("year")
+    month = request.GET.get("month")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    if start_date and end_date:
+        return qs.filter(
+            order__created_at__date__range=[start_date, end_date]
+        )
+
+    if filter_type == "weekly" and year and month:
+        return qs.filter(
+            order__created_at__year=year,
+            order__created_at__month=month
+        )
+
+    if filter_type == "monthly" and year:
+        return qs.filter(order__created_at__year=year)
+
+    if filter_type == "yearly" and year:
+        return qs.filter(order__created_at__year=year)
+
+    return qs
+
+@login_required(login_url='admin_login')
+def best_selling_categories_chart(request):
+    qs = OrderItem.objects.filter(
+        order__payment_status__in=["paid", "partially_refunded"]
+    )
+
+    qs = apply_order_time_filters(qs, request)
+
+    data = (
+        qs.values("product__product__category__name")
+          .annotate(
+              quantity_sold=Sum("quantity"),
+              revenue=Sum(F("quantity") * F("price"))
+          )
+          .order_by("-quantity_sold")[:10]
+    )
+
+    return JsonResponse({
+        "categories": [
+            {
+                "name": item["product__product__category__name"],
+                "quantity": item["quantity_sold"],
+                "revenue": float(item["revenue"] or 0)
+            }
+            for item in data
+            if item["product__product__category__name"]
+        ]
+    })
+
+    
+@login_required(login_url='admin_login')
+def best_selling_material_types_chart(request):
+    qs = OrderItem.objects.filter(
+        order__payment_status__in=["paid", "partially_refunded"]
+    )
+    qs = apply_order_time_filters(qs, request)
+
+    data = (
+        qs.values("product__material_type")
+          .annotate(
+              quantity_sold=Sum("quantity"),
+              revenue=Sum(F("quantity") * F("price"))
+          )
+          .order_by("-quantity_sold")[:10]
+    )
+
+    return JsonResponse({
+        "materials": [
+            {
+                "name": item["product__material_type"],
+                "quantity": item["quantity_sold"],
+                "revenue": float(item["revenue"] or 0)
+            }
+            for item in data
+            if item["product__material_type"]
+        ]
+    })
+
+@login_required(login_url='admin_login')
+def best_selling_products_chart(request):
+    qs = OrderItem.objects.filter(
+        order__payment_status__in=["paid", "partially_refunded"]
+    )
+
+    qs = apply_order_time_filters(qs, request)
+
+    data = (
+        qs.values("product__product__name")
+          .annotate(
+              quantity_sold=Sum("quantity"),
+              revenue=Sum(F("quantity") * F("price"))
+          )
+          .order_by("-quantity_sold")[:10]
+    )
+
+    return JsonResponse({
+        "products": [
+            {
+                "name": item["product__product__name"],
+                "quantity": item["quantity_sold"],
+                "revenue": float(item["revenue"] or 0)
+            }
+            for item in data
+            if item["product__product__name"]
+        ]
+    })
+
+
+
+@never_cache
 def admin_logout(request):
     logout(request)
     return redirect('admin_login')
@@ -137,7 +359,7 @@ def customer_list(request):
     elif filter_status == 'unblocked':
         customers = customers.filter(is_blocked=False)
 
-    paginator = Paginator(customers, 8)
+    paginator = Paginator(customers, 12)
     page = request.GET.get('page')
     page_obj = paginator.get_page(page)
 
@@ -287,7 +509,7 @@ def admin_product_list(request):
         products = products.filter(Q(name__icontains=search_query))
 
 
-    paginator = Paginator(products, 8)
+    paginator = Paginator(products, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -338,11 +560,13 @@ def add_product(request):
                 ProductImage.objects.create(product=product, image=url)
 
             messages.success(request, "Product added successfully.")
+            request.session['product_saved'] = True
             return redirect('admin_variant_list', product_id=product.id)
         else:
             messages.error(request, "Please fix the errors below.")
     else:
         form = ProductForm()
+        request.session.pop('product_saved', None)
 
     return render(request, 'admin/product_form.html', {'form': form})
 
@@ -387,12 +611,13 @@ def edit_product(request, id):
                 ProductImage.objects.create(product=product, image=added_url)
 
             messages.success(request, "Product updated successfully.")
+            request.session['product_saved'] = True
             return redirect('admin_product_list')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
         form = ProductForm(instance=product, show_deleted=True)
-
+        request.session.pop('product_saved', None)
 
     existing_images = [
         img.image.url
@@ -540,7 +765,7 @@ def admin_order_list(request):
     if search_query:
         orders = orders.filter(order_id__icontains=search_query)
 
-    paginator = Paginator(orders, 10)  
+    paginator = Paginator(orders, 12)  
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
@@ -549,7 +774,7 @@ def admin_order_list(request):
         "search_query": search_query,
     })
 
-
+@cache_control(no_store=True, no_cache=True, must_revalidate=True)
 @login_required(login_url='admin_login')
 def admin_order_details(request, order_id):
     order = get_object_or_404(Orders, order_id=order_id)
@@ -645,11 +870,12 @@ def reject_return(request, return_id):
     messages.success(request, "Return request rejected.")
     return redirect("admin_return_list")
   
+@login_required(login_url='admin_login')
 def admin_return_list(request):
     returns = (
         OrderReturn.objects
         .select_related("user", "item__order")
-        .order_by("approval_status", "-created_at")
+        .order_by("-created_at")
     )
 
     return render(
@@ -657,59 +883,6 @@ def admin_return_list(request):
         "admin/returns/return_list.html",
         {"returns": returns}
     )
-
-
-# @login_required(login_url='admin_login')
-# def create_product_offer(request):
-#     if request.method=='POST':
-#         ProductOffer.objects.create(
-#             name=request.POST.get('name'),
-#             product_id=request.POST['product'],
-#             discount_type=request.POST['discount_type'],
-#             discount_value=request.POST['discount_value'],
-#             max_discount_amount=request.POST.get('max_discount_amount') or None,
-#             start_date=request.POST['start_date'],
-#             end_date=request.POST['end_date'],
-#             is_active=True
-#         )
-#         messages.success(request,"Product offer created.")
-#         return redirect('admin_product_offer_list')
-
-
-# @login_required(login_url='admin_login')
-# def admin_offer_list(request):
-#     search_query = request.GET.get("q", "").strip()
-
-#     product_offers = ProductOffer.objects.all().order_by("-created_at")
-#     category_offers = CategoryOffer.objects.all().order_by("-created_at")
-
-#     if search_query:
-#         product_offers = product_offers.filter(
-#             Q(name__icontains=search_query) |
-#             Q(product__name__icontains=search_query)
-#         )
-#         category_offers = category_offers.filter(
-#             Q(name__icontains=search_query) |
-#             Q(category__name__icontains=search_query)
-#         )
-
-#     paginator = Paginator(product_offers,8)
-#     page_number = request.GET.get("page")
-#     product_page_obj = paginator.get_page(page_number)
-
-
-#     params = request.GET.copy()
-#     if "page" in params:
-#         params.pop("page")
-#     clean_querystring = params.urlencode()
-
-#     return render(request, "admin/offers/offer_list.html", {
-#         "product_offers": product_page_obj,
-#         "category_offers": category_offers,
-#         "page_obj": product_page_obj,
-#         "search_query": search_query,
-#         "querystring": clean_querystring,
-#     })
 
 @login_required(login_url="admin_login")
 def admin_offer_list(request):
@@ -743,35 +916,6 @@ def admin_offer_list(request):
         "search_query": search_query,
     })
 
-# @login_required(login_url='admin_login')
-# def admin_offer_create(request):
-#     offer_type = request.POST.get("offer_type") or request.GET.get("type") or "product"
-
-#     if offer_type == "product":
-#         product_form = ProductOfferForm(request.POST or None)
-#         category_form = None
-#     else:
-#         product_form = None
-#         category_form = CategoryOfferForm(request.POST or None)
-
-#     if request.method == "POST":
-#         if offer_type == "product" and product_form.is_valid():
-#             product_form.save()
-#             messages.success(request, "Product offer created successfully.")
-#             return redirect("admin_offer_list")
-
-#         if offer_type == "category" and category_form.is_valid():
-#             category_form.save()
-#             messages.success(request, "Category offer created successfully.")
-#             return redirect("admin_offer_list")
-
-#     return render(request, "admin/offers/offer_form.html", {
-#         "title": "Add Offer",
-#         "show_offer_type": True,
-#         "offer_type": offer_type,
-#         "product_form": product_form,
-#         "category_form": category_form,
-#     })
 @login_required(login_url="admin_login")
 def admin_product_offer_create(request):
     form = ProductOfferForm(request.POST or None)
@@ -817,6 +961,7 @@ def admin_product_offer_edit(request, pk):
         "product_form": form,      
         "category_form": None,      
     })
+
 
 @login_required(login_url='admin_login')
 def admin_category_offer_edit(request, pk):
@@ -1072,6 +1217,7 @@ def sales_report_excel(request):
     wb.save(response)
     return response
 
+@login_required(login_url='admin_login')
 def sales_report_pdf(request):
     range_type = request.GET.get("range", "daily")
     start_date = request.GET.get("start_date")
@@ -1142,7 +1288,7 @@ def admin_cancel_order(request, order_id):
                 item.status = "cancelled"
                 item.cancellation_reason = reason
                 item.save()
-                refundable_amount += item.price
+                refundable_amount =refundable_amount+item.price
 
         if order.payment_status == "paid":
             if refundable_amount > 0:

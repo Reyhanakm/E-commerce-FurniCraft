@@ -79,12 +79,12 @@
             {% endfor %}
 
         </div>
+        {% include "commerce/wallet/pagination.html" %}
     {% else %}
         <p class="text-sm text-gray-500">
             No wallet transactions yet.
         </p>
     {% endif %}
 </div>
-     {% include "commerce/wallet/pagination.html" %}
-
+    
     

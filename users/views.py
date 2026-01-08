@@ -16,11 +16,11 @@ import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.utils import timezone
-from .forms import RegistrationForm,ForgotPasswordForm,ResetPasswordVerifyForm,LoginForm,AddressForm
+from .forms import RegistrationForm,ForgotPasswordForm, ResetOTPForm, ResetPasswordForm,LoginForm,AddressForm
 from product.models import Category
 from users.decorators import block_check
 from admin_app.models import Banner
-from utils.otp import create_and_send_otp,validate_otp,otp_cache_key
+from utils.otp import create_and_send_otp, get_remaining_otp_cooldown,validate_otp,otp_cache_key
 from django.contrib.auth import update_session_auth_hash
 
 
@@ -81,13 +81,14 @@ def user_register(request):
 @block_check
 @never_cache
 def verify_otp(request):
-    if request.method == 'POST':
-        entered_otp = request.POST.get('otp')
-        email = request.session.get('pending_email')
-        
-        if not email:
+    email = request.session.get('pending_email')
+    if not email:
             messages.error(request, "Email missing. Please register again.")
             return redirect('user_register')
+    remaining_seconds = get_remaining_otp_cooldown(email, "register")
+
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp')
 
         valid,msg = validate_otp(email,"register",entered_otp)
 
@@ -102,47 +103,51 @@ def verify_otp(request):
             return redirect('user_register')
 
         reg = json.loads(data)
-        actual_otp = reg.get('otp')
+        # actual_otp = reg.get('otp')
         print("Entered OTP:", entered_otp)
-        print("Actual OTP:", actual_otp)
+        # print("Actual OTP:", actual_otp)
 
-        user = User.objects.create_user(
-            email=email,
-            first_name=reg['first_name'],
-            last_name=reg['last_name'],
-            phone_number=reg['phone_number'],
-            password=reg['password'],
-            referralcode=generate_unique_referral_code(),
-            is_blocked=False
-        )
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=email,
+                first_name=reg['first_name'],
+                last_name=reg['last_name'],
+                phone_number=reg['phone_number'],
+                password=reg['password'],
+                referralcode=generate_unique_referral_code(),
+                is_blocked=False
+            )
 
-        Wallet.objects.get_or_create(user=user)
+            Wallet.objects.get_or_create(user=user)
 
-        referrer_id=reg.get('referredby')
-        if referrer_id:
-            try:
-                referrer=User.objects.get(id=referrer_id)
-                if referrer!=user:
-                    user.referredby=referrer
-                    user.save(update_fields=["referredby"])
+            referrer_id=reg.get('referredby')
+            if referrer_id:
+                try:
+                    referrer=User.objects.get(id=referrer_id)
+                    if referrer!=user:
+                        user.referredby=referrer
+                        user.save(update_fields=["referredby"])
 
-                    Referral.objects.get_or_create(
-                        referrer=referrer,
-                        referred_user=user,
-                        defaults={'reward_amount':100}
-                    )
-                    
-            except User.DoesNotExist:
-                pass
+                        Referral.objects.get_or_create(
+                            referrer=referrer,
+                            referred_user=user,
+                            defaults={'reward_amount':100}
+                        )
+                        
+                except User.DoesNotExist:
+                    pass
                 
         # Clear Redis cache
         cache.delete(f"user_register:{email}")
-        messages.success(request, "Account created successfully! You can now log in.")
+        cache.delete(otp_cache_key("register", email))
         del request.session['pending_email']
+
+        messages.success(request, "Account created successfully! You can now log in.")
         return redirect('user_login')
     
-    else:
-        return render(request, 'user/verify_otp.html')
+    return render(request, 'user/verify_otp.html',{
+    "remaining_seconds": remaining_seconds
+    })
 
 
 @block_check
@@ -157,6 +162,7 @@ def resend_register_otp(request):
     key = otp_cache_key("register", email)
     data = cache.get(key)
 
+
     if not data:
         messages.error(request, "OTP expired. Please register again.")
         return redirect("user_register")
@@ -167,7 +173,7 @@ def resend_register_otp(request):
 
     # COOLDOWN LIMIT
     if elapsed < 60:
-        messages.error(request, f"Please wait {int(100 - elapsed)} seconds before resending OTP.")
+        messages.error(request, f"Please wait {int(60 - elapsed)} seconds before resending OTP.")
         return redirect("verify_otp")
 
     new_otp = create_and_send_otp(
@@ -213,38 +219,56 @@ def forgot_password(request):
 @never_cache
 def reset_password_verify(request):
     email = request.session.get('pending_email')
-    form = ResetPasswordVerifyForm(request.POST or None)
-
     if not email:
         messages.error(request, "Session expired. Please try again.")
         return redirect('forgot_password')
+    remaining_seconds = get_remaining_otp_cooldown(email,"reset_password")
+    
+    otp_verified = request.session.get("reset_otp_verified", False)
+    otp_form = ResetOTPForm()
+    password_form = ResetPasswordForm()
+    
+    if request.method == 'POST' and not otp_verified and 'otp' in request.POST:
+        otp_form = ResetOTPForm(request.POST)
+        if otp_form.is_valid():
+            otp = otp_form.cleaned_data['otp']
 
-    if request.method == 'POST' and form.is_valid():
-        otp = form.cleaned_data['otp']
-        new_password = form.cleaned_data['new_password']
-        confirm_password = form.cleaned_data['confirm_new_password']
+            if not otp:
+                messages.error(request, "Please enter the OTP.")
+                return redirect("reset_password_verify")
 
-        valid, msg = validate_otp(email, "reset_password", otp)
-
-        if not valid:
-            messages.error(request, msg)
+            valid, msg = validate_otp(email, "reset_password", otp)
+            if not valid:
+                messages.error(request, msg)
+                return redirect("reset_password_verify")
+            
+            request.session['reset_otp_verified'] = True
+            messages.success(request, "OTP verified. Please set a new password.")
             return redirect("reset_password_verify")
 
-        if new_password != confirm_password:
-            messages.error(request, "Passwords do not match.")
-            return redirect('reset_password_verify')
+    if request.method == 'POST' and otp_verified:
+        password_form = ResetPasswordForm(request.POST)
 
-        user = User.objects.get(email=email)
-        user.set_password(new_password)
-        user.save()
+        if password_form.is_valid():
+           
+            user = get_object_or_404(User, email=email)
+            user.set_password(password_form.cleaned_data['new_password'])
+            user.save()
 
-        if "pending_email" in request.session:
-            del request.session['pending_email']
+            # invalidate sessions properly
+            update_session_auth_hash(request, user)
 
-        messages.success(request, "Password reset successful!")
-        return redirect('user_login')
+            request.session.pop('pending_email', None)
+            request.session.pop('reset_otp_verified', None)
 
-    return render(request, 'user/reset_password_verify.html', {'form': form, 'email': email})
+            messages.success(request, "Password reset successful!")
+            return redirect('user_login')
+    print(password_form.errors)
+    return render(request, 'user/reset_password_verify.html', {'password_form': password_form,
+                                                               'otp_form':otp_form, 
+                                                               'email': email,
+                                                               "otp_verified": otp_verified,
+                                                               'remaining_seconds': remaining_seconds,})
 
 
 @never_cache
@@ -318,7 +342,6 @@ def user_logout(request):
 
 
 @block_check
-@never_cache
 @login_required
 def home(request):
     banners=Banner.objects.filter(status=True).order_by('id')
@@ -332,6 +355,7 @@ def landing(request):
     return render(request,'user/landing.html',{'categories':categories,'banners':banners})
 
 @login_required
+@never_cache
 def change_email_request_old_otp(request):
     if request.session.get("email_change_old_verified"):
         return redirect("change_email_enter_new")
@@ -351,6 +375,7 @@ def change_email_request_old_otp(request):
     return redirect("change_email_verify_old")
 
 @login_required
+@never_cache
 def change_email_verify_old(request):
     if not request.session.get("email_change_old_pending"):
         return redirect("change_email_request_old_otp")
@@ -374,6 +399,7 @@ def change_email_verify_old(request):
 
 
 @login_required
+@never_cache
 def change_email_enter_new(request):
     if not request.session.get("email_change_old_verified"):
         return redirect("change_email_request_old_otp")
@@ -392,6 +418,7 @@ def change_email_enter_new(request):
 
 
 @login_required
+@never_cache
 def change_email_request_new_otp(request):
     if not request.session.get("email_change_old_verified"):
         return redirect("change_email_request_old_otp")
@@ -413,6 +440,7 @@ def change_email_request_new_otp(request):
     return redirect("change_email_verify_new")
 
 @login_required
+@never_cache
 def change_email_verify_new(request):
     new_email = request.session.get("pending_new_email")
 
@@ -511,6 +539,7 @@ def resend_email_change_new_otp(request):
     return redirect("change_email_verify_new")
 
 @login_required
+@never_cache
 def change_password_verify_current(request):
     if request.method == "GET":
         return render(request, "user/profile/change_password_verify_current.html")
@@ -527,6 +556,7 @@ def change_password_verify_current(request):
     return render(request, "user/profile/change_password_new.html")
 
 @login_required
+@never_cache
 def change_password_set_new(request):
     if not request.session.get("password_verified"):
         return render(request, "user/profile/change_password_verify_current.html")
@@ -546,38 +576,6 @@ def change_password_set_new(request):
 
     messages.success(request, "Password changed successfully!")
     return render(request, "user/profile/change_password_success.html")
-
-# @login_required
-# def add_address(request):
-#     if request.method == 'POST':
-#         form = AddressForm(request.POST,initial={'user':request.user})
-
-#         if form.is_valid():
-#             address = form.save(commit=False)
-#             address.user = request.user
-#             address.save()  
-
-#             if request.headers.get("HX-Request"):
-#                 return render(request, "user/profile/_address_list_partial.html", {
-#                     "addresses": request.user.addresses.all()
-#                 })
-
-#             return redirect('my_address')
-
-        
-#         if request.headers.get("HX-Request"):
-#             return render(request, "user/profile/_add_address_partial.html", {
-#                 "form": form
-#             })
-
-    
-#     form = AddressForm(initial={'user':request.user})
-
-#     return render(request, "user/profile/_add_address_partial.html", {
-#         "form": form,
-#         "addresses": request.user.addresses.all()
-#     })
-
 
 
 @login_required
@@ -608,17 +606,6 @@ def edit_address(request, pk):
         "form": form, "address": address
     })
 
-
-# @login_required
-# def delete_address(request, pk):
-#     address = get_object_or_404(UserAddress, id=pk, user=request.user)
-#     address.delete()
-
-#     messages.success(request, "Address deleted successfully!")
-#     return render(request, "user/profile/_address_list_partial.html", {
-#         "addresses": request.user.addresses.all().order_by('created_at'),
-#         "user": request.user
-#     })
 
 @login_required
 def delete_address(request, pk):

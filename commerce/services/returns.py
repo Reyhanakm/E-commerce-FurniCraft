@@ -1,5 +1,6 @@
 from django.db import transaction
 from decimal import Decimal
+from django.db.models import F
 
 from commerce.models import OrderReturn, OrderItem, Orders,Wallet, WalletTransaction
 from commerce.utils.coupons import calculate_item_coupon_share
@@ -21,6 +22,10 @@ def approve_return_service(return_request: OrderReturn):
     # Mark item returned
     item.status = "returned"
     item.save(update_fields=["status"])
+
+    variant = (type(item.product).objects.select_for_update().get(pk=item.product.pk))
+    variant.stock+=F("stock") + item.quantity
+    variant.save(update_fields=["stock"])
 
     # Calculate refund
     coupon_share = calculate_item_coupon_share(order, item) or Decimal("0.00")
@@ -71,7 +76,7 @@ def refund_order_to_wallet(order, amount):
     ).exists():
         return
 
-    wallet.balance += Decimal(amount)
+    wallet.balance = wallet.balance + Decimal(amount)
     wallet.save(update_fields=["balance"])
 
     WalletTransaction.objects.create(

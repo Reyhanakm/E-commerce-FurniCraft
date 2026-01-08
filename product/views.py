@@ -26,7 +26,7 @@ def category_products(request, id):
         "category_id": id
     }
     )
-    products = Product.objects.filter(category=category).prefetch_related(
+    products = Product.objects.filter(category=category,variants__isnull=False).prefetch_related(
         Prefetch(
             'variants',
             queryset=ProductVariant.objects
@@ -41,7 +41,7 @@ def category_products(request, id):
             'images',
             queryset=ProductImage.objects.order_by('-is_primary', 'id')
         )
-    )
+    ).distinct()
     logger.info(
     "Products fetched for category",
     extra={
@@ -99,7 +99,6 @@ def products(request):
                 'product__category__category_offers'
             ))
     )
-
     search_query = request.GET.get('search')
 
     if search_query:
@@ -232,13 +231,16 @@ def product_details(request,id):
         "product_id": id
     }
     )
-
-    product=Product.objects.select_related('category').prefetch_related(
-        Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
-        'variants',
-        'variants__product__product_offers',
-        'variants__product__category__category_offers',
-    ).get(id=id)
+    try:
+        product=Product.objects.select_related('category').prefetch_related(
+            Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
+            'variants',
+            'variants__product__product_offers',
+            'variants__product__category__category_offers',
+        ).get(id=id)
+    except Product.DoesNotExist:
+        messages.error(request, "This product is temporarily unavailable!")
+        return redirect("products")
     related_products=Product.objects.filter(category=product.category).exclude(id=id).prefetch_related(
         Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
         'variants',
@@ -251,15 +253,14 @@ def product_details(request,id):
     is_in_wishlist = False
     wishlist_variant_ids=[]
     if request.user.is_authenticated:
-        if request.user.is_authenticated:
-            logger.debug(
-                "Wishlist status checked",
-                extra={
-                    "user_id": request.user.id,
-                    "product_id": id,
-                    "in_wishlist": is_in_wishlist
-                }
-            )
+        logger.debug(
+            "Wishlist status checked",
+            extra={
+                "user_id": request.user.id,
+                "product_id": id,
+                "in_wishlist": is_in_wishlist
+            }
+        )
         variants=list(product.variants.all())
         default_variant = variants[0] if variants else None
         pricing=get_pricing_context(default_variant) if default_variant else None

@@ -27,8 +27,8 @@
                     </a>
                     <div class="hidden md:flex space-x-8">
                         <a href="{% url 'home' %}" class="text-black font-medium border-b-2 border-black">Home</a>
-                        <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">Contact</a>
                         <a href="{% url 'products' %}" class="text-[#4D4D4D] hover:text-black font-medium">Products</a> 
+                        <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">Contact</a>
                         <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">About</a>
                     </div>
                 </div>
@@ -184,7 +184,10 @@
 
     function showToast(message, type = 'success', duration = 2500) {
       const container = document.getElementById('toast-container');
-      container.innerHTML = "";
+    // container.innerHTML = "";
+    while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
       const toast = document.createElement('div');
       toast.textContent = message;
       toast.className = `transform translate-x-full opacity-0 transition-all duration-500 ease-out text-white px-4 py-2 rounded-lg shadow-lg ${toastColors[type] || toastColors.neutral}`;
@@ -215,10 +218,11 @@
         }
       });
     }
-    document.body.addEventListener('htmx:beforeSwap', function(evt) {
+    document.body.addEventListener('htmx:afterOnLoad', function(evt) {
     const xhr = evt.detail.xhr;
     
     const hxTrigger = xhr.getResponseHeader('HX-Trigger');
+    if (!hxTrigger) return;
     
     if (hxTrigger) {
         try {

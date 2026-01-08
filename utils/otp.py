@@ -15,7 +15,7 @@ def otp_cache_key(purpose,email):
 def send_otp_email(email,otp,subject):
     send_mail(
         subject,
-        f"Your OTP is {otp}. It expires in 5 minutes.",
+        f"Welcome to Furnicraft. Your OTP is {otp}. It expires in 1 minutes.",
         settings.DEFAULT_FROM_EMAIL,
         [email],
         fail_silently=False,
@@ -23,6 +23,7 @@ def send_otp_email(email,otp,subject):
 
 def create_and_send_otp(email,purpose,subject):
     otp=generate_otp()
+    print("OTP CREATED AT:", timezone.now())
 
     data = {
         "otp":otp,
@@ -60,3 +61,13 @@ def validate_otp(email,purpose,entered_otp):
     return True,"OTP verified Successfully."
 
 
+def get_remaining_otp_cooldown(email, purpose, cooldown=60):
+    key = otp_cache_key(purpose, email)
+    data = cache.get(key)
+
+    if not data:
+        return 0
+
+    otp_data = json.loads(data)
+    elapsed = timezone.now().timestamp() - otp_data.get("otp_created_at", 0)
+    return max(0, int(cooldown - elapsed))

@@ -1,12 +1,12 @@
 from django.db import transaction
 from commerce.models import Wallet, WalletTransaction
+from commerce.services.exceptions import InsufficientWalletBalance
 
-@transaction.atomic
 def pay_using_wallet(*, user, order, amount):
     wallet = Wallet.objects.select_for_update().get(user=user)
 
     if wallet.balance < amount:
-        raise ValueError("INSUFFICIENT_BALANCE")
+        raise InsufficientWalletBalance()
 
     wallet.balance -= amount
     wallet.save(update_fields=["balance"])

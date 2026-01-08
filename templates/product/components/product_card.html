@@ -97,11 +97,12 @@
 
             <!-- CART (variant-based) -->
                 {% if default_variant and default_variant.stock > 0 %}
-                    <form hx-post="{% url 'add_cart_variant' default_variant.id %}"
-                          hx-swap="none"
-                          hx-indicator="#btn-loader-{{ default_variant.id }}">
-                        {% csrf_token %}
-                        <button type="submit"
+                    {% comment %} <form 
+                        {% csrf_token %} {% endcomment %}
+                        <button type="button"
+                                hx-post="{% url 'add_cart_variant' default_variant.id %}"
+                                hx-swap="none"
+                                hx-indicator="#btn-loader-{{ default_variant.id }}"
                                 class="w-10 h-10 rounded-full bg-[#F5F1EF] text-[#A89289]
                                        hover:bg-[#A89289] hover:text-white
                                        transition-all duration-300
@@ -114,7 +115,7 @@
                                 <i class="fas fa-spinner fa-spin text-white text-xs"></i>
                             </div>
                         </button>
-                    </form>
+                    {% comment %} </form> {% endcomment %}
                 {% else %}
                     <span class="text-xs font-bold text-red-500
                                  bg-red-50 px-2 py-1 rounded">

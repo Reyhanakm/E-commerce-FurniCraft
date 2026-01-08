@@ -51,6 +51,7 @@
       </button>
     </div>
   </form>
+
 </div>
 <!-- CROP MODAL -->
 <div id="cropModal"
@@ -75,120 +76,173 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <script>
-  const imageUrls = JSON.parse('{{ existing_images|default:"[]"|safe }}');  // for edit mode
+  // ---- INITIAL DATA ----
+  const imageUrls = JSON.parse('{{ existing_images|default:"[]"|safe }}');
   const preview = document.getElementById('preview');
   const hiddenInput = document.getElementById('imageUrls');
   const uploadCount = document.getElementById('uploadCount');
+  const confirmCrop = document.getElementById("confirmCrop");
+  confirmCrop.disabled = true;
 
+  const PRODUCT_ID = "{{ form.instance.id|default:'new' }}";
+  const STORAGE_KEY = `admin_product_images_${PRODUCT_ID}`;
+  const fileInput = document.getElementById("fileInput");
+
+  // ---- HELPERS ----
   function updateHiddenInput() {
     hiddenInput.value = JSON.stringify(imageUrls);
-    uploadCount.innerText = imageUrls.length > 0
-      ? `${imageUrls.length} image${imageUrls.length > 1 ? 's' : ''} uploaded.`
-      : 'No images uploaded yet.';
   }
 
   function renderPreview() {
     preview.innerHTML = "";
+
     imageUrls.forEach((url, index) => {
       const wrapper = document.createElement('div');
       wrapper.className = "relative";
       wrapper.innerHTML = `
         <img src="${url}" class="w-24 h-24 object-cover rounded-md border">
-        <button type="button" 
+        <button type="button"
                 onclick="removeImage(${index})"
-                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full hover:bg-red-600">×</button>
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">×</button>
       `;
       preview.appendChild(wrapper);
     });
+
+    uploadCount.innerText = `${imageUrls.length} / 6 images uploaded`;
     updateHiddenInput();
   }
 
   function removeImage(index) {
     imageUrls.splice(index, 1);
+    saveImages();
     renderPreview();
   }
 
+  function saveImages() {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(imageUrls));
+  }
+
+  function loadImages() {
+    if (imageUrls.length > 0) return; 
+    const isPost = "{{ request.method }}" === "POST";
+    if (!isPost) return;
+
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      imageUrls.push(...JSON.parse(stored));
+    }
+  }
+
+  function clearImages() {
+    sessionStorage.removeItem(STORAGE_KEY);
+  }
+
+  // ---- FILE INPUT ----
   document.getElementById("upload_widget").addEventListener("click", () => {
-  document.getElementById("fileInput").click();
+  fileInput.value = "";
+  fileInput.click();
 });
 
-let cropper;
 
-const fileInput = document.getElementById("fileInput");
-const cropModal = document.getElementById("cropModal");
-const cropImage = document.getElementById("cropImage");
+  const cropModal = document.getElementById("cropModal");
+  const cropImage = document.getElementById("cropImage");
+  let cropper;
+  let uploading = false;
 
-// When user chooses file
-fileInput.addEventListener("change", (e) => {
+  fileInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    fileInput.value = "";
+    if (imageUrls.length >= 6) {
+      showToast("Maximum 6 images allowed.", "warning");
+      return;
+    }
 
-
+    confirmCrop.disabled = true;
     cropImage.src = URL.createObjectURL(file);
     cropModal.classList.remove("hidden");
 
     if (cropper) cropper.destroy();
 
+    cropImage.onload = () => confirmCrop.disabled = false;
+    cropImage.onerror = () => {
+      confirmCrop.disabled = true;
+      showToast("Failed to load image", "error");
+    };
+
     cropper = new Cropper(cropImage, {
-        aspectRatio: 1,
-        viewMode: 1,
-        autoCropArea: 1,
+      aspectRatio: 1,
+      viewMode: 1,
+      autoCropArea: 1,
     });
-});
+  });
 
-// Cancel crop
-document.getElementById("cancelCrop").addEventListener("click", () => {
+  document.getElementById("cancelCrop").addEventListener("click", () => {
     cropModal.classList.add("hidden");
+    confirmCrop.disabled = true;
     if (cropper) cropper.destroy();
-});
+  });
 
-// Confirm crop + upload to Cloudinary
-document.getElementById("confirmCrop").addEventListener("click", () => {
-    cropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob(async (blob) => {
-        cropModal.classList.add("hidden");
+  function setUploading(state) {
+    uploading = state;
+    document.querySelector("button[type='submit']").disabled = state;
+  }
 
-        showLoader();
+  confirmCrop.addEventListener("click", () => {
+    if (!cropper) return;
 
+    setUploading(true);
+    cropModal.classList.add("hidden");
 
-        const formData = new FormData();
-        formData.append("file", blob);
-        formData.append("upload_preset", "product_preset");
+    cropper.getCroppedCanvas({ width: 600, height: 600 }).toBlob(async (blob) => {
+      showLoader();
 
-        const response = await fetch(
-            "https://api.cloudinary.com/v1_1/dcaevmkgg/image/upload",
-            { method: "POST", body: formData }
-        );
+      const formData = new FormData();
+      formData.append("file", blob);
+      formData.append("upload_preset", "product_preset");
 
-        const data = await response.json();
+      const response = await fetch(
+        "https://api.cloudinary.com/v1_1/dcaevmkgg/image/upload",
+        { method: "POST", body: formData }
+      );
 
-        if (!data.secure_url) {
-            showToast("Image upload failed!", "error");
-            return;
-        }
+      const data = await response.json();
 
-        imageUrls.push(data.secure_url);
-        renderPreview();
-        updateHiddenInput();
-        hideLoader();
+      hideLoader();
+      setUploading(false);
 
+      if (!data.secure_url) {
+        showToast("Image upload failed!", "error");
+        return;
+      }
+
+      imageUrls.push(data.secure_url);
+      saveImages();
+      renderPreview();
     });
-});
+  });
 
-
-  // Validate before submit
   document.getElementById("productForm").addEventListener("submit", (e) => {
     if (imageUrls.length < 3) {
       e.preventDefault();
-      showToast("Please upload at least 3 product images before saving.", "error");
-      return false;
+      showToast("Please upload at least 3 images.", "error");
+    }
+    if (uploading) {
+      e.preventDefault();
+      showToast("Please wait for upload to finish.", "info");
     }
   });
 
-  // Initialize preview for edit mode
-  renderPreview();
+  // ---- INIT ----
+  {% if request.session.product_saved %}
+  clearImages();
+{% endif %}
+
+loadImages();
+renderPreview();
+
 </script>
+
 
 <!-- Tailwind Fix for Django Form Fields -->
 <style>

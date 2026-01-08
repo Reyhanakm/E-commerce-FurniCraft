@@ -92,7 +92,7 @@
 
     <p class="flex justify-between">
         <span>Subtotal</span>
-        <span>₹{{ subtotal }}</span>
+        <span>₹{{ subtotal|floatformat:2 }}</span>
     </p>
 
     {% if offer_discount > 0 %}
@@ -105,7 +105,7 @@
     {% if coupon %}
     <p class="flex justify-between text-green-600">
         <span>Coupon ({{ coupon.code }})</span>
-        <span>- ₹{{ coupon_discount }}</span>
+        <span>- ₹{{ coupon_discount|floatformat:2 }}</span>
     </p>
     {% endif %}
 
@@ -118,6 +118,6 @@
 
     <p class="flex justify-between text-lg font-semibold">
         <span>Total</span>
-        <span>₹{{ total }}</span>
+        <span>₹{{ total|floatformat:2 }}</span>
     </p>
 </div>

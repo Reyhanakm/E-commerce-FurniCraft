@@ -28,10 +28,10 @@
                 <div class="mt-1">
     {% if pricing.is_offer_applied %}
         <p class="text-sm text-gray-400 line-through">
-            ₹{{ pricing.base_price }}
+            ₹{{ pricing.base_price|floatformat:2 }}
         </p>
         <p class="text-xl font-extrabold text-[#A89289]">
-            ₹{{ pricing.current_price }}
+            ₹{{ pricing.current_price|floatformat:2 }}
         </p>
         <span class="inline-block mt-1 px-2 py-0.5
                      bg-red-100 text-red-700 text-xs font-semibold rounded-full">
@@ -39,7 +39,7 @@
         </span>
     {% else %}
         <p class="text-xl font-extrabold text-[#A89289]">
-            ₹{{ pricing.base_price }}
+            ₹{{ pricing.base_price|floatformat:2 }}
         </p>
     {% endif %}
 </div>
