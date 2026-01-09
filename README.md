@@ -1,4 +1,4 @@
-# 🪑 FurniCraft – Furniture E-commerce Platform
+# FurniCraft – Furniture E-commerce Platform
 
 FurniCraft is a **production-oriented furniture e-commerce platform** built using **Django** and **Tailwind CSS**.  
 The project replicates real-world e-commerce workflows including secure OTP authentication, modular offer systems, order lifecycle management, wallet-based refunds, and a fully custom admin panel.
@@ -7,7 +7,7 @@ The primary focus of this project is **business logic correctness, clean archite
 
 ---
 
-## 🚀 Key Highlights
+## Key Highlights
 
 - OTP-based email authentication and verification
 - Modular offer system (category, product, referral)
@@ -20,7 +20,7 @@ The primary focus of this project is **business logic correctness, clean archite
 
 ---
 
-## 🧠 System Architecture Overview
+## System Architecture Overview
 
 ### Frontend
 - HTML
@@ -91,7 +91,7 @@ The primary focus of this project is **business logic correctness, clean archite
 
 ---
 
-## 🛠️ Admin Features
+## Admin Features
 
 ### Dashboard
 - Overview of orders, users, and products
@@ -111,7 +111,7 @@ The primary focus of this project is **business logic correctness, clean archite
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 ### Frontend
 - HTML
@@ -133,7 +133,7 @@ The primary focus of this project is **business logic correctness, clean archite
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 - Python 3.10+
