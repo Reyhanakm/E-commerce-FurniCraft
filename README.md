@@ -172,7 +172,7 @@ DB_PASSWORD=
 DB_HOST=
 DB_PORT=
 
-### Database & Server
+## Database & Server
 
 python manage.py migrate
 python manage.py createsuperuser
@@ -191,7 +191,7 @@ Admin routes are strictly protected
 
 Wallet and refund operations use atomic transactions
 
-### Future Enhancements
+## Future Enhancements
 
 Advanced filtering and sorting
 
@@ -201,13 +201,13 @@ Coupon system
 
 Performance optimization and caching
 
-### Author
+## Author
 
 Reyhana K M
 
 Built as part of the Brototype Full-Stack Learning Program.
 
-### License
+## License
 
 Copyright © 2026 Reyhana K M
 
