@@ -566,6 +566,7 @@ def place_order(request):
     last_checkout_time = request.session.get("checkout_cart_update_at")
     if last_checkout_time and float(last_checkout_time) != float(cart.updated_at.timestamp()):
         messages.error(request, "Your cart was updated. Please review checkout again.")
+        request.session.pop("applied_coupon", None)
         return redirect("checkout")
 
     with transaction.atomic():
@@ -590,8 +591,10 @@ def place_order(request):
         #  STOCK VALIDATION 
         for item in items:
             if item.variant.stock == 0:
+                request.session.pop("applied_coupon", None)
                 return redirect("cart_page")
             elif item.quantity > item.variant.stock:
+                request.session.pop("applied_coupon", None)
                 messages.error(
                     request,
                     f"Only {item.variant.stock} left for {item.variant.material_type}."
@@ -799,7 +802,8 @@ def razorpay_success(request):
                 "razorpay_payment_id",
                 "razorpay_signature"
             ])
-
+        request.session.pop("applied_coupon", None)
+        request.session.pop("checkout_cart_update_at", None)
         return JsonResponse({"success": True})
 
     except Orders.DoesNotExist:
@@ -826,6 +830,7 @@ def razorpay_failed(request):
         order.payment_status = "failed"
         order.save(update_fields=["payment_status"])
         CartItem.objects.filter(cart__user=order.user).delete()
+        request.session.pop("applied_coupon", None)
 
     except Orders.DoesNotExist:
         pass
@@ -853,6 +858,7 @@ def order_success(request,order_id):
         order_id=order_id,
         user=request.user
     )
+    request.session.pop("applied_coupon", None)
     return render(request,"commerce/order/order_success.html",{"order":order})
 
 @login_required

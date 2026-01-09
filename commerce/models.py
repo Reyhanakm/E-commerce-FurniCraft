@@ -221,6 +221,5 @@ class WalletTransaction(models.Model):
     razorpay_order_id=models.CharField(max_length=255,blank=True,null=True)
     source=models.CharField(max_length=150,choices=SOURCE_CHOICES,default="null")
     created_at=models.DateTimeField(auto_now_add=True)
-    class Meta:
-        unique_together = ('wallet', 'order', 'source')
+    
 

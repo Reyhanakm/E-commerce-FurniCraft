@@ -9,7 +9,7 @@
         </h2>
 
         <!-- OTP Form -->
-        <form method="POST" action="{% url 'verify_otp' %} novalidate">
+        <form method="POST" action="{% url 'verify_otp' %}"novalidate>
             {% csrf_token %}
             <input type="hidden" name="email" value="{{ email }}">
 

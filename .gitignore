@@ -15,3 +15,6 @@ staticfiles/
 # IDE/editor files
 .vscode/
 .idea/
+
+# logger
+logs/

@@ -3,6 +3,8 @@ from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.urls import reverse
 import re
+import logging
+
 from django.db import transaction
 from users.utils import generate_unique_referral_code
 from django.contrib.auth import authenticate, login, logout
@@ -23,10 +25,13 @@ from admin_app.models import Banner
 from utils.otp import create_and_send_otp, get_remaining_otp_cooldown,validate_otp,otp_cache_key
 from django.contrib.auth import update_session_auth_hash
 
+logger = logging.getLogger('users')
 
 @never_cache
 def user_register(request):
+    logger.info("User registration started")
     if request.method == 'POST':
+        logger.info("POST request received for registration")
         form = RegistrationForm(request.POST)
         print("form is valid?", form.is_valid()) 
         print("form is error: ", form.errors)
@@ -68,6 +73,7 @@ def user_register(request):
             print("Debug OTP: ",otp)
             
             messages.success(request, "OTP sent to your email.")
+            logger.info(f"OTP email sent to {email}")
             return redirect('verify_otp')
 
         else:
@@ -103,9 +109,7 @@ def verify_otp(request):
             return redirect('user_register')
 
         reg = json.loads(data)
-        # actual_otp = reg.get('otp')
         print("Entered OTP:", entered_otp)
-        # print("Actual OTP:", actual_otp)
 
         with transaction.atomic():
             user = User.objects.create_user(

@@ -274,10 +274,17 @@ LOGGING = {
         "commerce": {
             "handlers": ["console",'file'],
             "level": "INFO",
+            'propagate': False,
         },
         "admin_app": {
             "handlers": ["console",'file'],
             "level": "INFO",
+            'propagate': False,
+        },
+        'users': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }

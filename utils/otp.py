@@ -13,9 +13,28 @@ def otp_cache_key(purpose,email):
 
 
 def send_otp_email(email,otp,subject):
+    message = f"""
+        Hi,
+
+        Welcome to Furnicraft 👋
+
+        We received a request to verify your email address.
+
+        🔐 Your One-Time Password (OTP):
+        {otp}
+
+        This OTP is valid for **1 minute** only.
+
+        Please do NOT share this OTP with anyone for security reasons.
+
+        If you did not request this verification, you can safely ignore this email.
+
+        Thanks & regards,
+        Furnicraft Team
+        """
     send_mail(
         subject,
-        f"Welcome to Furnicraft. Your OTP is {otp}. It expires in 1 minutes.",
+        message,
         settings.DEFAULT_FROM_EMAIL,
         [email],
         fail_silently=False,
