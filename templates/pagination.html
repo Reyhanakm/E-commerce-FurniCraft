@@ -1,25 +1,27 @@
+{% with param=page_param|default:"page" %}
 <div class="flex justify-center items-center mt-6 space-x-2">
 
-    {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
-           class="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100">‹</a>
-    {% endif %}
+  {% if page_obj.has_previous %}
+    <a href="?{{ param }}={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
+       class="px-3 py-1 border rounded-md">‹</a>
+  {% endif %}
 
-    {% for num in page_obj.paginator.page_range %}
-        {% if page_obj.number == num %}
-            <span class="px-3 py-1 border rounded-md bg-gray-200">{{ num }}</span>
-        {% else %}
-            <a href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}"
-               class="px-3 py-1 border rounded-md hover:bg-gray-100">{{ num }}</a>
-        {% endif %}
-    {% endfor %}
-
-    {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
-           class="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100">›</a>
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="px-3 py-1 border rounded-md bg-gray-200">{{ num }}</span>
+    {% else %}
+      <a href="?{{ param }}={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}"
+         class="px-3 py-1 border rounded-md hover:bg-gray-100">{{ num }}</a>
     {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a href="?{{ param }}={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
+       class="px-3 py-1 border rounded-md">›</a>
+  {% endif %}
 
 </div>
+{% endwith %}
 
 
 

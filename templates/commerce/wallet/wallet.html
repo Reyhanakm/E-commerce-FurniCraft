@@ -1,16 +1,15 @@
-<div class="max-w-xl mx-auto bg-white rounded-xl border shadow-sm p-6">
+<div id="wallet-container">
+    <div class="max-w-xl mx-auto bg-white rounded-xl border shadow-sm p-6">   
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-xl font-semibold text-gray-800">
+                Wallet
+            </h2>
+            <span class="text-sm text-gray-500">
+                {{ wallet.user.first_name }} {{ wallet.user.last_name }}
+            </span>
+        </div>
 
-   
-    <div class="flex items-center justify-between mb-5">
-        <h2 class="text-xl font-semibold text-gray-800">
-            Wallet
-        </h2>
-        <span class="text-sm text-gray-500">
-            {{ wallet.user.first_name }} {{ wallet.user.last_name }}
-        </span>
-    </div>
-
-    <div class="bg-[#F7F4F2] border border-[#E6DDD8] rounded-lg p-5">
+        <div class="bg-[#F7F4F2] border border-[#E6DDD8] rounded-lg p-5">
 
         <p class="text-sm text-gray-600 mb-1">
             Available Balance
@@ -40,7 +39,6 @@
     <h3 class="text-lg font-semibold text-gray-800 mb-4">
         Wallet Transactions
     </h3>
-
     {% if page_obj %}
         <div class="divide-y">
 
@@ -77,14 +75,15 @@
 
             </div>
             {% endfor %}
+    {% include "commerce/pagination.html" with page_obj=page_obj target="#wallet-container"  url_name='my_wallet' querystring=""%}
 
         </div>
-        {% include "commerce/wallet/pagination.html" %}
-    {% else %}
+      {% else %}
         <p class="text-sm text-gray-500">
             No wallet transactions yet.
         </p>
     {% endif %}
+    </div>  
+    
+    
 </div>
-    
-    

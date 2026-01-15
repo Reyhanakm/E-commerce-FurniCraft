@@ -95,31 +95,20 @@ class ResetPasswordForm(forms.Form):
 
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Passwords do not match.")
+        if p1:
+            if len(p1) < 8:
+                raise forms.ValidationError("Password must be at least 8 characters long.")
+            if not re.search(r"[A-Z]", p1):
+                raise forms.ValidationError("Password must include at least one uppercase letter.")
+            if not re.search(r"[a-z]", p1):
+                raise forms.ValidationError("Password must include at least one lowercase letter.")
+            if not re.search(r"[0-9]", p1):
+                raise forms.ValidationError("Password must include at least one digit.")
+            if not re.search(r"[@$!%*#?&]", p1):
+                raise forms.ValidationError("Password must include at least one special character (@, $, !, etc.)")
+
         return cleaned_data
 
-# class ResetPasswordVerifyForm(forms.Form):
-#     otp = forms.CharField(
-#         max_length=6,
-#         widget=forms.TextInput(attrs={
-#             'placeholder': '000000',
-#             'maxlength': '6',
-#             'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-center text-2xl tracking-widest'
-#         })
-#     )
-
-#     new_password = forms.CharField(
-#         widget=forms.PasswordInput(attrs={
-#             'id': 'new_password',
-#             'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500'
-#         })
-#     )
-
-#     confirm_new_password = forms.CharField(
-#         widget=forms.PasswordInput(attrs={
-#             'id': 'confirm_new_password',
-#             'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500'
-#         })
-#     )
 
 
 class LoginForm(forms.Form):

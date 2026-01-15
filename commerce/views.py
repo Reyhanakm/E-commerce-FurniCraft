@@ -16,18 +16,19 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from commerce.services.exceptions import InsufficientWalletBalance
+from commerce.utils.availability import check_item_availability
 from commerce.utils.offers import get_discount_percentage
 from users.decorators import block_check
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from .models import Cart,CartItem,OrderItem,Orders,Wishlist,WishlistItem,Wallet,WalletTransaction,OrderReturn
 from users.models import User,UserAddress
-from product.models import Category, Coupon, CouponUsage,Product,ProductVariant
+from product.models import Category, Coupon, CouponUsage,Product,ProductVariant,Review
 from .utils.trigger import trigger,attach_trigger
 from decimal import Decimal
 from commerce.utils.pricing import get_pricing_context
 from .utils.checkout import render_checkout_summary
-from commerce.utils.coupons import validate_and_calculate_coupon,calculate_item_coupon_share
+from commerce.utils.coupons import get_available_coupons, validate_and_calculate_coupon,calculate_item_coupon_share
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle,Spacer
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -118,8 +119,11 @@ def move_to_cart(request, p_id):
     wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
 
     cart_response = add_to_cart_logic(request, variant.product, variant)
+    hx_data= json.loads(cart_response["HX-Trigger"])
     
-    if cart_response.status_code == 204:
+    if hx_data["toast"]["type"]=="error":
+        return cart_response
+    elif hx_data["toast"]["type"]== "success":
         wishlist_item_qs = WishlistItem.objects.filter(wishlist=wishlist, product=variant)
         wishlist_item_qs.delete()
         
@@ -177,8 +181,8 @@ def add_to_cart_logic(request, product, variant):
     if item:
         if item.quantity + quantity > variant.stock:
             return trigger("Only limited stock available.", "error")
-        if item.quantity + quantity > 5:
-           return trigger("Cannot add more than 5 per order.", "error")
+        if item.quantity + quantity > settings.PURCHASE_QTY_LIMIT:
+           return trigger(f"Cannot add more than {settings.PURCHASE_QTY_LIMIT} per order.", "error")
         
         item.quantity += quantity
         item.save()
@@ -188,7 +192,8 @@ def add_to_cart_logic(request, product, variant):
     return trigger("Product added to cart!", "success", update=True)
 
 @block_check
-@login_required    
+@login_required
+@never_cache    
 def cart_page(request):
 
     cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -245,7 +250,7 @@ def stock_status_for_variant(request, variant_id):
     
     in_cart_qty = cart_item.quantity if cart_item else 0
 
-    max_addable_qty = 5 
+    max_addable_qty = settings.PURCHASE_QTY_LIMIT
     
     remaining_stock_in_db = variant.stock - in_cart_qty
     remaining_stock_to_add = max_addable_qty - in_cart_qty
@@ -271,12 +276,12 @@ def increase_quantity(request, item_id):
         cart__user=request.user
     )
 
-    if item.quantity < item.variant.stock and item.quantity < 5:
+    if item.quantity < item.variant.stock and item.quantity < settings.PURCHASE_QTY_LIMIT:
         item.quantity += 1
         item.save()
         message="Quantity Increased."
     else:
-        message = "Maximum quantity reached (5) or out of stock."
+        message = f"Maximum quantity reached ({settings.PURCHASE_QTY_LIMIT}) or out of stock."
     data = {
         "toast": {"message": message, "type": "info"},
         "update-cart": True 
@@ -411,10 +416,18 @@ def cart_totals(request):
 @never_cache
 @cache_control(no_store=True, no_cache=True, must_revalidate=True)
 def checkout(request):
+    request.session.pop("applied_coupon", None)
     user=request.user
     cart,_=Cart.objects.get_or_create(user=user)
     
     products=cart.items.select_related("variant",'product')
+    for item in products:
+        is_available, error = check_item_availability(item)
+
+    if not is_available:
+        messages.error(request, error)
+        return redirect("products")
+    
     if not products.exists():
         messages.error(request,"Your cart is empty!")
         return redirect('cart_page')
@@ -454,31 +467,7 @@ def checkout(request):
     cod_allowed = total <= MAX_COD_AMOUNT
 
     
-    coupons_qs = Coupon.objects.filter(
-        is_active=True,
-        valid_from__lte=now,
-        valid_until__gte=now
-    ).annotate(
-        total_usage_count=Count('usages'),
-        user_usage_count=Count('usages', filter=Q(usages__user=user))
-    )
-
-    available_coupons = []
-    
-    for c in coupons_qs:
-        if c.usage_limit is not None and c.total_usage_count >= c.usage_limit:
-            continue
-        if c.user_usage_count >= c.per_user_limit:
-            continue
-            
-        is_eligible = subtotal >= c.minimum_purchase_amount
-        shortage = c.minimum_purchase_amount - subtotal
-        
-        available_coupons.append({
-            'obj': c,
-            'is_eligible': is_eligible,
-            'reason': None if is_eligible else f"Add ₹{shortage} more"
-        })
+    available_coupons = get_available_coupons(user=user,subtotal=subtotal)
     request.session["checkout_cart_update_at"]=cart.updated_at.timestamp()
     context={
         "products":products,
@@ -559,6 +548,7 @@ def place_order(request):
     if not request.POST.get("address"):
         messages.error(request, "Please select an address.")
         return redirect("checkout")
+    
 
     user = request.user
     cart, _ = Cart.objects.get_or_create(user=user)
@@ -697,6 +687,7 @@ def place_order(request):
             items.delete()
             request.session.pop("checkout_cart_update_at", None)
             request.session.pop("applied_coupon", None)
+            request.session["just_completed_order"] = order.order_id
 
             messages.success(request, "Your order was placed successfully!")
             return redirect("order_success", order_id=order.order_id)
@@ -712,6 +703,7 @@ def place_order(request):
 
             request.session.pop("checkout_cart_update_at", None)
             request.session.pop("applied_coupon", None)
+            request.session["just_completed_order"] = order.order_id
 
             messages.success(request, "Your order was placed successfully!")
             return redirect("order_success", order_id=order.order_id)
@@ -804,10 +796,11 @@ def razorpay_success(request):
             ])
         request.session.pop("applied_coupon", None)
         request.session.pop("checkout_cart_update_at", None)
+        request.session["just_completed_order"] = order.order_id
         return JsonResponse({"success": True})
 
     except Orders.DoesNotExist:
-        return JsonResponse({"success": True})
+        return JsonResponse({"success": False}, status=404)
 
     except razorpay.errors.SignatureVerificationError:
         return JsonResponse({"success": False}, status=400)
@@ -829,18 +822,25 @@ def razorpay_failed(request):
         )
         order.payment_status = "failed"
         order.save(update_fields=["payment_status"])
+
+        request.session["just_completed_order"] = order.order_id
+
         CartItem.objects.filter(cart__user=order.user).delete()
         request.session.pop("applied_coupon", None)
+        return JsonResponse({"success": True})
 
     except Orders.DoesNotExist:
-        pass
-    
-    return JsonResponse({"success": True})
+        return JsonResponse({"success": False}, status=404)
 
 
 @login_required
 @never_cache
 def payment_failed(request,order_id):
+    if request.session.get("just_completed_order") != order_id:
+        return redirect("my_orders_page")
+
+    request.session.pop("just_completed_order", None)
+
     order = get_object_or_404(
         Orders,
         order_id=order_id,
@@ -853,6 +853,11 @@ def payment_failed(request,order_id):
 @login_required
 @never_cache
 def order_success(request,order_id):
+    if request.session.get("just_completed_order") != order_id:
+        return redirect("my_orders_page")
+
+    request.session.pop("just_completed_order", None)
+
     order=get_object_or_404(
         Orders.objects.select_related("address").prefetch_related("items__product"),
         order_id=order_id,
@@ -862,25 +867,50 @@ def order_success(request,order_id):
     return render(request,"commerce/order/order_success.html",{"order":order})
 
 @login_required
+@never_cache
 def my_orders(request):
     orders=Orders.objects.filter(user=request.user).order_by("-created_at")
-    paginator = Paginator(orders, 5)  
+    paginator = Paginator(orders, 3)  
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
-    return render(request,"commerce/order/my_orders.html",{"orders":orders,"page_obj": page_obj})
+    if request.headers.get("HX-Request") == "true":
+        return render(request,"commerce/order/my_orders.html",{
+            "orders":page_obj,"page_obj": page_obj,"querystring": "",})
+    return render(
+        request,
+        "commerce/order/my_orders_page.html",
+        {"orders":page_obj,"page_obj": page_obj,"querystring": ""}
+    )
 
 
 @login_required
+@never_cache
 def user_order_detail(request, order_id):
     order = get_object_or_404(Orders, order_id=order_id, user=request.user)
-    items = order.items.select_related("product", "product__product")
+    items = order.items.select_related("product", "product__product").prefetch_related("return_items")
+
+    for item in items:
+        return_obj=item.return_items.first()
+        item.return_status=return_obj.approval_status if return_obj else None
+
+    product_ids=items.values_list("product__product__id",flat=True)
+    reviewed_product_ids=set(Review.objects
+                            .filter(user=request.user,
+                             product__product__id__in=product_ids)
+                            .values_list("product__product__id",flat=True))
+    
+    net_total = (
+    order.total_price_before_discount- order.offer_discount- order.coupon_discount)
     return render(request, "commerce/order/order_details.html", {
         "order": order,
         "items": items,
+        "net_total": net_total,
+        "reviewed_product_ids":reviewed_product_ids
     })
 
 
 @login_required
+@never_cache
 def download_invoice(request, order_id):
     styles = get_invoice_styles()
 
@@ -986,6 +1016,7 @@ def download_invoice(request, order_id):
 
 
 @login_required
+@never_cache
 def my_orders_page(request):
     orders_qs=Orders.objects.filter(user=request.user).order_by("-created_at")
     paginator = Paginator(orders_qs, 4)  
@@ -1096,6 +1127,7 @@ def request_return(request, item_id):
 
 
 @login_required
+@never_cache
 def my_wallet(request):
     wallet,_=Wallet.objects.get_or_create(user=request.user)
     transactions = wallet.transactions.select_related("order").order_by("-created_at")
@@ -1105,12 +1137,12 @@ def my_wallet(request):
 
     context = {
             "wallet": wallet,
+            "querystring": "",
             "page_obj": page_obj,
         }
     if request.headers.get("HX-Request"):
-        return render(request, "commerce/wallet/wallet.html", context)
-    return render(request,"commerce/wallet/my_wallet.html",context)
-
+        return render(request, "commerce/wallet/my_wallet.html", context)
+    return render(request,"commerce/wallet/wallet_page.html",context)
 
 def add_checkout_address(request):
     return render(request,"commerce/checkout/add_checkout_address.html")

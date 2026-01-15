@@ -39,6 +39,6 @@ urlpatterns = [
     path("order/invoice/<str:order_id>/", views.download_invoice, name="download_invoice"),
     path("order/item/return/<int:item_id>/", views.request_return, name="return_request"),
 
-    path('wallet/',views.my_wallet,name='my_wallet'),
+    path('profile/wallet/',views.my_wallet,name='my_wallet'),
     
 ]

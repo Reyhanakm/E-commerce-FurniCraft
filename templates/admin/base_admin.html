@@ -30,9 +30,9 @@
           <a href="{% url 'banner_page' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Banner</a>
           <a href="{% url 'admin_coupon_list' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Coupons</a>
           <a href="{% url 'admin_offer_list' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Offers</a>
-          <a href="#" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Settings</a>
+          {% comment %} <a href="#" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Settings</a> {% endcomment %}
         </nav>
-          <a href="{% url 'admin_logout' %}" class="block text-gray-700 hover:text-black mt-10">Logout</a>
+          <a href="{% url 'admin_logout' %}" class="block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200 mt-10">Logout</a>
 
       </div>
     </aside>

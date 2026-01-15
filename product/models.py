@@ -4,6 +4,7 @@ from users.models import User
 from commerce.models import Orders
 from datetime import time
 from django.utils import timezone
+from django.core.validators import MinValueValidator,MaxValueValidator
 
 class CategoryManager(models.Manager):
 
@@ -231,7 +232,7 @@ class CouponUsage(models.Model):
     used_at = models.DateTimeField(auto_now_add=True)
     
 class CategoryOffer(models.Model):
-    name=models.CharField(max_length=200,blank=True,null=True)
+    name=models.CharField(max_length=200,blank=True,null=True,default='C-offer')
     category = models.ForeignKey(Category,related_name='category_offers',on_delete=models.CASCADE)
     discount_type = models.CharField(max_length=20,default='percentage')
     discount_value=models.DecimalField(max_digits=10,decimal_places=2)
@@ -248,13 +249,15 @@ class CategoryOffer(models.Model):
         ]
     @property
     def status(self):
-        now = timezone.now()
+        now = timezone.localtime(timezone.now())
+        start = timezone.localtime(self.start_date)
+        end = timezone.localtime(self.end_date)
 
         if not self.is_active:
             return "inactive"
-        if self.start_date > now:
+        if start > now:
             return "upcoming"
-        if self.end_date < now:
+        if end < now:
             return "expired"
         return "active"
     
@@ -262,7 +265,7 @@ class CategoryOffer(models.Model):
         return f"{self.category.name} offer"
 
 class ProductOffer(models.Model):
-    name = models.CharField(max_length=200,blank=True,null=True,default='N/A')
+    name = models.CharField(max_length=200,blank=True,null=True,default='P-offer')
     product=models.ForeignKey(Product,related_name='product_offers',on_delete=models.CASCADE)
     discount_type = models.CharField(max_length=20,default='percentage')
     discount_value = models.DecimalField(max_digits=10,decimal_places=2)
@@ -281,18 +284,50 @@ class ProductOffer(models.Model):
 
     @property
     def status(self):
-        now = timezone.now()
+        now = timezone.localtime(timezone.now())
+        start = timezone.localtime(self.start_date)
+        end = timezone.localtime(self.end_date)
 
         if not self.is_active:
             return "inactive"
-        if self.start_date > now:
+        if start > now:
             return "upcoming"
-        if self.end_date < now:
+        if end < now:
             return "expired"
         return "active"
 
     def __str__(self):
         return f"{self.product.name} offer"
     
-    
+class Review(models.Model):
+    user = models.ForeignKey(
+        User,
+        related_name="reviews",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    product = models.ForeignKey(
+        ProductVariant,
+        related_name="reviews",
+        on_delete=models.CASCADE
+    )
+    comment = models.TextField()
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    image = CloudinaryField('review_image', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'product'],
+                name='unique_review_per_user_per_product'
+            )
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        user = self.user.email if self.user else "Anonymous"
+        return f"{user} rated {self.product} ({self.rating}/5)"

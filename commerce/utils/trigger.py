@@ -10,6 +10,7 @@ def trigger(message, type="info", update=False, wishlist_update=False):
         response.status_code = 204
     
     data = {
+        "success": type != "error",
         "toast": {
             "message": message,
             "type": type

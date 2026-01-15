@@ -28,7 +28,8 @@ def get_sold_items(start_date=None, end_date=None):
     qs = OrderItem.objects.filter(
         status="delivered",
         order__payment_status__in=["paid", "partially_refunded"]
-    ).select_related("order")
+    ).select_related("order").order_by("-id")
+
 
     if start_date and end_date:
         qs = qs.filter(order__created_at__date__range=[start_date, end_date])

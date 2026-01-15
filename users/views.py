@@ -267,7 +267,6 @@ def reset_password_verify(request):
 
             messages.success(request, "Password reset successful!")
             return redirect('user_login')
-    print(password_form.errors)
     return render(request, 'user/reset_password_verify.html', {'password_form': password_form,
                                                                'otp_form':otp_form, 
                                                                'email': email,
@@ -337,16 +336,16 @@ def user_login(request):
 
 
 @block_check
-@never_cache
 @login_required(login_url="/login")
+@never_cache
 def user_logout(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('user_login')
 
-
-@block_check
 @login_required
+@block_check
+@never_cache
 def home(request):
     banners=Banner.objects.filter(status=True).order_by('id')
     categories=Category.objects.all()
@@ -354,9 +353,16 @@ def home(request):
 
 
 def landing(request):
-    banners=Banner.objects.filter(status=True).order_by('id')   
+    banners = Banner.objects.filter(status=True).order_by('created_at')
+  
     categories=Category.objects.all()
     return render(request,'user/landing.html',{'categories':categories,'banners':banners})
+
+@login_required
+@never_cache
+def about(request):
+    about_image="https://res.cloudinary.com/dcaevmkgg/image/upload/v1765350456/uukfgvd5npilmdl5fhpt.png"
+    return render(request,"user/about.html",{"about_image":about_image})
 
 @login_required
 @never_cache
@@ -545,6 +551,13 @@ def resend_email_change_new_otp(request):
 @login_required
 @never_cache
 def change_password_verify_current(request):
+    if not request.user.has_usable_password():
+        messages.error(
+            request,
+            "You signed in using Google. Please set a password first."
+        )
+        return redirect("profile") 
+    
     if request.method == "GET":
         return render(request, "user/profile/change_password_verify_current.html")
 

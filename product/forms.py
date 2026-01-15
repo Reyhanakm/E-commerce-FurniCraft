@@ -1,8 +1,9 @@
 from decimal import Decimal
 from django import forms
 import re
-from .models import Category, Product, ProductVariant, ProductImage,ProductOffer,CategoryOffer,Coupon
+from .models import Category, Product, ProductVariant, ProductImage,ProductOffer,CategoryOffer,Coupon,Review
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class MultiFileInput(forms.ClearableFileInput):
@@ -37,6 +38,11 @@ class CategoryForm(forms.ModelForm):
         name = self.cleaned_data['name'].strip()
         if not name:
             raise forms.ValidationError("Category name cannot be empty.")
+        letter_count = len(re.findall(r"[A-Za-z]", name))
+        if letter_count < 3:
+            raise forms.ValidationError(
+                "Must contain at least 3 letters."
+            )
         
         if not re.match(r'^[A-Za-z0-9\s\-\&\.,]+$', name):
             raise forms.ValidationError("Only letters, digits, spaces, hyphens, '&', dots, and commas are allowed.")
@@ -54,9 +60,11 @@ class CategoryForm(forms.ModelForm):
     def clean_image(self):
         image = self.cleaned_data.get('image')
 
-        if not self.instance.id or not image:
+        if not self.instance.id and not image:
             raise forms.ValidationError("Category image is required.")
         
+        if self.instance.id and not image:
+            return self.instance.image
         return image
 
 
@@ -86,6 +94,12 @@ class ProductForm(forms.ModelForm):
         name = self.cleaned_data['name'].strip()
         if not name:
             raise forms.ValidationError("Product name cannot be empty.")
+        letter_count = len(re.findall(r"[A-Za-z]", name))
+        if letter_count < 3:
+            raise forms.ValidationError(
+                "Must contain at least 3 letters."
+            )
+
         if not re.match(r'^[A-Za-z0-9\s]+$', name):
             raise forms.ValidationError("Product name should contain only letters, digits, and spaces.")
         if name.isdigit():
@@ -129,6 +143,11 @@ class ProductVariantForm(forms.ModelForm):
         material_type = self.cleaned_data['material_type'].strip()
         if not material_type:
             raise forms.ValidationError("Material type cannot be empty.")
+        letter_count = len(re.findall(r"[A-Za-z]", material_type))
+        if letter_count < 3:
+            raise forms.ValidationError(
+                "Must contain at least 3 letters."
+            )
         if not re.match(r'^[A-Za-z0-9\s]+$', material_type):
             raise forms.ValidationError("Material type should contain only letters, digits, and spaces.")
         if material_type.isdigit():
@@ -222,8 +241,18 @@ class ProductOfferForm(forms.ModelForm):
         end = cleaned_data.get("end_date")
         is_active = cleaned_data.get("is_active")
 
-        now = timezone.now()
+        tz = timezone.get_current_timezone()
 
+        if start and timezone.is_naive(start):
+            start = timezone.make_aware(start, tz)
+            cleaned_data["start_date"] = start
+
+        if end and timezone.is_naive(end):
+            end = timezone.make_aware(end, tz)
+            cleaned_data["end_date"] = end
+
+        now = timezone.localtime(timezone.now())
+        
         if end and end <= now:
             self.add_error("end_date", "End date must be a future date.")
 
@@ -250,13 +279,21 @@ class ProductOfferForm(forms.ModelForm):
                 original_price = Decimal('0.00')
             if percentage_value > 90:
                 self.add_error("discount_value", "Discount percentage cannot exceed 90%.")
+            if percentage_value <=0:
+                self.add_error("discount_value","Discount percentage should be greater than 0%.")
             
             if max_cap_amount:
                 limit_70 = original_price * Decimal('0.70')
+                limit_01 = original_price * Decimal('0.01')
                 if max_cap_amount > limit_70:
                     self.add_error(
                         "max_discount_amount", 
                         f"Max discount limit cannot exceed 70% of the product price (Limit: ₹{limit_70:.2f})."
+                    )
+                elif max_cap_amount < limit_01:
+                    self.add_error(
+                        "max_discount_amount",
+                        f"Maximum discount amount must be at least 1% of the product price (₹{limit_01:.2f})."
                     )
 
         return cleaned_data
@@ -307,7 +344,17 @@ class CategoryOfferForm(forms.ModelForm):
         max_discount_amount = cleaned.get("max_discount_amount")
         is_active = cleaned.get("is_active")
 
-        now = timezone.now()
+        tz = timezone.get_current_timezone()
+
+        if start and timezone.is_naive(start):
+            start = timezone.make_aware(start, tz)
+            cleaned["start_date"] = start
+
+        if end and timezone.is_naive(end):
+            end = timezone.make_aware(end, tz)
+            cleaned["end_date"] = end
+
+        now = timezone.localtime(timezone.now())
         if end and end <= now:
             self.add_error("end_date", "End date must be a future date.")
         if start and end:
@@ -331,8 +378,9 @@ class CategoryOfferForm(forms.ModelForm):
                 self.add_error("discount_value", "Discount percentage cannot exceed 90%.")
 
         if max_discount_amount is not None:
-            if max_discount_amount <= 0:
-                self.add_error("max_discount_amount", "Max discount amount must be a positive value.")
+            if max_discount_amount < 100 or max_discount_amount>50000:
+                self.add_error("max_discount_amount", "Max discount amount must be in between 100 and 50000.")
+        
         return cleaned
     
 class CouponForm(forms.ModelForm):
@@ -369,7 +417,7 @@ class CouponForm(forms.ModelForm):
     def clean_code(self):
         code = self.cleaned_data.get('code')
         if code:
-            exists = Coupon.objects.filter(code__iexact=code).exclude(pk=self.instance.pk).exists()
+            exists = Coupon.objects.filter(is_deleted=False,code__iexact=code).exclude(pk=self.instance.pk).exists()
             if exists:
                 raise forms.ValidationError("This coupon code already exists. Please use a unique code.")
         return code
@@ -381,7 +429,25 @@ class CouponForm(forms.ModelForm):
         max_limit = cleaned_data.get('maximum_discount_limit')
         valid_from = cleaned_data.get("valid_from")
         valid_until = cleaned_data.get("valid_until")
+        min_purchase_amount = cleaned_data.get("minimum_purchase_amount")
+
+        tz = timezone.get_current_timezone()
+
+        if valid_from and timezone.is_naive(valid_from):
+            valid_from = timezone.make_aware(valid_from, tz)
+            cleaned_data["valid_from"] = valid_from
+
+        if valid_until and timezone.is_naive(valid_until):
+            valid_until = timezone.make_aware(valid_until, tz)
+            cleaned_data["valid_until"] = valid_until
+
         
+        if min_purchase_amount is not None:
+            if min_purchase_amount <= 0:
+                self.add_error(
+                    "minimum_purchase_amount",
+                    "Minimum purchase amount must be greater than 0."
+                )
         if discount_value is not None:
             if discount_value <= 0:
                 self.add_error("discount_value", "Discount value must be greater than 0.")
@@ -392,18 +458,91 @@ class CouponForm(forms.ModelForm):
                 
                 if max_limit is None or max_limit <= 0:
                     self.add_error("maximum_discount_limit", "Maximum discount limit is required for percentage coupons.")
-            
+
+                
             elif discount_type == 'flat':
                 if discount_value > 100000: 
                      self.add_error("discount_value", "Flat discount seems too high. Please verify.")
+                if min_purchase_amount:
+                    if discount_value > (min_purchase_amount * Decimal("0.70")):
+                        self.add_error(
+                            "discount_value",
+                            "Flat discount cannot exceed 70% of the minimum purchase amount."
+                        )
 
-        now = timezone.now()
+        now = timezone.localtime(timezone.now())
         if valid_from and valid_until:
             if valid_until <= valid_from:
-                self.add_error("valid_until", "Valid until must be later than valid from.")
+                self.add_error("valid_until", "Valid until must be  after valid from.")
 
             if valid_until <= now:
                 self.add_error("valid_until", "Valid until must be a future date.")
+        
+        usage_limit = cleaned_data.get("usage_limit")
+        per_user_limit = cleaned_data.get("per_user_limit")
+        if usage_limit:
+            if usage_limit <= 0:
+                self.add_error("usage_limit", "Limit must be positive.")
+        if per_user_limit:
+            if per_user_limit <= 0:
+                self.add_error("per_user_limit", "Limit must be positive.")
+
+        if usage_limit is not None and per_user_limit is not None:
+            if per_user_limit > usage_limit:
+                self.add_error(
+                    "per_user_limit",
+                    "Per-user usage limit cannot be greater than the total usage limit."
+                )
+
         return cleaned_data
 
+class ReviewForm(forms.ModelForm):
+    image = forms.ImageField(
+        required=False,
+        error_messages={
+            "invalid_image": "Only PNG, JPG, JPEG, WEBP files are allowed.",
+        }
+    )
+
+    class Meta:
+        model = Review
+        fields = ["comment", "rating", "image"]
+
+        widgets = {
+            "comment": forms.Textarea(attrs={
+                "rows": 4,
+                "class": "w-full px-4 py-3 border border-gray-300 rounded-lg "
+                         "focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none",
+                "placeholder": "Share your experience"
+            }),
+            "rating": forms.Select(
+                choices=[(i, i) for i in range(1, 6)],
+                attrs={"class": "border rounded px-2 py-1"}
+            ),
+        }
+
+    def clean_comment(self):
+        comment = self.cleaned_data.get("comment", "").strip()
+
+        if len(comment) < 3:
+            raise forms.ValidationError(
+                "Comment should contain at least 3 characters."
+            )
+
+        return comment
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+
+        if not image:
+            return image
+
+        if hasattr(image, "content_type"):
+            allowed = ["image/png", "image/jpeg", "image/webp"]
+            if image.content_type not in allowed:
+                raise ValidationError(
+                    "Only PNG, JPG, JPEG, WEBP files are allowed."
+                )
+
+        return image
 

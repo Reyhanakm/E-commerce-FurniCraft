@@ -87,18 +87,21 @@
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{{ product.name }}</h1>
                     <p class="text-gray-500 text-sm mb-6">SKU: #{{ product.id }}</p>
 
-
+                {% if reviews %}                
                     <div class="star-rating mb-6">
-                        <div class="stars" id="productRating">
-                            <i class="fas fa-star text-yellow-400"></i>
-                            <i class="fas fa-star text-yellow-400"></i>
-                            <i class="fas fa-star text-yellow-400"></i>
-                            <i class="fas fa-star text-yellow-400"></i>
-                            <i class="fas fa-star-half-alt text-yellow-400"></i>
+                        <div class="stars">
+                            {% for _ in ""|center:avg_rating %}
+                                <i class="fas fa-star text-yellow-400"></i>
+                            {% endfor %}
                         </div>
-                        <span class="text-sm font-semibold text-gray-700">4.5</span>
-                        <span class="text-xs text-gray-500">(238 reviews)</span>
+                        <span class="text-sm font-semibold text-gray-700">
+                            ({{ avg_rating }})
+                        </span>
+                        <span class="text-xs text-gray-500">
+                            ({{ reviews|length }} review{{ reviews|length|pluralize }})
+                        </span>
                     </div>
+                    {% endif %}
 
                     <div id="variantInfo" 
                         class="bg-gradient-to-br from-[#F5F1EF] to-[#EEDDD8] rounded-2xl p-6 shadow-md mb-8 border border-[#E8DFD7]">
@@ -142,8 +145,15 @@
             <div class="mt-12 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
 
                 <h2 class="text-2xl font-bold text-gray-800 mb-8">Customer Reviews</h2>
-
-
+                
+                {% if reviews %}
+                
+                {% for review in reviews %}
+                <div
+                    class="review-item mb-6 border-b pb-4
+                        {% if forloop.counter > 2 %}hidden{% endif %}"
+                >
+                        
                 <div class="border-b-2 border-gray-200 pb-8 mb-8">
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 bg-[#A89289] rounded-full flex items-center justify-center flex-shrink-0">
@@ -151,32 +161,51 @@
                         </div>
                         <div class="flex-1">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="font-bold text-gray-800 text-lg">Aarav Sharma</h3>
+                                <h3 class="font-bold text-gray-800 text-lg">{{review.user.first_name}}</h3>
                                 <span class="text-xs text-gray-500">Verified Purchase</span>
                             </div>
                             <div class="flex items-center gap-2 mb-3">
                                 <div class="flex text-yellow-400">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
+                                    
+                                    {% if review.rating %}
+                                    {% for _ in ""|center:review.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% endfor %}
+                                        
+                                    {% endif %}
+                                        
                                 </div>
-                                <span class="text-xs text-gray-500">(5/5 stars)</span>
+                                <span class="text-xs text-gray-500">({{review.rating}}/5 stars)</span>
                             </div>
                             <p class="text-gray-700 leading-relaxed">
-                                Excellent product! High quality materials and beautiful finish. Absolutely worth the price. The craftsmanship is exceptional and it arrived in perfect condition.
+                                {{review.comment}}
+                                {% comment %} Excellent product! High quality materials and beautiful finish. Absolutely worth the price. The craftsmanship is exceptional and it arrived in perfect condition. {% endcomment %}
                             </p>
                         </div>
                     </div>
                 </div>
 
+                {% endfor %}
+                {% if reviews|length > 2 %}
+        <button
+            id="loadMoreBtn"
+            class="mt-4 text-orange-600 font-medium hover:underline"
+        >
+            Load more reviews
+        </button>
+    {% endif %}
+{% else %}
+    <p class="text-gray-500">No reviews yet.</p>
+{% endif %}
+                
 
-                <button class="w-full py-3 text-[#A89289] font-semibold border-2 border-[#A89289] rounded-lg hover:bg-[#F5F1EF] transition-all duration-200">
+                {% comment %} <button class="w-full py-3 text-[#A89289] font-semibold border-2 border-[#A89289] rounded-lg hover:bg-[#F5F1EF] transition-all duration-200">
                     Load More Reviews
                 </button>
-
-            </div>
+                {% else %}
+                <span>No reviews</span>           
+                {% endif %}
+            </div> {% endcomment %}
 
         <!-- Related Products -->
             <div class="mt-16">

@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import date
 import json
 import logging
+from urllib.parse import urlencode
 from django.db import transaction
 from commerce.services.returns import refund_order_to_wallet
 from django.shortcuts import render,redirect, get_object_or_404
@@ -503,13 +504,13 @@ def admin_product_list(request):
     
     products = Product.objects.all_with_deleted().prefetch_related(
         Prefetch('images', queryset=ProductImage.objects.order_by('-is_primary', '-created_at'))
-    ).order_by('-created_at')
+    ).order_by('is_deleted','-created_at')
 
     if search_query:
         products = products.filter(Q(name__icontains=search_query))
 
 
-    paginator = Paginator(products, 12)
+    paginator = Paginator(products, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -919,6 +920,9 @@ def admin_offer_list(request):
 @login_required(login_url="admin_login")
 def admin_product_offer_create(request):
     form = ProductOfferForm(request.POST or None)
+    if request.method == "POST":
+        print("RAW POST start_date:", request.POST.get("start_date"))
+
 
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -986,6 +990,27 @@ def admin_category_offer_edit(request, pk):
 def admin_offer_toggle(request, offer_type, pk):
     model = ProductOffer if offer_type == "product" else CategoryOffer
     offer = get_object_or_404(model, pk=pk)
+    now = timezone.localtime(timezone.now())
+
+    if not offer.is_active:
+        conflict_qs = model.objects.filter(
+            is_active=True,
+            start_date__lte=now,
+            end_date__gte=now
+        ).exclude(pk=offer.pk)
+
+        if offer_type == "product":
+            conflict_qs = conflict_qs.filter(product=offer.product)
+        else:
+            conflict_qs = conflict_qs.filter(category=offer.category)
+
+        if conflict_qs.exists():
+            messages.error(
+                request,
+                "An active offer already exists for this "
+                f"{'product' if offer_type == 'product' else 'category'}."
+            )
+            return redirect("admin_offer_list")
 
     offer.is_active = not offer.is_active
     offer.save(update_fields=["is_active"])
@@ -994,18 +1019,45 @@ def admin_offer_toggle(request, offer_type, pk):
     messages.success(request, f"Offer {status} successfully.")
     return redirect("admin_offer_list")
 
+@login_required(login_url="admin_login")
+def delete_product_offer(request,pk):
+    offer=get_object_or_404(ProductOffer,id=pk)
+    if offer:
+        offer.delete()
+        messages.success(request,"Offer deletion successfull!")
+    else:
+        messages.error(request,"Currently unavailable!")
+    return redirect("admin_offer_list")
+
+
+@login_required(login_url="admin_login")
+def delete_category_offer(request,pk):
+    offer=get_object_or_404(CategoryOffer,id=pk)
+    if offer:
+        offer.delete()
+        messages.success(request,"Offer deletion successfull!")
+    else:
+        messages.error(request,"Currently unavailable!")
+    return redirect("admin_offer_list")
 
 @login_required(login_url="admin_login")
 def admin_coupon_list(request):
+    search_query = request.GET.get("q", "")
     coupons = (
         Coupon.objects
-        .filter(is_deleted=False)
+        .all()
         .annotate(used_count=Count("usages"))
         .order_by("-created_at")
     )
-      
+    if search_query:
+        coupons = coupons.filter(coupon_code__icontains=search_query)
+
+    paginator = Paginator(coupons, 6)  
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)      
     return render(request, "admin/coupons/list.html", {
-        "coupons": coupons
+        "coupons": page_obj,
+        "page_obj":page_obj
     })
 
 @login_required(login_url="admin_login")
@@ -1064,6 +1116,9 @@ def sales_report(request):
     end_date = request.GET.get("end_date")
 
     if start_date and end_date:
+        if start_date>end_date:
+            messages.error(request,"Start date should be before end date")
+            return redirect("sales_report")
         start = datetime.strptime(start_date, "%Y-%m-%d")
         end = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
         range_type = None
@@ -1082,9 +1137,19 @@ def sales_report(request):
         total_sales += item.price
         product_discount += (item.unit_price * item.quantity) - item.price
         coupon_discount += calculate_item_coupon_share(item.order, item)
+    
+    paginator = Paginator(sold_items,8)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = urlencode(params)
 
     context = {
-        "sold_items": sold_items,
+        "sold_items": page_obj,
+        "page_obj":page_obj,
+        "querystring": querystring,
         "order_count": sold_items.values("order_id").distinct().count(),
         "total_sales": total_sales,
         "product_discount": product_discount,

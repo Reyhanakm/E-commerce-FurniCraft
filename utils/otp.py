@@ -20,10 +20,9 @@ def send_otp_email(email,otp,subject):
 
         We received a request to verify your email address.
 
-        🔐 Your One-Time Password (OTP):
-        {otp}
+        🔐 Your One-Time Password (OTP): {otp}
 
-        This OTP is valid for **1 minute** only.
+        This OTP is valid for ** 5 minute ** only.
 
         Please do NOT share this OTP with anyone for security reasons.
 

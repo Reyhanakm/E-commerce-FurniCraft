@@ -130,4 +130,13 @@
     </a>
 
 </div>
+<script>
+    window.addEventListener("pageshow", function (event) {
+        if (event.persisted) {
+            // Page restored from back-forward cache
+            window.location.href = "{% url 'my_orders_page' %}";
+        }
+    });
+</script>
+
 {% endblock %}

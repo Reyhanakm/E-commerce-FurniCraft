@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.utils import timezone
 from product.models import Coupon, CouponUsage
+from django.db.models import Count,Q
 
 def validate_and_calculate_coupon(coupon_code, user, subtotal):
     try:
@@ -69,3 +70,40 @@ def calculate_item_coupon_share(order, item):
     ) * order.coupon_discount
 
     return item_coupon_share.quantize(Decimal("0.01"))
+
+
+def get_available_coupons(*, user, subtotal, now=None):
+    """
+    Returns a list of available coupons with eligibility info.
+    """
+    if now is None:
+        now = timezone.now()
+
+    coupons_qs = Coupon.objects.filter(
+        is_active=True,
+        valid_from__lte=now,
+        valid_until__gte=now
+    ).annotate(
+        total_usage_count=Count('usages'),
+        user_usage_count=Count('usages', filter=Q(usages__user=user))
+    )
+
+    available_coupons = []
+
+    for c in coupons_qs:
+        if c.usage_limit is not None and c.total_usage_count >= c.usage_limit:
+            continue
+
+        if c.user_usage_count >= c.per_user_limit:
+            continue
+
+        is_eligible = subtotal >= c.minimum_purchase_amount
+        shortage = max(Decimal("0"), c.minimum_purchase_amount - subtotal)
+
+        available_coupons.append({
+            "obj": c,
+            "is_eligible": is_eligible,
+            "reason": None if is_eligible else f"Add ₹{shortage}"
+        })
+
+    return available_coupons

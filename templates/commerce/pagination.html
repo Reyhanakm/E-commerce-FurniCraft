@@ -1,0 +1,79 @@
+<div class="flex justify-center items-center mt-8 space-x-2">
+
+    {% if page_obj.has_previous %}
+        <button
+            hx-get="{% url url_name %}?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+            hx-target="{{ target }}"
+            hx-push-url="true"
+            class="px-3 py-1 border rounded-md bg-white hover:bg-gray-100">
+            ‹
+        </button>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+            {% if num == page_obj.number %}
+                <span class="px-3 py-1 border rounded-md bg-[#D8C6C0]">
+                    {{ num }}
+                </span>
+            {% else %}
+                <button
+                    hx-get="{% url url_name %}?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}"
+                    hx-target="{{ target }}"
+                    hx-push-url="true"
+                    class="px-3 py-1 border rounded-md bg-white hover:bg-gray-100">
+                    {{ num }}
+                </button>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <button
+            hx-get="{% url url_name %}?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+            hx-target="{{ target }}"
+            hx-push-url="true"
+            class="px-3 py-1 border rounded-md bg-white hover:bg-gray-100">
+            ›
+        </button>
+    {% endif %}
+</div>
+
+{% comment %} <div class="flex justify-center items-center mt-8 space-x-2">
+
+    {% if page_obj.has_previous %}
+        <button 
+            hx-get="{% url url_name %}?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+            hx-target="{{ target }}"
+            hx-push-url="true"
+            class="px-3 py-1 border rounded-md bg-white hover:bg-gray-100">
+            ‹
+        </button>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+            <span class="px-3 py-1 border rounded-md bg-[#D8C6C0]">
+                {{ num }}
+            </span>
+        {% else %}
+            <button 
+                hx-get="{% url url_name %}?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}"
+                hx-target="{{ target }}"
+                hx-push-url="true"
+                class="px-3 py-1 border rounded-md bg-white hover:bg-gray-100">
+                {{ num }}
+            </button>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <button 
+            hx-get="{% url url_name %}?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+            hx-target="{{ target }}"
+            hx-push-url="true"
+            class="px-3 py-1 border rounded-md bg-white hover:bg-gray-100">
+            ›
+        </button>
+    {% endif %}
+</div> {% endcomment %}

@@ -1,6 +1,9 @@
 import logging
+from django.db import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import render, redirect,HttpResponse,get_object_or_404
-from product.models import Category,Product,ProductImage,ProductVariant
+from product.forms import ReviewForm
+from product.models import Category,Product,ProductImage,ProductVariant, Review
 from django.db.models import Prefetch,Q,Min
 from django.core.paginator import Paginator
 from django.contrib import messages
@@ -8,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from users.models import User
 from django.core.cache import cache
-from commerce.models import Wishlist, WishlistItem
+from commerce.models import OrderItem, Wishlist, WishlistItem
 import json
 from users.decorators import block_check
 from commerce.utils.pricing import get_pricing_context,attach_best_pricing_to_products
@@ -241,6 +244,10 @@ def product_details(request,id):
     except Product.DoesNotExist:
         messages.error(request, "This product is temporarily unavailable!")
         return redirect("products")
+    
+    reviews=Review.objects.filter(product__product=product).select_related("user","product")
+    avg_rating=reviews.aggregate(avg=Avg("rating"))["avg"] or 0
+    avg_rating = round(avg_rating)
     related_products=Product.objects.filter(category=product.category).exclude(id=id).prefetch_related(
         Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
         'variants',
@@ -287,7 +294,9 @@ def product_details(request,id):
                                         'pricing':pricing,
                                         'wishlist_variant_ids': wishlist_variant_ids,
                                         'default_variant': default_variant,
-                                        'default_variant_id': default_variant.id if default_variant else None
+                                        'default_variant_id': default_variant.id if default_variant else None,
+                                        'reviews':reviews,
+                                        "avg_rating": avg_rating,
     })
 
 @block_check
@@ -335,3 +344,45 @@ def load_variant_info(request, variant_id):
         'pricing':pricing
     }
     return render(request, 'product/components/variant_info.html', context)
+
+@login_required
+@never_cache
+def add_review(request, variant_id):
+    product = get_object_or_404(ProductVariant, id=variant_id)
+    id=product.product.id
+
+    has_purchased = OrderItem.objects.filter(
+        order__user=request.user,
+        status__in=["delivered","returned"],
+        product=product
+    ).exists()
+
+    if not has_purchased:
+        messages.error(request, "You can review this product only after it has been delivered.")
+        return redirect("product_details",id=id)
+
+    if request.method == "POST":
+        form = ReviewForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            try:
+                review = form.save(commit=False)
+                review.user = request.user
+                review.product = product
+                review.save()
+
+                messages.success(request, "Thank you for your review!")
+                return redirect("my_orders_page")
+
+            except IntegrityError:
+                form.add_error(None, "You have already reviewed this product.")
+
+    else:
+        form = ReviewForm()
+
+    return render(request, "product/reviews/add_review.html", {
+        "form": form,
+        "product": product
+    })
+
+

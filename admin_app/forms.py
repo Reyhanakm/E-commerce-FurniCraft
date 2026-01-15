@@ -24,5 +24,7 @@ class BannerForm(forms.ModelForm):
 
         if not image:
             raise forms.ValidationError("Banner image is required.")
+        if "w_400" in image:
+            raise forms.ValidationError("Upload a higher resolution banner image.")
         
         return image

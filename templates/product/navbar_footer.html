@@ -28,8 +28,8 @@
                     <div class="hidden md:flex space-x-8">
                         <a href="{% url 'home' %}" class="text-black font-medium border-b-2 border-black">Home</a>
                         <a href="{% url 'products' %}" class="text-[#4D4D4D] hover:text-black font-medium">Products</a> 
-                        <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">Contact</a>
-                        <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">About</a>
+                        {% comment %} <a href="#" class="text-[#4D4D4D] hover:text-black font-medium">Contact</a> {% endcomment %}
+                        <a href="{% url 'about' %}" class="text-[#4D4D4D] hover:text-black font-medium">About</a>
                     </div>
                 </div>
                     
@@ -144,6 +144,17 @@
     
 {% endblock script %}
 {% include "components/loading_overlay.html" %}
+<style>
+  .errorlist {
+    color: #ef4444; 
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  .errorlist li {
+    list-style: none;
+  }
+</style>
+
 <style>
         @keyframes slide-in {
             from {
@@ -260,23 +271,6 @@
         }, 5000); 
         // HTMX backend support
         document.body.addEventListener("toast", e => showToast(e.detail.message));
-
-
-        document.body.addEventListener("htmx:beforeRequest", function(evt) {
-            showLoader();  
-        });
-
-        document.body.addEventListener("htmx:afterSwap", function(evt) {
-            hideLoader();
-        });
-
-        document.body.addEventListener("htmx:responseError", function(evt) {
-            hideLoader();
-        });
-
-        document.body.addEventListener("htmx:sendError", function(evt) {
-            hideLoader();
-        });
 
 </script>    
 </body>

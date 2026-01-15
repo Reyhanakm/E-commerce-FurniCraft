@@ -53,8 +53,8 @@ urlpatterns=[
     path("offers/category/add/", views.admin_category_offer_create, name="admin_category_offer_create"),
     path("offers/product/<int:pk>/edit/", views.admin_product_offer_edit, name="admin_product_offer_edit"),
     path("offers/category/<int:pk>/edit/", views.admin_category_offer_edit, name="admin_category_offer_edit"),
-    path("offers/product/<int:pk>/edit/", views.admin_product_offer_edit, name="admin_product_offer_edit"),
-    path("offers/category/<int:pk>/edit/", views.admin_category_offer_edit, name="admin_category_offer_edit"),
+    path("offers/product/<int:pk>/delete/", views.delete_product_offer, name="delete_product_offer"),
+    path("offers/category/<int:pk>/delete/", views.delete_category_offer, name="delete_category_offer"),
     path("offers/<str:offer_type>/<int:pk>/toggle/", views.admin_offer_toggle, name="admin_offer_toggle"),
 
     path("coupons/",views.admin_coupon_list, name="admin_coupon_list"),

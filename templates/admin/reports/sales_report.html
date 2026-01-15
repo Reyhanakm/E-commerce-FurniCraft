@@ -81,19 +81,21 @@
   <table class="w-full text-sm">
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-3 text-left">S.No</th>
         <th class="p-3 text-left">Order ID</th>
-        <th class="p-3">Date</th>
-        <th class="p-3">Product</th>
+        <th class="p-3 text-left">Date</th>
+        <th class="p-3 text-left">Product</th>
         <th class="p-3">Qty</th>
-        <th class="p-3">Net Price</th>
+        <th class="p-3 text-right">Net Price</th>
       </tr>
     </thead>
     <tbody>
-      {% for item in sold_items %}
+      {% for item in page_obj %}
       <tr class="border-t">
+        <td class="p-3">{{ forloop.counter0|add:page_obj.start_index  }}</td>
         <td class="p-3">{{ item.order.order_id }}</td>
         <td class="p-3">{{ item.order.created_at|date:"Y-m-d" }}</td>
-        <td class="p-3">{{ item.product }}</td>
+        <td class="p-3">{{ item.product.product }}</td>
         <td class="p-3 text-center">{{ item.quantity }}</td>
         <td class="p-3 text-right">₹{{ item.price }}</td>
       </tr>
@@ -107,6 +109,8 @@
     </tbody>
   </table>
 </div>
+{% include "pagination.html" %}
+
 <script>
 document.querySelector("select[name='range']").addEventListener("change", function () {
   if (this.value) {

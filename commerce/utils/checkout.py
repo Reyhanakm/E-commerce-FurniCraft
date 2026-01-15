@@ -51,6 +51,8 @@ def render_checkout_summary(request, error_message=None, success_message=None):
 
     shipping_cost = Decimal("0") if subtotal >= 1000 else Decimal("80")
     total = subtotal - coupon_discount + shipping_cost
+    cod_allowed= total<=1000
+
 
     now = timezone.now()
     
@@ -88,10 +90,11 @@ def render_checkout_summary(request, error_message=None, success_message=None):
         "subtotal": subtotal,
         "shipping_cost": shipping_cost,
         "total": total,
+        "cod_allowed":cod_allowed,
         "available_coupons": available_coupons,
     }
 
-    response = render(request, "commerce/checkout/_coupon_totals.html", context)
+    response = render(request, "commerce/checkout/_coupon_response.html", context)
 
     if error_message:
         return attach_trigger(response, error_message, type="error")

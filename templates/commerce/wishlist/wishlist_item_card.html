@@ -58,7 +58,7 @@
                 {% if v.stock > 0 %}
                     <button 
                         hx-post="{% url 'move_to_cart' v.id %}" 
-                        hx-swap="outerHTML" 
+                        hx-swap="none" 
                         hx-target="#wishlist-item-{{ v.id }}"
                         class="px-4 py-2 text-sm font-semibold text-white bg-[#A89289] rounded-lg shadow-md 
                                hover:bg-[#876F67] transition-colors duration-200">
