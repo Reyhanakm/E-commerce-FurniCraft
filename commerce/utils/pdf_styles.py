@@ -9,6 +9,7 @@ def get_invoice_styles():
         "TitleStyle",
         parent=styles["Title"],
         alignment=TA_CENTER,
+        fontName="DejaVuSans",
         fontSize=20,
         spaceAfter=20,
     )
@@ -16,6 +17,7 @@ def get_invoice_styles():
     label_style = ParagraphStyle(
         "LabelStyle",
         parent=styles["Normal"],
+        fontName="DejaVuSans",
         fontSize=10,
         textColor=colors.grey,
     )
@@ -23,18 +25,20 @@ def get_invoice_styles():
     value_style = ParagraphStyle(
         "ValueStyle",
         parent=styles["Normal"],
+        fontName="DejaVuSans",
         fontSize=11,
     )
 
     bold_style = ParagraphStyle(
         "BoldStyle",
         parent=styles["Normal"],
+        fontName="DejaVuSans",
         fontSize=11,
-        fontName="Helvetica-Bold",
     )
 
     right_style = ParagraphStyle(
         "RightStyle",
+        fontName="DejaVuSans",
         parent=styles["Normal"],
         alignment=TA_RIGHT,
     )

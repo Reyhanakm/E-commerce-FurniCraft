@@ -235,7 +235,7 @@ class CategoryOffer(models.Model):
     name=models.CharField(max_length=200,blank=True,null=True,default='C-offer')
     category = models.ForeignKey(Category,related_name='category_offers',on_delete=models.CASCADE)
     discount_type = models.CharField(max_length=20,default='percentage')
-    discount_value=models.DecimalField(max_digits=10,decimal_places=2)
+    discount_percent=models.DecimalField(max_digits=10,decimal_places=2)
     max_discount_amount=models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
     start_date=models.DateTimeField()
     end_date= models.DateTimeField()
@@ -268,7 +268,7 @@ class ProductOffer(models.Model):
     name = models.CharField(max_length=200,blank=True,null=True,default='P-offer')
     product=models.ForeignKey(Product,related_name='product_offers',on_delete=models.CASCADE)
     discount_type = models.CharField(max_length=20,default='percentage')
-    discount_value = models.DecimalField(max_digits=10,decimal_places=2)
+    discount_percent = models.DecimalField(max_digits=10,decimal_places=2)
     max_discount_amount = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
     
     start_date=models.DateTimeField()
@@ -293,6 +293,7 @@ class ProductOffer(models.Model):
         if start > now:
             return "upcoming"
         if end < now:
+            
             return "expired"
         return "active"
 

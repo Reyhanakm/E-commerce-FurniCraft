@@ -1,3 +1,4 @@
+{% load widget_tweaks %}
 <div class="space-y-1">
 
     <!-- Label -->
@@ -8,7 +9,7 @@
     <!-- Password Field With Eye -->
     {% if field.field.widget.input_type == "password" %}
         <div class="relative">
-            {{ field }}
+            {{ field|add_class:"w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A89289] outline-none" }}
 
             <!-- Eye Toggle Button -->
             <button 
@@ -21,7 +22,7 @@
 
     <!-- Regular Field -->
     {% else %}
-        {{ field }}
+        {{ field|add_class:"w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A89289] outline-none" }}
     {% endif %}
 
     <!-- Errors -->
@@ -32,3 +33,17 @@
     {% endif %}
 
 </div>
+<script>
+    function togglePassword(inputId, iconId) {
+            const passInput = document.getElementById(inputId);
+            const eyeIcon = document.getElementById(iconId);
+
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                eyeIcon.classList.replace("fa-eye-slash", "fa-eye");
+            } else {
+                passInput.type = "password";
+                eyeIcon.classList.replace("fa-eye", "fa-eye-slash");
+            }
+        }
+</script>

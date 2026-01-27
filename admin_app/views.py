@@ -7,7 +7,7 @@ import json
 import logging
 from urllib.parse import urlencode
 from django.db import transaction
-from commerce.services.returns import refund_order_to_wallet
+from commerce.services.returns import process_refund_to_wallet
 from django.shortcuts import render,redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login,logout
@@ -36,8 +36,6 @@ from openpyxl.utils import get_column_letter
 from admin_app.services.sales_report import get_date_range, get_sold_items
 from commerce.utils.coupons import calculate_item_coupon_share
 
-from .forms import BannerForm
-from .models import Banner
 from commerce.models import Orders,OrderItem,OrderReturn
 from users.models import User,UserManager
 from product.models import Category,Product,ProductVariant,ProductImage,ProductOffer,CategoryOffer,Coupon,CouponUsage
@@ -296,55 +294,6 @@ def admin_logout(request):
     logout(request)
     return redirect('admin_login')
 
-
-@login_required(login_url='admin_login')
-def banner_page(request):
-    if request.method == 'POST':
-        form = BannerForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect("banner_page")
-    else:
-        form = BannerForm()
-
-    banners = Banner.objects.all().order_by('created_at')
-
-    return render(request, "admin/banner_page.html", {
-        'add_form': form,      
-        'banners': banners,    
-        'edit_form': None,     
-        'edit_id': None,
-    })
-
-
-@login_required(login_url='admin_login')
-def edit_banner(request, id):
-    banner = Banner.objects.get(id=id)
-
-    if request.method == "POST":
-        form = BannerForm(request.POST, request.FILES, instance=banner)
-        if form.is_valid():
-            form.save()
-            return redirect("banner_page")
-    else:
-        form = BannerForm(instance=banner)
-
-    banners = Banner.objects.all().order_by('-created_at')
-
-    return render(request, "admin/banner_page.html", {
-        'add_form': BannerForm(),   
-        'edit_form': form,          
-        'banners': banners,
-        'edit_id': id,              
-    })
-
-@login_required(login_url='admin_login')
-def delete_banner(request, id):
-    banner = Banner.objects.get(id=id)
-    banner.delete()   # Cloudinary image also gets removed
-    return redirect("banner_page")
-
-
 @login_required(login_url='admin_login')
 def customer_list(request):
     search_query = request.GET.get('q', '')
@@ -389,7 +338,7 @@ def toggle_block_status(request, customer_id):
 def admin_category_list(request):
     search_query=request.GET.get('q','')
 
-    categories = Category.objects.all_with_deleted().order_by('-created_at')
+    categories = Category.objects.all_with_deleted().order_by('is_deleted','-created_at')
 
     if search_query:
         categories = categories.filter(Q(name__icontains=search_query))
@@ -878,11 +827,15 @@ def admin_return_list(request):
         .select_related("user", "item__order")
         .order_by("-created_at")
     )
+    paginator = Paginator(returns, 10)  
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     return render(
         request,
         "admin/returns/return_list.html",
-        {"returns": returns}
+        {"returns": page_obj,
+         "page_obj":page_obj}
     )
 
 @login_required(login_url="admin_login")
@@ -1228,7 +1181,7 @@ def sales_report_excel(request):
         ws.append([
             item.order.order_id,
             item.order.created_at.date(),
-            str(item.product),
+            str(item.product.product),
             item.quantity,
             float(item.price),
             float(prod_discount),
@@ -1335,35 +1288,45 @@ FINAL_ITEM_STATUSES = {
 @transaction.atomic
 def admin_cancel_order(request, order_id):
     order = get_object_or_404(Orders, order_id=order_id)
-
-    can_cancel = order.items.exclude(status__in=FINAL_ITEM_STATUSES).exists()
-    if not can_cancel:
+    if order.items.filter(status__in=["delivered","returned"]).exists():
         messages.error(
-            request,
-            "Order cannot be cancelled. All items are already completed."
+            request, 
+            "This order cannot be cancelled because one or more items have already been completed. "
+            "Please use the Return process instead."
         )
+        return redirect("order_details", order_id=order.order_id)
+
+    cancellable_items = order.items.exclude(status__in=FINAL_ITEM_STATUSES)
+    if not cancellable_items.exists():
+        messages.error(request,"Order cannot be cancelled. All items are already completed.")
         return redirect("order_details", order_id=order.order_id)
 
     if request.method == "POST":
         reason = request.POST.get("reason", "").strip()
-        refundable_amount = Decimal("0.00")
+        final_refund_amount = Decimal('0.00')
 
-        for item in order.items.select_for_update():
-            if item.status not in FINAL_ITEM_STATUSES:
-                item.status = "cancelled"
-                item.cancellation_reason = reason
-                item.save()
-                refundable_amount =refundable_amount+item.price
+        if order.payment_status in ["paid","partially_refunded"]:
 
-        if order.payment_status == "paid":
-            if refundable_amount > 0:
-                refund_order_to_wallet(order, refundable_amount)
+            total_paid = order.original_total
+            already_refunded = order.refunded_amount
+            final_refund_amount = total_paid - already_refunded
+            if final_refund_amount > 0:
+                process_refund_to_wallet(order, final_refund_amount, source="order_cancel")
             order.payment_status = "refunded"
         else:
-            order.payment_status = "cancelled"
+            # For COD or Failed payments
+            order.payment_status = "cancelled"        
+        for item in cancellable_items.select_for_update():
+            
+            item.status = "cancelled"
+            item.cancellation_reason = reason
+            item.save(update_fields=['status', 'cancellation_reason'])
 
-        order.save(update_fields=["payment_status"])
+            item.product.stock += item.quantity
+            item.product.save(update_fields=['stock'])
 
+        order.total_price = Decimal("0.00")
+        order.save(update_fields=['payment_status', 'total_price'])
 
         messages.success(request, "Order cancelled successfully.")
         return redirect("order_details", order_id=order.order_id)

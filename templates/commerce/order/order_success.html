@@ -53,7 +53,7 @@
                             {% endwith %}
             <div>
                 <p class="font-medium">{{ item.product.product.name }}</p>
-                <p class="text-sm text-gray-600 font-medium">Variant: {{ item.product.material_type }}</p>
+                <p class="text-sm text-gray-600 font-medium">Material: {{ item.product.material_type }}</p>
                 <p class="text-sm">Qty: {{ item.quantity }}</p>
                 {% if item.offer_percent > 0 %}
                     <p class="text-xs font-medium text-green-600">

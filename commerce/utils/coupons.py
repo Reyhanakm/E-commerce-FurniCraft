@@ -56,20 +56,15 @@ def calculate_item_coupon_share(order, item):
     if not order.coupon or order.coupon_discount <= 0:
         return Decimal("0.00")
 
-    # Total order value AFTER offers, BEFORE coupon
-    order_items_total = sum(i.price * i.quantity for i in order.items.all())
-
-    if order_items_total == 0:
+    base_subtotal = (Decimal(order.original_total or 0) + order.coupon_discount) - order.delivery_charge
+    if base_subtotal <= 0:
         return Decimal("0.00")
     
-    item_totals =item.price * item.quantity
+    item_value =item.price 
 
-    # Proportional coupon share
-    item_coupon_share = (
-        item_totals / order_items_total
-    ) * order.coupon_discount
+    item_coupon_share = ( item_value / base_subtotal) * order.coupon_discount
 
-    return item_coupon_share.quantize(Decimal("0.01"))
+    return item_coupon_share.quantize(Decimal("0.01"),rounding = 'ROUND_HALF_UP')
 
 
 def get_available_coupons(*, user, subtotal, now=None):

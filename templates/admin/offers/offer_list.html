@@ -71,9 +71,9 @@
         <td class="px-4 py-3">{{ offer.product.name }}</td>
         <td class="px-4 py-3">
           {% if offer.discount_type == "percentage" %}
-            {{ offer.discount_value }}%
+            {{ offer.discount_percent }}%
           {% else %}
-            ₹{{ offer.discount_value }}
+            ₹{{ offer.discount_percent }}
           {% endif %}
         </td>
         <td class="px-4 py-3">
@@ -137,9 +137,9 @@
         <td class="px-4 py-3">{{ offer.category.name }}</td>
         <td class="px-4 py-3">
           {% if offer.discount_type == "percentage" %}
-            {{ offer.discount_value }}%
+            {{ offer.discount_percent }}%
           {% else %}
-            ₹{{ offer.discount_value }}
+            ₹{{ offer.discount_percent }}
           {% endif %}
         </td>
         <td class="px-4 py-3">

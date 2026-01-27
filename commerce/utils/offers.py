@@ -45,7 +45,7 @@ def calculate_effective_discount(offer, price):
     if not offer:
         return Decimal('0.00')
         
-    discount_amount = (price * offer.discount_value) / 100
+    discount_amount = (price * offer.discount_percent) / 100
     
     if offer.max_discount_amount and discount_amount > offer.max_discount_amount:
         discount_amount = offer.max_discount_amount

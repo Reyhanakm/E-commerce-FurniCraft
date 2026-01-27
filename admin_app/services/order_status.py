@@ -3,6 +3,7 @@ from commerce.models import OrderItem
 from commerce.utils.referral import process_referral_after_first_order
 from commerce.utils.orders import is_first_successful_order
 from .order_payment import sync_order_payment_status_from_items
+from django.db import transaction
 
 ORDER_PAYMENT_TRANSITIONS = {
     "pending": ["paid", "failed"],
@@ -70,7 +71,7 @@ def update_order_payment_status(order, new_status):
     order.payment_status = new_status
     order.save(update_fields=["payment_status"])
 
-
+@transaction.atomic
 def update_order_item_status(item, new_status):
     allowed = ITEM_STATUS_TRANSITIONS.get(item.status, [])
 
@@ -78,10 +79,13 @@ def update_order_item_status(item, new_status):
         raise ValidationError(
             f"Cannot change item status from {item.status} to {new_status}"
         )
+    order = item.order
+
     old_status = item.status
+    if order.payment_method=="razorpay" and order.payment_status not in ["paid", "partially_refunded"]:
+        raise ValidationError(f"Order cannot be updated before payment completion")
     item.status = new_status
     item.save(update_fields=["status"])
-    order = item.order
 
     if (
         old_status != "delivered"

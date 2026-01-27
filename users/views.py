@@ -5,7 +5,7 @@ from django.urls import reverse
 import re
 import logging
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from users.utils import generate_unique_referral_code
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -18,10 +18,9 @@ import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.utils import timezone
-from .forms import RegistrationForm,ForgotPasswordForm, ResetOTPForm, ResetPasswordForm,LoginForm,AddressForm
+from .forms import ChangeEmailForm, EditProfileForm, RegistrationForm,ForgotPasswordForm, ResetOTPForm, ResetPasswordForm,LoginForm,AddressForm, SetNewPasswordForm, VerifyOTPForm, VerifyOldEmailOTPForm
 from product.models import Category
 from users.decorators import block_check
-from admin_app.models import Banner
 from utils.otp import create_and_send_otp, get_remaining_otp_cooldown,validate_otp,otp_cache_key
 from django.contrib.auth import update_session_auth_hash
 
@@ -347,16 +346,14 @@ def user_logout(request):
 @block_check
 @never_cache
 def home(request):
-    banners=Banner.objects.filter(status=True).order_by('id')
     categories=Category.objects.all()
-    return render(request,'user/home.html',{'categories':categories,'banners':banners})
+    return render(request,'user/home.html',{'categories':categories})
 
 
 def landing(request):
-    banners = Banner.objects.filter(status=True).order_by('created_at')
   
     categories=Category.objects.all()
-    return render(request,'user/landing.html',{'categories':categories,'banners':banners})
+    return render(request,'user/landing.html',{'categories':categories})
 
 @login_required
 @never_cache
@@ -393,19 +390,17 @@ def change_email_verify_old(request):
     old_email = request.user.email
 
     if request.method == "POST":
-        otp = request.POST.get("otp")
+        form = VerifyOldEmailOTPForm(request.POST, email=old_email)
 
-        valid, msg = validate_otp(old_email, "email_change_old", otp)
-
-        if not valid:
-            messages.error(request, msg)
-            return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email}) 
+        if not form.is_valid():
+            return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email,"form": form}) 
         request.session["email_change_old_verified"] = True
         request.session.pop("email_change_old_pending", None)
         messages.success(request, "Current email verified. Now enter your new email.")
         return redirect("change_email_enter_new")
-
-    return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email})
+    
+    form = VerifyOldEmailOTPForm(email=old_email)
+    return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email,"form": form})
 
 
 @login_required
@@ -415,16 +410,17 @@ def change_email_enter_new(request):
         return redirect("change_email_request_old_otp")
     
     if request.method == "POST":
-        new_email = request.POST.get("new_email")
+        form = ChangeEmailForm(request.POST, user=request.user)
 
-        if User.objects.filter(email=new_email).exists():
-            messages.error(request, "Email already in use.")
-            return render(request, "user/profile/change_email_enter_new.html") 
-        
-        request.session["pending_new_email"] = new_email
-        return redirect("change_email_request_new_otp")
+        if form.is_valid():
+            request.session["pending_new_email"] = form.cleaned_data["new_email"]
+            return redirect("change_email_request_new_otp")
 
-    return render(request, "user/profile/change_email_enter_new.html")
+        return render(request, "user/profile/change_email_enter_new.html",{"form": form}) 
+    
+    form = ChangeEmailForm(user=request.user)
+
+    return render(request, "user/profile/change_email_enter_new.html",{"form": form})
 
 
 @login_required
@@ -458,31 +454,57 @@ def change_email_verify_new(request):
         return redirect("change_email_enter_new")
 
     if request.method == "POST":
-        otp = request.POST.get("otp")
+        form = VerifyOTPForm(request.POST)  
 
-        valid, msg = validate_otp(new_email, "email_change_new", otp)
+        if form.is_valid():
+            otp = form.cleaned_data['otp']
+            valid, msg = validate_otp(new_email, "email_change_new", otp)
 
-        if not valid:
-            messages.error(request, msg)
-            return render(request, "user/profile/change_email_verify_new.html", {'new_email': new_email})
+            if not valid:
+                form.add_error('otp', msg)
+                return render(request, "user/profile/change_email_verify_new.html", {
+                    'new_email': new_email,
+                    'form': form
+                })
+            
+            user = request.user
+            user.email = new_email
+            
+            try:
+                user.save()
+            except IntegrityError:
+                messages.error(request, "This email was just taken by another user. Please try a different one.")
+                return redirect("change_email_enter_new")
+
+            for key in ["pending_new_email", "email_change_old_verified"]:
+                request.session.pop(key, None)
+
+            messages.success(request, "Email updated successfully!")
+
+            if request.headers.get("HX-Request"):
+                profile_form = EditProfileForm(user=user, initial={
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'phone_number': user.phone_number,
+                    'email': user.email 
+                })
+                return render(request, "user/profile/_edit_profile_form.html", {
+                    "form": profile_form, 
+                    "user": user
+                })
+            else:
+                return redirect("my_profile")
         
-        user = request.user
-        user.email = new_email
-        user.save()
+        return render(request, "user/profile/change_email_verify_new.html", {
+            'new_email': new_email,
+            'form': form
+        })
 
-        for key in ["pending_new_email", "email_change_old_verified"]:
-            request.session.pop(key, None)
-
-        messages.success(request, "Email updated successfully!")
-        redirect_url = reverse("edit_profile") 
-  
-        response = HttpResponse(status=204) 
-        response["HX-Redirect"] = redirect_url
-        
-        return response
-
-
-    return render(request, "user/profile/change_email_verify_new.html", {'new_email': new_email})
+    form = VerifyOTPForm()
+    return render(request, "user/profile/change_email_verify_new.html", {
+        'new_email': new_email, 
+        'form': form
+    })
 
 @login_required
 @never_cache
@@ -569,33 +591,39 @@ def change_password_verify_current(request):
 
     
     request.session["password_verified"] = True
+    form = SetNewPasswordForm()
 
-    return render(request, "user/profile/change_password_new.html")
+    return render(request, "user/profile/change_password_new.html",{"form": form})
 
 @login_required
 @never_cache
 def change_password_set_new(request):
     if not request.session.get("password_verified"):
         return render(request, "user/profile/change_password_verify_current.html")
+    
+    if request.method == "POST":
+        form = SetNewPasswordForm(request.POST)
 
-    new = request.POST.get("new_password")
-    confirm = request.POST.get("confirm_password")
+        if form.is_valid():
+            new_pass = form.cleaned_data['new_password']
+            user = request.user
+            user.set_password(new_pass)
+            user.save()
 
-    if new != confirm:
-        messages.error(request, "Passwords do not match")
-        return render(request, "user/profile/change_password_new.html")
-    user=request.user
-    user.set_password(new)
-    user.save()
+            update_session_auth_hash(request, user)
+            request.session.pop("password_verified", None)
 
-    update_session_auth_hash(request, user)
-    request.session.pop("password_verified", None)
-
-    messages.success(request, "Password changed successfully!")
-    return render(request, "user/profile/change_password_success.html")
+            messages.success(request, "Password changed successfully!")
+            return render(request, "user/profile/change_password_success.html")
+        else:
+            return render(request, "user/profile/change_password_new.html", {"form": form})
+    
+    form = SetNewPasswordForm()
+    return render(request, "user/profile/change_password_new.html", {"form": form})
 
 
 @login_required
+@never_cache
 def edit_address(request, pk):
     address = get_object_or_404(UserAddress, id=pk, user=request.user)
 
@@ -674,6 +702,7 @@ def set_default_address(request, pk):
     })
 
 @login_required
+@never_cache
 def add_address(request):
     source = request.GET.get("from", "profile")
 
@@ -724,6 +753,7 @@ def add_address(request):
 
 @block_check
 @login_required
+@never_cache
 def my_profile(request):
     user=request.user
     if not user.referralcode:
@@ -739,24 +769,40 @@ def my_profile(request):
 
 
 @login_required
+@never_cache
 def edit_profile(request):
     user = request.user
-    
-    if request.method == 'POST':
-        
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.phone_number = request.POST.get('phone_number', user.phone_number) 
-        
-        
-        if 'image' in request.FILES:
-            user.image = request.FILES['image']
-            
-        user.save()
-        
-        return render(request, "user/profile/_profile_partial.html", {'user': user})
 
-    return render(request, "user/profile/_edit_profile_form.html", {'user': user})
+    if request.method == "POST":
+        form = EditProfileForm(request.POST,request.FILES,user=user)
+
+        if form.is_valid():
+            user.first_name = form.cleaned_data["first_name"]
+            user.last_name = form.cleaned_data["last_name"]
+            user.phone_number = form.cleaned_data["phone_number"]
+
+            if form.cleaned_data.get("image"):
+                user.image = form.cleaned_data["image"]
+
+            user.full_clean()   
+            user.save()
+
+            return render(request,"user/profile/_profile_partial.html",{"user": user})
+        else:
+            messages.error(request, "Please correct the errors below.")
+
+        return render(request,"user/profile/_edit_profile_form.html",{"form": form,"user": user})
+
+    form = EditProfileForm(
+        initial={
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone_number": user.phone_number,
+        },
+        user=user
+    )
+
+    return render(request,"user/profile/_edit_profile_form.html",{"form": form,"user": user})
             
 
 

@@ -1,6 +1,6 @@
 import logging
 from django.db import IntegrityError
-from django.db.models import Avg
+from django.db.models import Avg,Count
 from django.shortcuts import render, redirect,HttpResponse,get_object_or_404
 from product.forms import ReviewForm
 from product.models import Category,Product,ProductImage,ProductVariant, Review
@@ -29,7 +29,10 @@ def category_products(request, id):
         "category_id": id
     }
     )
-    products = Product.objects.filter(category=category,variants__isnull=False).prefetch_related(
+    products = Product.objects.filter(category=category,variants__isnull=False).annotate(
+        average_rating=Avg('variants__reviews__rating'),
+        review_count=Count('variants__reviews', distinct=True) 
+    ).prefetch_related(
         Prefetch(
             'variants',
             queryset=ProductVariant.objects
@@ -92,7 +95,9 @@ def products(request):
         category__is_deleted=False,
         variants__isnull=False
     ).annotate(
-        min_price=Min('variants__sales_price')  
+        min_price=Min('variants__sales_price'),
+        average_rating=Avg('variants__reviews__rating'),
+        review_count=Count('variants__reviews', distinct=True) 
     ).prefetch_related(
         Prefetch('images', queryset=ProductImage.objects.order_by('id')),
         Prefetch('variants', queryset=ProductVariant.objects
@@ -176,7 +181,6 @@ def products(request):
             exc_info=True
         )
 
-
     params = request.GET.copy()
     if "page" in params:
         params.pop("page")
@@ -211,8 +215,6 @@ def products(request):
             extra={"user_id": request.user.id}
         )
 
-
-
     if request.headers.get("HX-Request"):
         return render(
             request,
@@ -245,9 +247,6 @@ def product_details(request,id):
         messages.error(request, "This product is temporarily unavailable!")
         return redirect("products")
     
-    reviews=Review.objects.filter(product__product=product).select_related("user","product")
-    avg_rating=reviews.aggregate(avg=Avg("rating"))["avg"] or 0
-    avg_rating = round(avg_rating)
     related_products=Product.objects.filter(category=product.category).exclude(id=id).prefetch_related(
         Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
         'variants',
@@ -288,6 +287,9 @@ def product_details(request,id):
                 product=default_variant 
             ).exists()
     
+        reviews=Review.objects.filter(product__product=product).select_related("user","product").order_by("-created_at")
+        avg_rating=reviews.aggregate(avg=Avg("rating"))["avg"] or 0
+        avg_rating = round(avg_rating)
     return render(request,'product/product_details.html',{'product':product,
                                         'related_products':related_products,
                                         'is_in_wishlist': is_in_wishlist,

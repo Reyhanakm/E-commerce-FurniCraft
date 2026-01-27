@@ -1,4 +1,6 @@
 from django import forms
+
+from utils.otp import validate_otp
 from .models import User,UserAddress
 import re
 
@@ -30,6 +32,9 @@ class RegistrationForm(forms.Form):
             raise forms.ValidationError("Phone number must contain digits only.")
         if len(phone) != 10:
             raise forms.ValidationError("Phone number must be 10 digits long.")
+        if User.objects.filter(phone_number=phone).exists():
+            raise forms.ValidationError("Phone number already registered.")
+
         return phone
     
     def clean_referralcode(self):
@@ -212,3 +217,118 @@ class AddressForm(forms.ModelForm):
 
         return cleaned_data
 
+class EditProfileForm(forms.Form):
+    first_name = forms.CharField(max_length=100)
+    last_name = forms.CharField(max_length=100)
+    phone_number = forms.CharField(max_length=10, required=True)
+    image = forms.ImageField(required=False)
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get("first_name").strip()
+        if not first_name.isalpha():
+            raise forms.ValidationError("First name should only contain letters.")
+        if len(first_name)<3:
+            raise forms.ValidationError("First should contain atleast 3 charecters")
+        return first_name
+    
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name')
+        if not re.search(r'[A-Za-z]{1,}', last_name):
+            raise forms.ValidationError("Last name must contain at least 1 alphabet.")
+        return last_name
+
+    def clean_phone_number(self):
+        phone = self.cleaned_data.get("phone_number")
+
+        if not phone:
+            return phone
+        if not re.match(r'^[6-9]\d{9}$', phone):
+            raise forms.ValidationError("Enter a valid 10-digit Indian phone number")
+
+        if User.objects.exclude(id=self.user.id).filter(phone_number=phone).exists():
+            raise forms.ValidationError("Phone number already registered.")
+
+        return phone
+    
+class ChangeEmailForm(forms.Form):
+    new_email = forms.EmailField(
+        error_messages={
+            "invalid": "Enter a valid email address."
+        }
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_new_email(self):
+        email = self.cleaned_data["new_email"]
+
+        if User.objects.exclude(id=self.user.id).filter(email=email).exists():
+            raise forms.ValidationError("Email already in use.")
+
+        return email
+    
+class VerifyOldEmailOTPForm(forms.Form):
+    otp = forms.CharField(
+        max_length=6,
+        error_messages={
+            "required": "OTP is required.",
+        }
+    )
+
+    def __init__(self, *args, email=None, **kwargs):
+        self.email = email
+        super().__init__(*args, **kwargs)
+
+    def clean_otp(self):
+        otp = self.cleaned_data["otp"]
+
+        valid, msg = validate_otp(
+            self.email,
+            "email_change_old",
+            otp
+        )
+
+        if not valid:
+            raise forms.ValidationError(msg)
+
+        return otp
+
+class SetNewPasswordForm(forms.Form):
+    new_password = forms.CharField(widget=forms.PasswordInput)
+    confirm_password = forms.CharField(widget=forms.PasswordInput)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get("new_password")
+        p2 = cleaned_data.get("confirm_password")
+
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("Passwords do not match.")
+        
+        if p1:
+                if len(p1) < 8:
+                    raise forms.ValidationError("Password must be at least 8 characters long.")
+                if not re.search(r"[A-Z]", p1):
+                    raise forms.ValidationError("Password must include at least one uppercase letter.")
+                if not re.search(r"[a-z]", p1):
+                    raise forms.ValidationError("Password must include at least one lowercase letter.")
+                if not re.search(r"[0-9]", p1):
+                    raise forms.ValidationError("Password must include at least one digit.")
+                if not re.search(r"[@$!%*#?&]", p1):
+                    raise forms.ValidationError("Password must include at least one special character (@, $, !, etc.)")
+        
+        return cleaned_data
+    
+class VerifyOTPForm(forms.Form):
+    otp = forms.CharField(
+        max_length=6,
+        label="Enter OTP",
+        widget=forms.TextInput(attrs={'placeholder': 'Enter 6-digit code'}),
+        error_messages={"required": "OTP is required."}
+    )

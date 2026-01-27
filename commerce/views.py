@@ -5,6 +5,10 @@ from django.db import transaction
 from django.db.models import Q,Count
 from django.urls import reverse
 import json
+
+import os
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
@@ -16,6 +20,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from commerce.services.exceptions import InsufficientWalletBalance
+from commerce.services.returns import process_refund_to_wallet
 from commerce.utils.availability import check_item_availability
 from commerce.utils.offers import get_discount_percentage
 from users.decorators import block_check
@@ -36,7 +41,6 @@ from .utils.pdf_styles import get_invoice_styles
 from .services.wallet import pay_using_wallet
 
 logger = logging.getLogger("commerce")
-
 
 def load_wishlist_items(request):
     wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
@@ -377,7 +381,7 @@ def cart_totals(request):
 
     cart, _ = Cart.objects.get_or_create(user=request.user)
     items = cart.items.select_related("variant", "product")
-    if items.count() == 0:
+    if not items.exists():
         return HttpResponse("")
 
     subtotal =Decimal(0)
@@ -424,9 +428,9 @@ def checkout(request):
     for item in products:
         is_available, error = check_item_availability(item)
 
-    if not is_available:
-        messages.error(request, error)
-        return redirect("products")
+        if not is_available:
+            messages.error(request, error)
+            return redirect("products")
     
     if not products.exists():
         messages.error(request,"Your cart is empty!")
@@ -637,7 +641,8 @@ def place_order(request):
             offer_discount=offer_discount,
             coupon=coupon,
             coupon_discount=coupon_discount,
-            total_price=total,
+            total_price=total,  # total_price is mutable (changes on cancel/return)
+            original_payable_amount=total, # original_payable_amount is immutable (order history)
             payment_method=payment_method,
             delivery_charge=delivery_charge,
             payment_status="pending"
@@ -909,111 +914,12 @@ def user_order_detail(request, order_id):
     })
 
 
-@login_required
-@never_cache
-def download_invoice(request, order_id):
-    styles = get_invoice_styles()
-
-    order = get_object_or_404(
-        Orders.objects.prefetch_related("items__product"),
-        order_id=order_id,
-        user=request.user,
-        payment_status__in =["paid","partially_refunded","refunded"]
+pdfmetrics.registerFont(
+    TTFont(
+        "DejaVu",
+        os.path.join(settings.BASE_DIR, "static/fonts/DejaVuSans.ttf")
     )
-
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="Invoice_{order.order_id}.pdf"'
-
-    doc = SimpleDocTemplate(response, pagesize=A4)
-    elements = []
-
-    # Title 
-    elements.append(Paragraph("FURNICRAFT INVOICE", styles["title"]))
-    elements.append(Spacer(1, 10))
-
-    # Order Meta 
-    meta_table = Table(
-        [
-            ["Order ID:", order.order_id, "Date:", order.created_at.strftime("%d %b %Y")]
-        ],
-        colWidths=[70, 180, 50, 120]
-    )
-    elements.append(meta_table)
-    elements.append(Spacer(1, 15))
-
-    #  Billing Address 
-    addr = order.address
-    elements.append(Paragraph("Bill To", styles["bold"]))
-    elements.append(Spacer(1, 5))
-    elements.append(Paragraph(addr.name, styles["value"]))
-    elements.append(Paragraph(f"{addr.house}, {addr.street}", styles["value"]))
-    elements.append(Paragraph(f"{addr.district}, {addr.state} - {addr.pincode}", styles["value"]))
-    elements.append(Spacer(1, 20))
-
-    # Items Table 
-    table_data = [["Product", "Qty", "Unit Price", "Final Price"]]
-
-    for item in order.items.all():
-        table_data.append([
-            f"{item.product.product.name} ({item.product.material_type})",
-            item.quantity,
-            f"₹{item.unit_price}",
-            f"₹{item.price}",
-        ])
-
-    table = Table(table_data, colWidths=[230, 50, 90, 90])
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("FONT", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("ALIGN", (1, 1), (-1, -1), "CENTER"),
-        ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
-        ("TOPPADDING", (0, 0), (-1, 0), 10),
-    ]))
-
-    elements.append(table)
-    elements.append(Spacer(1, 20))
-
-    paid_subtotal = sum(item.unit_price * item.quantity for item in order.items.all())
-    paid_total = (paid_subtotal - order.offer_discount - order.coupon_discount + order.delivery_charge)
-
-    #  Summary 
-    summary_data = [
-        ["Subtotal", f"₹{order.total_price_before_discount}"],
-    ]
-
-    if order.offer_discount > 0:
-        summary_data.append(["Offer Discount", f"- ₹{order.offer_discount}"])
-
-    if order.coupon:
-        summary_data.append([f"Coupon ({order.coupon.code})", f"- ₹{order.coupon_discount}"])
-
-    summary_data.append(["Shipping", f"₹{order.delivery_charge}"])
-    summary_data.append(["", ""])
-    summary_data.append(["TOTAL PAID", f"₹{paid_total}"])
-
-    summary_table = Table(summary_data, colWidths=[300, 160], hAlign="RIGHT")
-    summary_table.setStyle(TableStyle([
-        ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
-        ("FONT", (0, -1), (-1, -1), "Helvetica-Bold"),
-        ("FONTSIZE", (0, -1), (-1, -1), 12),
-        ("LINEABOVE", (0, -1), (-1, -1), 1.2, colors.black),
-        ("TOPPADDING", (0, -1), (-1, -1), 10),
-    ]))
-
-    elements.append(summary_table)
-    elements.append(Spacer(1, 25))
-
-    elements.append(
-        Paragraph(
-            "This is a system-generated invoice and does not require a signature.",
-            styles["label"]
-        )
-    )
-
-    doc.build(elements)
-    return response
-
+)
 
 @login_required
 @never_cache
@@ -1035,8 +941,15 @@ def cancel_order_item(request,item_id):
     if item.status!='order_received':
         messages.error(request,"This item cannot be cancelled!")
         return redirect("user_order_detail",item.order.order_id)
+    
     with transaction.atomic():
         order=item.order
+        if order.is_payment_locked:
+            messages.error(
+                request,
+                "You cannot cancel items while Razorpay payment is pending. Please retry payment or create new order."
+            )
+            return redirect("user_order_detail", order.order_id)
         if item.status == 'cancelled':
             messages.error(request, "Item already cancelled.")
             return redirect("user_order_detail", order.order_id)
@@ -1047,41 +960,33 @@ def cancel_order_item(request,item_id):
         item.product.save(update_fields=['stock'])
 
         if order.payment_status in ['paid','partially_refunded']:
-            wallet,_=Wallet.objects.get_or_create(user=request.user)
 
             coupon_share = calculate_item_coupon_share(order, item)
 
             refund_amount=item.price - coupon_share
+            refund_amount = max(refund_amount, Decimal("0.00"))
+            
+            process_refund_to_wallet(order=order,amount=refund_amount,source=f"item_cancel_{item.id}")
 
-            wallet.balance+=refund_amount
-            wallet.save(update_fields=["balance"])
-
-            WalletTransaction.objects.create(
-                wallet=wallet,
-                order=order,
-                amount=refund_amount,
-                transaction_type='credit',
-                source='order_cancel'
-            )
             messages.success(
             request,f"Item cancelled. ₹{refund_amount} refunded to your wallet."
         )
         else:
             messages.success(
             request,f"Item cancelled.")
-
-        remaining_items=order.items.exclude(status="cancelled")
-        new_total=sum(i.price for i in remaining_items)
-        if order.payment_status in ['paid', 'partially_refunded']:
-            if new_total==0:
-                order.payment_status='refunded'
-            else:
-                order.payment_status='partially_refunded'
-            order.total_price=new_total+order.delivery_charge
-            order.save(update_fields=['total_price','payment_status'])
-        else:
-            order.payment_status='failed'
-            order.save(update_fields=['payment_status'])
+        if not order.is_payment_locked:
+            remaining_items=order.items.exclude(status="cancelled")
+            new_total=sum(i.price for i in remaining_items)
+            if order.payment_status in ['paid', 'partially_refunded']:
+                if new_total==0:
+                    order.payment_status='refunded'
+                else:
+                    order.payment_status='partially_refunded'
+                order.total_price=new_total+order.delivery_charge
+                order.save(update_fields=['total_price','payment_status'])
+            elif order.payment_method!='razorpay':
+                order.payment_status='failed'
+                order.save(update_fields=['payment_status'])
     return redirect("user_order_detail",order.order_id)
 
 @login_required
@@ -1146,3 +1051,115 @@ def my_wallet(request):
 
 def add_checkout_address(request):
     return render(request,"commerce/checkout/add_checkout_address.html")
+
+font_path = os.path.join(settings.BASE_DIR, 'static/fonts/DejaVuSans.ttf')
+pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
+
+@login_required
+@never_cache
+def download_invoice(request, order_id):
+    styles = get_invoice_styles()
+
+    order = get_object_or_404(
+        Orders.objects.prefetch_related("items__product"),
+        order_id=order_id,
+        user=request.user,
+        payment_status__in =["paid","partially_refunded","refunded"]
+    )
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="Invoice_{order.order_id}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    elements = []
+
+    # Title 
+    elements.append(Paragraph("FURNICRAFT INVOICE", styles["title"]))
+    elements.append(Spacer(1, 10))
+
+    # Order Meta 
+    meta_table = Table(
+        [
+            ["Order ID:", order.order_id, "Date:", order.created_at.strftime("%d %b %Y")]
+        ],
+        colWidths=[70, 180, 50, 120]
+    )
+    elements.append(meta_table)
+    elements.append(Spacer(1, 15))
+
+    #  Billing Address 
+    addr = order.address
+    elements.append(Paragraph("Bill To", styles["bold"]))
+    elements.append(Spacer(1, 5))
+    elements.append(Paragraph(addr.name, styles["value"]))
+    elements.append(Paragraph(f"{addr.house}, {addr.street}", styles["value"]))
+    elements.append(Paragraph(f"{addr.district}, {addr.state} - {addr.pincode}", styles["value"]))
+    elements.append(Spacer(1, 20))
+
+    # Items Table 
+    table_data = [["Product", "Qty", "Unit Price", "Final Price"]]
+
+    for item in order.items.all():
+        product_name = f"{item.product.product.name} ({item.product.material_type})"
+        wrapped_product = Paragraph(product_name, styles["value"])
+        table_data.append([
+            wrapped_product,
+            item.quantity,
+            f"₹{item.unit_price}",
+            f"₹{item.price}",
+        ])
+
+    table = Table(table_data, colWidths=[250, 50, 90, 90])
+    table.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONT", (0, 0), (-1, 0), "DejaVuSans"),
+        ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+        ("TOPPADDING", (0, 0), (-1, 0), 10),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 20))
+
+    paid_subtotal = sum(item.unit_price * item.quantity for item in order.items.all())
+    paid_total = (paid_subtotal - order.offer_discount - order.coupon_discount + order.delivery_charge)
+
+    #  Summary 
+    summary_data = [
+        ["Subtotal", f"₹{order.total_price_before_discount}"],
+    ]
+
+    if order.offer_discount > 0:
+        summary_data.append(["Offer Discount", f"- ₹{order.offer_discount}"])
+
+    if order.coupon:
+        summary_data.append([f"Coupon ({order.coupon.code})", f"- ₹{order.coupon_discount}"])
+
+    summary_data.append(["Shipping", f"₹{order.delivery_charge}"])
+    summary_data.append(["", ""])
+    summary_data.append(["TOTAL PAID", f"₹{paid_total}"])
+
+    summary_table = Table(summary_data, colWidths=[300, 160], hAlign="RIGHT")
+    summary_table.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, -1), "DejaVuSans"),
+        ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+        ("FONT", (0, -1), (-1, -1), "DejaVuSans"),
+        ("FONTSIZE", (0, -1), (-1, -1), 12),
+        ("LINEABOVE", (0, -1), (-1, -1), 1.2, colors.black),
+        ("TOPPADDING", (0, -1), (-1, -1), 10),
+    ]))
+
+    elements.append(summary_table)
+    elements.append(Spacer(1, 25))
+
+    elements.append(
+        Paragraph(
+            "This is a system-generated invoice and does not require a signature.",
+            styles["label"]
+        )
+    )
+
+    doc.build(elements)
+    return response

@@ -89,9 +89,6 @@
                     <button @click="slide = 2" 
                             :class="slide === 2 ? 'bg-white w-8' : 'bg-gray-400 w-3'"
                             class="h-3 rounded-full transition-all"></button>
-                    <button @click="slide = 3" 
-                            :class="slide === 3 ? 'bg-white w-8' : 'bg-gray-400 w-3'"
-                            class="h-3 rounded-full transition-all"></button>
                     
                 </div>
 
@@ -99,7 +96,6 @@
 
             <!-- Auto-advance every 5 seconds -->
             <script>
-                const banner = document.querySelector('[x-data]');
                 setInterval(() => {
                     const currentSlide = parseInt(banner.getAttribute('x-data').match(/slide: (\d+)/)[1]);
                     const totalSlides = 5;

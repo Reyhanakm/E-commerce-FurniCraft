@@ -11,12 +11,6 @@ urlpatterns=[
     path("dashboard/best-materials/",views.best_selling_material_types_chart,name="best_selling_material_types_chart"),
     path("dashboard/best-products/",views.best_selling_products_chart,name="best_selling_products_chart"),
 
-    
-    path('banner/',views.banner_page,name='banner_page'),
-    path('banner/edit/<int:id>/',views.edit_banner,name='edit_banner'),
-    path('banner/delete/<int:id>',views.delete_banner,name='delete_banner'),
-
-
     path('categories/', views.admin_category_list, name='admin_category_list'),
     path('categories/add/', views.add_category, name='add_category'),
     path('categories/edit/<int:id>/', views.edit_category, name='edit_category'),
@@ -66,6 +60,5 @@ urlpatterns=[
     path("sales-report/excel/", views.sales_report_excel, name="sales_report_excel"),
     path("sales-report/",views.sales_report,name="sales_report"),
     path("sales-report/pdf/",views.sales_report_pdf,name="sales_report_pdf"),
-
 
 ]

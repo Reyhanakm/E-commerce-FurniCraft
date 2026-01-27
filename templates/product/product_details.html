@@ -2,6 +2,9 @@
 {% block content %}
 
 <style>
+    .review-item {
+    transition: all 0.3s ease;
+}
     #zoomResult {
         position: absolute;
         left: 900px;
@@ -140,72 +143,50 @@
                     <p class="text-gray-700 leading-relaxed">{{ dv.description }}</p>
                 {% endwith %}
             </div>
-
-
-            <div class="mt-12 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
-
+    <div class="mt-12 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
                 <h2 class="text-2xl font-bold text-gray-800 mb-8">Customer Reviews</h2>
                 
                 {% if reviews %}
-                
-                {% for review in reviews %}
-                <div
-                    class="review-item mb-6 border-b pb-4
-                        {% if forloop.counter > 2 %}hidden{% endif %}"
-                >
-                        
-                <div class="border-b-2 border-gray-200 pb-8 mb-8">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-[#A89289] rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-user text-white"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="font-bold text-gray-800 text-lg">{{review.user.first_name}}</h3>
-                                <span class="text-xs text-gray-500">Verified Purchase</span>
-                            </div>
-                            <div class="flex items-center gap-2 mb-3">
-                                <div class="flex text-yellow-400">
-                                    
-                                    {% if review.rating %}
-                                    {% for _ in ""|center:review.rating %}
-                                        <i class="fas fa-star"></i>
-                                    {% endfor %}
-                                        
-                                    {% endif %}
-                                        
+                    <div id="reviews-container">
+                        {% for review in reviews %}
+                        <div class="review-item border-b border-gray-200 pb-8 mb-8 {% if forloop.counter > 2 %}hidden{% endif %}">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-[#A89289] rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-user text-white"></i>
                                 </div>
-                                <span class="text-xs text-gray-500">({{review.rating}}/5 stars)</span>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="font-bold text-gray-800 text-lg">{{ review.user.first_name }}</h3>
+                                        <span class="text-xs text-gray-500">Verified Purchase</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <div class="flex text-yellow-400">
+                                            {% if review.rating %}
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                        <span class="text-xs text-gray-500">({{ review.rating }}/5 stars)</span>
+                                    </div>
+                                    <p class="text-gray-700 leading-relaxed">{{ review.comment }}</p>
+                                </div>
                             </div>
-                            <p class="text-gray-700 leading-relaxed">
-                                {{review.comment}}
-                                {% comment %} Excellent product! High quality materials and beautiful finish. Absolutely worth the price. The craftsmanship is exceptional and it arrived in perfect condition. {% endcomment %}
-                            </p>
                         </div>
+                        {% endfor %}
                     </div>
-                </div>
 
-                {% endfor %}
-                {% if reviews|length > 2 %}
-        <button
-            id="loadMoreBtn"
-            class="mt-4 text-orange-600 font-medium hover:underline"
-        >
-            Load more reviews
-        </button>
-    {% endif %}
-{% else %}
-    <p class="text-gray-500">No reviews yet.</p>
-{% endif %}
-                
-
-                {% comment %} <button class="w-full py-3 text-[#A89289] font-semibold border-2 border-[#A89289] rounded-lg hover:bg-[#F5F1EF] transition-all duration-200">
-                    Load More Reviews
-                </button>
+                    {% if reviews|length > 2 %}
+                        <button id="loadMoreBtn" class="w-full py-3 text-[#A89289] font-semibold border-2 border-[#A89289] rounded-lg hover:bg-[#F5F1EF] transition-all duration-200">
+                            Load more reviews
+                        </button>
+                    {% endif %}
                 {% else %}
-                <span>No reviews</span>           
+                    <p class="text-gray-500">No reviews yet.</p>
                 {% endif %}
-            </div> {% endcomment %}
+            </div>
 
         <!-- Related Products -->
             <div class="mt-16">
@@ -332,7 +313,42 @@ function initLensZoom() {
 }
 
 document.addEventListener("DOMContentLoaded", initLensZoom);
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    if (!loadMoreBtn) return;
+
+    // Track state
+    let isExpanded = false;
+
+    loadMoreBtn.addEventListener("click", function () {
+        const allReviews = document.querySelectorAll(".review-item");
+        
+        if (!isExpanded) {
+            // Show all reviews
+            allReviews.forEach(review => {
+                review.classList.remove("hidden");
+                review.classList.add("fade-in"); // Optional: re-trigger your fade animation
+            });
+            this.innerText = "Show less";
+            isExpanded = true;
+        } else {
+            allReviews.forEach((review, index) => {
+                if (index >= 2) {
+                    review.classList.add("hidden");
+                }
+            });
+            this.innerText = "Load more reviews";
+            isExpanded = false;
+            
+            loadMoreBtn.parentElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+});
 </script>
+
 {% endblock script %}
 
 {% endblock %}

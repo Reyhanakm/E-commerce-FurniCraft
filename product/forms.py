@@ -1,9 +1,11 @@
 from decimal import Decimal
 from django import forms
 import re
+from datetime import datetime,time
 from .models import Category, Product, ProductVariant, ProductImage,ProductOffer,CategoryOffer,Coupon,Review
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+
 
 
 class MultiFileInput(forms.ClearableFileInput):
@@ -53,7 +55,7 @@ class CategoryForm(forms.ModelForm):
         
         name=name.title()
 
-        if Category.objects.filter(name__iexact=name).exclude(id=self.instance.id).exists():
+        if Category.objects.all_with_deleted().filter(name__iexact=name).exclude(id=self.instance.id).exists():
             raise forms.ValidationError("Category name already exists.")
         
         return name
@@ -106,7 +108,7 @@ class ProductForm(forms.ModelForm):
             raise forms.ValidationError("Product name cannot contain only digits.")
         
         name = name.title()
-        if Product.objects.filter(name__iexact=name).exclude(id=self.instance.id).exists():
+        if Product.objects.all_with_deleted().filter(name__iexact=name).exclude(id=self.instance.id).exists():
             raise forms.ValidationError("Product name already exists.")
 
         return name
@@ -153,9 +155,7 @@ class ProductVariantForm(forms.ModelForm):
         if material_type.isdigit():
             raise forms.ValidationError("Material type cannot contain only digits.")
         
-        material_type = material_type.title()
-
-        if ProductVariant.objects.filter(
+        if ProductVariant.objects.all_with_deleted().filter(
             product=self.instance.product,
             material_type__iexact=material_type
         ).exclude(id=self.instance.id).exists():
@@ -181,6 +181,17 @@ class ProductVariantForm(forms.ModelForm):
         if stock < 0:
             raise forms.ValidationError("Stock must be a positive integer.")
         return stock
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        regular_price = cleaned_data.get("regular_price")
+        sales_price = cleaned_data.get("sales_price")
+
+        if regular_price is not None and sales_price is not None:
+            if sales_price > regular_price:
+                self.add_error('sales_price', "Sales price cannot be greater than the regular price.")
+        
+        return cleaned_data
 
 
 class ProductImageForm(forms.ModelForm):
@@ -200,7 +211,7 @@ class ProductOfferForm(forms.ModelForm):
         fields = [
             "name",
             "product",
-            "discount_value",
+            "discount_percent",
             "max_discount_amount",
             "start_date",
             "end_date",
@@ -214,7 +225,7 @@ class ProductOfferForm(forms.ModelForm):
             "product": forms.Select(attrs={
                 "class": "w-full px-4 py-2 border rounded-lg",
             }),
-            "discount_value": forms.NumberInput(attrs={
+            "discount_percent": forms.NumberInput(attrs={
                 "class": "w-full px-4 py-2 border rounded-lg",
                 "step": "0.01",
             }),
@@ -222,41 +233,50 @@ class ProductOfferForm(forms.ModelForm):
                 "class": "w-full px-4 py-2 border rounded-lg",
                 "step": "0.01",
             }),
-            "start_date": forms.DateTimeInput(attrs={
-                "type": "datetime-local",
+            "start_date": forms.DateInput(attrs={
+                "type": "date",
                 "class": "w-full px-4 py-2 border rounded-lg",
             }),
-            "end_date": forms.DateTimeInput(attrs={
-                "type": "datetime-local",
+            "end_date": forms.DateInput(attrs={
+                "type": "date",
                 "class": "w-full px-4 py-2 border rounded-lg",
             }),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["product"].queryset = (
+            self.fields["product"].queryset
+            .filter(is_deleted=False)
+            .order_by("name")
+        )
 
     def clean(self):
         cleaned_data= super().clean()
         product = cleaned_data.get("product")
-        percentage_value = cleaned_data.get("discount_value")
+        percentage_value = cleaned_data.get("discount_percent")
         max_cap_amount = cleaned_data.get("max_discount_amount")
         start = cleaned_data.get("start_date")
         end = cleaned_data.get("end_date")
         is_active = cleaned_data.get("is_active")
 
         tz = timezone.get_current_timezone()
+        
 
-        if start and timezone.is_naive(start):
-            start = timezone.make_aware(start, tz)
+        if start:
+            start = timezone.make_aware(datetime.combine(start, time.min),tz)
             cleaned_data["start_date"] = start
 
-        if end and timezone.is_naive(end):
-            end = timezone.make_aware(end, tz)
+        if end:
+            end = timezone.make_aware(datetime.combine(end,time.max), tz)
             cleaned_data["end_date"] = end
 
         now = timezone.localtime(timezone.now())
+        today = now.date()
         
-        if end and end <= now:
+        if end and end.date() < today:
             self.add_error("end_date", "End date must be a future date.")
 
-        if start and end and start >= end:
+        if start and end and start > end:
             self.add_error("end_date", "End date must be after start date.")
         
         if product and start and end and is_active:
@@ -278,14 +298,19 @@ class ProductOfferForm(forms.ModelForm):
             else:
                 original_price = Decimal('0.00')
             if percentage_value > 90:
-                self.add_error("discount_value", "Discount percentage cannot exceed 90%.")
+                self.add_error("discount_percent", "Discount percentage cannot exceed 90%.")
             if percentage_value <=0:
-                self.add_error("discount_value","Discount percentage should be greater than 0%.")
+                self.add_error("discount_percent","Discount percentage should be greater than 0%.")
             
             if max_cap_amount:
                 limit_70 = original_price * Decimal('0.70')
                 limit_01 = original_price * Decimal('0.01')
-                if max_cap_amount > limit_70:
+                if not max_cap_amount>0:
+                    self.add_error(
+                        "max_discount_amount", 
+                        f"Max discount should be a positive number.")
+
+                elif max_cap_amount > limit_70:
                     self.add_error(
                         "max_discount_amount", 
                         f"Max discount limit cannot exceed 70% of the product price (Limit: ₹{limit_70:.2f})."
@@ -304,7 +329,7 @@ class CategoryOfferForm(forms.ModelForm):
         fields = [
             "name",
             "category",
-            "discount_value",
+            "discount_percent",
             "max_discount_amount",
             "start_date",
             "end_date",
@@ -317,7 +342,7 @@ class CategoryOfferForm(forms.ModelForm):
             "category": forms.Select(attrs={
                 "class": "w-full px-4 py-2 border rounded-lg",
             }),
-            "discount_value": forms.NumberInput(attrs={
+            "discount_percent": forms.NumberInput(attrs={
                 "class": "w-full px-4 py-2 border rounded-lg",
                 "step": "0.01",
             }),
@@ -325,37 +350,46 @@ class CategoryOfferForm(forms.ModelForm):
                 "class": "w-full px-4 py-2 border rounded-lg",
                 "step": "0.01",
             }),
-            "start_date": forms.DateTimeInput(attrs={
-                "type": "datetime-local",
+            "start_date": forms.DateInput(attrs={
+                "type": "date",
                 "class": "w-full px-4 py-2 border rounded-lg",
             }),
-            "end_date": forms.DateTimeInput(attrs={
-                "type": "datetime-local",
+            "end_date": forms.DateInput(attrs={
+                "type": "date",
                 "class": "w-full px-4 py-2 border rounded-lg",
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["category"].queryset = (
+            self.fields["category"].queryset
+            .filter(is_deleted=False)
+            .order_by("name") 
+        )
     def clean(self):
         cleaned = super().clean()
         category = cleaned.get("category")
         start = cleaned.get("start_date")
         end = cleaned.get("end_date")
-        discount_value = cleaned.get("discount_value")
+        discount_value = cleaned.get("discount_percent")
         max_discount_amount = cleaned.get("max_discount_amount")
         is_active = cleaned.get("is_active")
 
         tz = timezone.get_current_timezone()
 
-        if start and timezone.is_naive(start):
-            start = timezone.make_aware(start, tz)
+        if start:
+            start = timezone.make_aware(datetime.combine(start,time.min), tz)
             cleaned["start_date"] = start
 
-        if end and timezone.is_naive(end):
-            end = timezone.make_aware(end, tz)
+        if end:
+            end = timezone.make_aware(datetime.combine(end,time.max),tz)
             cleaned["end_date"] = end
 
         now = timezone.localtime(timezone.now())
-        if end and end <= now:
+        today = now.date()
+        if end and end.date() < today:
             self.add_error("end_date", "End date must be a future date.")
         if start and end:
             if start >= end:
@@ -366,16 +400,16 @@ class CategoryOfferForm(forms.ModelForm):
                 is_active=True,
                 start_date__lt=end,
                 end_date__gt=start
-            ).exclude(pk=self.instance.pk)
+            ).exclude(pk=self.instance.pk).order_by("category__name")
 
             if overlapping_offers.exists():
                 self.add_error(None, f"This category already has an active offer during these dates.")
         
         if discount_value is not None:
             if discount_value <= 0:
-                self.add_error("discount_value", "Discount percentage must be greater than 0.")
+                self.add_error("discount_percent", "Discount percentage must be greater than 0.")
             elif discount_value > 90:
-                self.add_error("discount_value", "Discount percentage cannot exceed 90%.")
+                self.add_error("discount_percent", "Discount percentage cannot exceed 90%.")
 
         if max_discount_amount is not None:
             if max_discount_amount < 100 or max_discount_amount>50000:
@@ -421,6 +455,7 @@ class CouponForm(forms.ModelForm):
             if exists:
                 raise forms.ValidationError("This coupon code already exists. Please use a unique code.")
         return code
+        
 
     def clean(self):
         cleaned_data = super().clean()

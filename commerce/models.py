@@ -3,6 +3,21 @@ import uuid
 from users.models import User,UserAddress
 from cloudinary.models import CloudinaryField
 
+class Wishlist(models.Model):
+    user=models.ForeignKey(User,related_name='user_wishlist',on_delete=models.CASCADE)
+    created_at=models.DateTimeField(auto_now_add=True)
+
+    
+class WishlistItem(models.Model):
+    wishlist=models.ForeignKey(Wishlist,related_name='wishlist_items',on_delete=models.CASCADE)
+    product=models.ForeignKey("product.ProductVariant",related_name='wishlist_product',on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together=('wishlist','product')
+
+    def __str__(self):
+        return f"{self.product.product.name} in wishlist"
+    
 
 class Cart(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE,related_name='cart')
@@ -48,7 +63,9 @@ class Orders(models.Model):
     coupon =models.ForeignKey("product.Coupon",null=True,blank=True,on_delete=models.SET_NULL)
     coupon_discount=models.DecimalField(max_digits=10,decimal_places=2,default=0)
     offer_discount=models.DecimalField(max_digits=10,decimal_places=2,default=0)
+    original_payable_amount = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
     total_price=models.DecimalField(max_digits=10,decimal_places=2)
+    refunded_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
     payment_method=models.CharField(choices=PAYMENT_METHODS,default='cod')
@@ -60,6 +77,23 @@ class Orders(models.Model):
 
     def __str__(self):
         return f"order {self.order_id} by {self.user.first_name}"
+    @property
+    def original_total(self):
+        return (
+            self.original_payable_amount
+            if self.original_payable_amount is not None else self.total_price)
+    @property
+    def total_refunded(self):
+        return self.refunded_amount
+    @property
+    def is_payment_locked(self):
+        return (
+            self.payment_method == "razorpay"
+            and self.payment_status in ["pending", "failed"]
+        )
+    @property
+    def current_payable(self):
+        return self.total_price
     @property
     def is_paid(self):
         return self.payment_status
@@ -99,13 +133,14 @@ class Orders(models.Model):
     
     @property
     def can_admin_cancel(self):
-        return self.items.exclude(status__in=[
-            "cancelled",
-            "delivered",
-            "returned",
-            "failed",
-        ]).exists()
-    
+        all_items = self.items.all()
+        if not all_items.exists():
+            return False 
+        if all(item.status == "cancelled" for item in all_items):
+            return False 
+        if (self.payment_method == "razorpay" and self.payment_status in ["pending", "failed"]):
+            return False     
+        return not any(item.status in ["delivered", "returned", "failed"] for item in all_items)
 
 class OrderItem(models.Model):
     STATUS_CHOICES=[
@@ -175,23 +210,6 @@ class OrderReturn(models.Model):
         return f"Return request for {self.item.product.product.name} is {self.approval_status}"
     
 
-class Wishlist(models.Model):
-    user=models.ForeignKey(User,related_name='user_wishlist',on_delete=models.CASCADE)
-    created_at=models.DateTimeField(auto_now_add=True)
-
-    
-class WishlistItem(models.Model):
-    wishlist=models.ForeignKey(Wishlist,related_name='wishlist_items',on_delete=models.CASCADE)
-    product=models.ForeignKey("product.ProductVariant",related_name='wishlist_product',on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together=('wishlist','product')
-
-    def __str__(self):
-        return f"{self.product.product.name} in wishlist"
-    
-
-
 class Wallet(models.Model):
     user=models.OneToOneField(User,related_name='wallet',on_delete=models.CASCADE)
     balance=models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
@@ -206,6 +224,7 @@ def generate_transaction_id():
 class WalletTransaction(models.Model):
     SOURCE_CHOICES = [
         ('razorpay','Credit through Razorpay'),
+        ('item_cancel','Refund - Item Cancelled'),
         ('order_cancel','Refund - Order Cancelled'),
         ('order_return','Refund - Order Returned'),
         ('order_debit','Debited for order'),
