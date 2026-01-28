@@ -89,9 +89,6 @@
                     <button @click="slide = 2" 
                             :class="slide === 2 ? 'bg-white w-8' : 'bg-gray-400 w-3'"
                             class="h-3 rounded-full transition-all"></button>
-                    <button @click="slide = 3" 
-                            :class="slide === 3 ? 'bg-white w-8' : 'bg-gray-400 w-3'"
-                            class="h-3 rounded-full transition-all"></button>
                     
                 </div>
 
@@ -99,7 +96,6 @@
 
             <!-- Auto-advance every 5 seconds -->
             <script>
-                const banner = document.querySelector('[x-data]');
                 setInterval(() => {
                     const currentSlide = parseInt(banner.getAttribute('x-data').match(/slide: (\d+)/)[1]);
                     const totalSlides = 5;
@@ -149,16 +145,6 @@
                         {% if category.description %}
                         <p class="text-gray-500 text-sm">{{ category.description|truncatewords:8 }}</p>
                         {% endif %}
-                    </div>
-
-                    <!-- Hover Icons -->
-                    <div class="absolute top-3 right-3 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button class="bg-white rounded-full p-2 shadow-md hover:bg-[#8D6E63] hover:text-white">
-                            <i class="far fa-heart text-sm"></i>
-                        </button>
-                        <button class="bg-white rounded-full p-2 shadow-md hover:bg-[#8D6E63] hover:text-white">
-                            <i class="far fa-eye text-sm"></i>
-                        </button>
                     </div>
                 </a>
                 {% empty %}

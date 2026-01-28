@@ -1,5 +1,9 @@
+import logging
+from django.db import IntegrityError
+from django.db.models import Avg,Count
 from django.shortcuts import render, redirect,HttpResponse,get_object_or_404
-from product.models import Category,Product,ProductImage,ProductVariant
+from product.forms import ReviewForm
+from product.models import Category,Product,ProductImage,ProductVariant, Review
 from django.db.models import Prefetch,Q,Min
 from django.core.paginator import Paginator
 from django.contrib import messages
@@ -7,102 +11,133 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from users.models import User
 from django.core.cache import cache
-from commerce.models import Wishlist, WishlistItem
+from commerce.models import OrderItem, Wishlist, WishlistItem
 import json
 from users.decorators import block_check
+from commerce.utils.pricing import get_pricing_context,attach_best_pricing_to_products
 
-
-# @block_check
-# @login_required
-# def category_products(request,id):
-#     category=Category.objects.get(id=id)
-#     products=Product.objects.filter(category=category).prefetch_related(
-#         Prefetch('variants',queryset=ProductVariant.objects.order_by('id')),
-#         Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')))
-    
-#     return render(request,'product/category_products.html',{'products':products,'category':category})
-# product/views.py
-
+logger = logging.getLogger('product')
 
 @block_check
-@login_required 
+@login_required
 def category_products(request, id):
     category = get_object_or_404(Category, id=id)
-    
-    # Efficiently fetch Products and related data
-    products = Product.objects.filter(category=category).prefetch_related(
-        Prefetch('variants', queryset=ProductVariant.objects.order_by('id')),
-        Prefetch('images', queryset=ProductImage.objects.order_by('-is_primary', 'id'))
+    logger.info(
+    "Category products page accessed",
+    extra={
+        "user_id": request.user.id,
+        "category_id": id
+    }
     )
-    
-    # --- WISHILIST CONTEXT LOGIC (NEW) ---
-    wishlist_product_ids = set()
-    
+    products = Product.objects.filter(category=category,variants__isnull=False).annotate(
+        average_rating=Avg('variants__reviews__rating'),
+        review_count=Count('variants__reviews', distinct=True) 
+    ).prefetch_related(
+        Prefetch(
+            'variants',
+            queryset=ProductVariant.objects
+                .select_related('product__category')
+                .prefetch_related(
+                    'product__product_offers',
+                    'product__category__category_offers'
+                )
+                .order_by('id')
+        ),
+        Prefetch(
+            'images',
+            queryset=ProductImage.objects.order_by('-is_primary', 'id')
+        )
+    ).distinct()
+    logger.info(
+    "Products fetched for category",
+    extra={
+        "category_id": id,
+        "product_count": products.count()
+    }
+    )
+    try:
+        attach_best_pricing_to_products(products)
+    except Exception:
+        logger.error(
+            "Failed to attach pricing for category products",
+            exc_info=True,
+            extra={"category_id": id}
+        )
+
+
+    wishlist_product_ids = []
+
     if request.user.is_authenticated:
-        # 1. Fetch the IDs of the parent Products (Product.id) that are in the user's wishlist.
-        #    We filter WishlistItem by the current user and get the ID of the linked Product (via ProductVariant).
-        #    We use .values_list and set() for maximum efficiency.
-        wishlist_product_ids = set(
+        wishlist_product_ids = list(
             WishlistItem.objects.filter(
                 wishlist__user=request.user,
-                # Filter to only check products currently displayed on the page (optional optimization)
-                product__product__in=products 
-            ).values_list('product__product__id', flat=True)
+                product__product__in=products
+            ).values_list(
+                'product_id',
+                flat=True
+            )
         )
-    # --------------------------------------
 
     context = {
         'products': products,
         'category': category,
-        'wishlist_product_ids': wishlist_product_ids # <-- Pass the set of IDs to the template
+        'wishlist_product_ids': wishlist_product_ids,
     }
-    
+
     return render(request, 'product/category_products.html', context)
 
 @block_check
 @never_cache
 @login_required(login_url="/login")
 def products(request):    
-    products=Product.objects.filter(category__is_deleted=False,variants__isnull=False).annotate(min_price=Min('variants__sales_price')).prefetch_related(
-        Prefetch('images',queryset=ProductImage.objects.order_by('id')),
-        Prefetch('variants',queryset=ProductVariant.objects.order_by('id')))
-    
+
+    products = Product.objects.filter(
+        category__is_deleted=False,
+        variants__isnull=False
+    ).annotate(
+        min_price=Min('variants__sales_price'),
+        average_rating=Avg('variants__reviews__rating'),
+        review_count=Count('variants__reviews', distinct=True) 
+    ).prefetch_related(
+        Prefetch('images', queryset=ProductImage.objects.order_by('id')),
+        Prefetch('variants', queryset=ProductVariant.objects
+            .select_related('product__category')
+            .prefetch_related(
+                'product__product_offers',
+                'product__category__category_offers'
+            ))
+    )
     search_query = request.GET.get('search')
 
     if search_query:
-        products=products.filter(Q(name__icontains=search_query)|Q(category__name__icontains=search_query)|
-                        Q(variants__material_type__icontains=search_query))
+        products = products.filter(
+            Q(name__icontains=search_query) |
+            Q(category__name__icontains=search_query) |
+            Q(variants__material_type__icontains=search_query)
+        )
 
     category_ids = request.GET.getlist('category')
     if category_ids:
         products = products.filter(category_id__in=category_ids)
-
+    # filtering
     price_min = request.GET.get('price_min')
     price_max = request.GET.get('price_max')
-
-    price_options = [
-    ("0-4999", "₹0 – ₹4,999"),
-    ("5000-24999", "₹5,000 – ₹24,999"),
-    ("25000-49999", "₹25,000 – ₹49,999"),
-    ("50000-99999", "₹50,000 – ₹99,999"),
-    ("100000-9999999", "₹100,000+"),
-]
-    selected_price_ranges=request.GET.getlist('price_range')
 
     if price_min:
         products = products.filter(min_price__gte=price_min)
     if price_max:
         products = products.filter(min_price__lte=price_max)
 
-    selected_price_ranges=[pr for pr in selected_price_ranges if pr and '-' in pr]
-    if selected_price_ranges:
-        price_query=Q()
-        for pr in selected_price_ranges:
-            low,high=pr.split('-')
-            price_query |=Q(min_price__gte=low,min_price__lte=high)
-        products= products.filter(price_query)
-    
+    selected_price_ranges = request.GET.getlist('price_range')
+    selected_price_ranges = [pr for pr in selected_price_ranges if pr and '-' in pr]
 
+    if selected_price_ranges:
+        price_query = Q()
+        for pr in selected_price_ranges:
+            low, high = pr.split('-')
+            price_query |= Q(min_price__gte=low, min_price__lte=high)
+        products = products.filter(price_query)
+    # sorting
     sort = request.GET.get('sort')
     if sort == 'low_to_high':
         products = products.order_by('min_price')
@@ -114,14 +149,37 @@ def products(request):
         products = products.order_by('-name')
     elif sort == 'new':
         products = products.order_by('-created_at')
-    
-    if not sort:
+    else:
         products = products.order_by('id')
 
-
+    wishlist_variant_ids = []
+    if request.user.is_authenticated:
+        wishlist_variant_ids = list(
+            WishlistItem.objects.filter(
+                wishlist__user=request.user
+            ).values_list("product_id", flat=True)
+        )
+    logger.info(
+    "Product listing accessed",
+    extra={
+        "user_id": request.user.id,
+        "search": search_query,
+        "categories": category_ids,
+        "sort": sort
+    }
+    )
     paginator = Paginator(products, 8)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+
+    try:
+        attach_best_pricing_to_products(page_obj.object_list)
+    except Exception:
+        logger.error(
+            "Pricing injection failed on product list",
+            exc_info=True
+        )
 
     params = request.GET.copy()
     if "page" in params:
@@ -131,81 +189,202 @@ def products(request):
     context = {
         "page_obj": page_obj,
         "products": page_obj.object_list,
+        "wishlist_product_ids": wishlist_variant_ids,
         "categories": Category.objects.all(),
-        "price_options": price_options,
-        "selected_price_ranges":selected_price_ranges,
+        "price_options": [
+            ("0-4999", "₹0 – ₹4,999"),
+            ("5000-24999", "₹5,000 – ₹24,999"),
+            ("25000-49999", "₹25,000 – ₹49,999"),
+            ("50000-99999", "₹50,000 – ₹99,999"),
+            ("100000-9999999", "₹100,000+"),
+        ],
+        "selected_price_ranges": selected_price_ranges,
         "search": search_query,
         "querystring": querystring,
     }
-
+    logger.info(
+    "Product pagination",
+    extra={
+        "page": page_number,
+        "total_products": paginator.count
+    }
+    )
+    if request.headers.get("HX-Request"):
+        logger.info(
+            "HTMX product list request",
+            extra={"user_id": request.user.id}
+        )
 
     if request.headers.get("HX-Request"):
-        return render(request, "product/components/product_list_partial.html", context)
-
+        return render(
+            request,
+            "product/components/product_list_partial.html",
+            context
+        )
 
     return render(request, "product/products.html", context)
+
 
 @block_check
 @never_cache
 @login_required(login_url='/login')
 def product_details(request,id):
-    product=Product.objects.select_related('category').prefetch_related(
+    logger.info(
+    "Product detail viewed",
+    extra={
+        "user_id": request.user.id,
+        "product_id": id
+    }
+    )
+    try:
+        product=Product.objects.select_related('category').prefetch_related(
+            Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
+            'variants',
+            'variants__product__product_offers',
+            'variants__product__category__category_offers',
+        ).get(id=id)
+    except Product.DoesNotExist:
+        messages.error(request, "This product is temporarily unavailable!")
+        return redirect("products")
+    
+    related_products=Product.objects.filter(category=product.category).exclude(id=id).prefetch_related(
         Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
-        'variants'
-    ).get(id=id)
-    related_products=Product.objects.filter(category=product.category).prefetch_related(
-        Prefetch('images',queryset=ProductImage.objects.order_by('-is_primary','id')),
-        'variants'
-    ).exclude(id=id)
-
+        'variants',
+        'variants__product__product_offers',
+        'variants__product__category__category_offers',
+    )
+    if related_products:
+        related_products = list(related_products)
+        attach_best_pricing_to_products(related_products)
     is_in_wishlist = False
+    wishlist_variant_ids=[]
     if request.user.is_authenticated:
-        
-        default_variant = product.variants.first()
-        
+        logger.debug(
+            "Wishlist status checked",
+            extra={
+                "user_id": request.user.id,
+                "product_id": id,
+                "in_wishlist": is_in_wishlist
+            }
+        )
+        variants=list(product.variants.all())
+        default_variant = variants[0] if variants else None
+        pricing=get_pricing_context(default_variant) if default_variant else None
+        wishlist_variant_ids = list(
+            WishlistItem.objects.filter(
+                wishlist__user=request.user
+            ).values_list("product_id", flat=True)
+        )
+        if not product.variants.exists():
+            logger.warning(
+                "Product has no variants",
+                extra={"product_id": id}
+            )
+
         if default_variant:
             is_in_wishlist = WishlistItem.objects.filter(
                 wishlist__user=request.user,
                 product=default_variant 
             ).exists()
-    return render(request,'product/product_details.html',{'product':product,'related_products':related_products,
+    
+        reviews=Review.objects.filter(product__product=product).select_related("user","product").order_by("-created_at")
+        avg_rating=reviews.aggregate(avg=Avg("rating"))["avg"] or 0
+        avg_rating = round(avg_rating)
+    return render(request,'product/product_details.html',{'product':product,
+                                        'related_products':related_products,
                                         'is_in_wishlist': is_in_wishlist,
-                                        'default_variant_id': product.variants.first().id 
-                                        if product.variants.first() else None,
+                                        'pricing':pricing,
+                                        'wishlist_variant_ids': wishlist_variant_ids,
+                                        'default_variant': default_variant,
+                                        'default_variant_id': default_variant.id if default_variant else None,
+                                        'reviews':reviews,
+                                        "avg_rating": avg_rating,
     })
 
 @block_check
 def load_product_image(request, id):
     src = request.GET.get("src")
+    logger.debug(
+    "Product image loaded dynamically",
+    extra={"src": src}
+    )
     return HttpResponse(f"""
         <img src='{src}' class='zoomable w-full h-auto rounded-xl shadow-lg object-cover'>
     """)
-# @block_check
-# def load_variant_info(request, variant_id):
-#     v = ProductVariant.objects.get(id=variant_id)
-#     return render(request,'product/components/variant_info.html',{'variant':v})
-
 
 @block_check
 def load_variant_info(request, variant_id):
-    # 1. Get the variant
+
+    logger.info(
+    "Variant info loaded",
+    extra={
+        "variant_id": variant_id,
+        "user_id": request.user.id if request.user.is_authenticated else None
+    }
+    )
     v = ProductVariant.objects.get(id=variant_id)
-    
-    # 2. Check if it's in the wishlist (Default to False)
+    try:
+        pricing = get_pricing_context(v)
+    except Exception:
+        logger.error(
+            "Variant pricing failed",
+            exc_info=True,
+            extra={"variant_id": variant_id}
+        )
+
     is_in_wishlist = False
     
     if request.user.is_authenticated:
-        # Check if a WishlistItem exists for this user and this variant
-        # We query across the relationship: wishlist -> user
         is_in_wishlist = WishlistItem.objects.filter(
             wishlist__user=request.user, 
             product=v
         ).exists()
 
-    # 3. Pass the boolean to the template
     context = {
         'variant': v,
-        'is_in_wishlist': is_in_wishlist
+        'is_in_wishlist': is_in_wishlist,
+        'pricing':pricing
     }
-    
     return render(request, 'product/components/variant_info.html', context)
+
+@login_required
+@never_cache
+def add_review(request, variant_id):
+    product = get_object_or_404(ProductVariant, id=variant_id)
+    id=product.product.id
+
+    has_purchased = OrderItem.objects.filter(
+        order__user=request.user,
+        status__in=["delivered","returned"],
+        product=product
+    ).exists()
+
+    if not has_purchased:
+        messages.error(request, "You can review this product only after it has been delivered.")
+        return redirect("product_details",id=id)
+
+    if request.method == "POST":
+        form = ReviewForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            try:
+                review = form.save(commit=False)
+                review.user = request.user
+                review.product = product
+                review.save()
+
+                messages.success(request, "Thank you for your review!")
+                return redirect("my_orders_page")
+
+            except IntegrityError:
+                form.add_error(None, "You have already reviewed this product.")
+
+    else:
+        form = ReviewForm()
+
+    return render(request, "product/reviews/add_review.html", {
+        "form": form,
+        "product": product
+    })
+
+

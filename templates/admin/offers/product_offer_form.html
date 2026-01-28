@@ -1,0 +1,46 @@
+{% extends "admin/base_admin.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Add Product Offer</h1>
+  </div>
+
+  <div class="bg-white shadow-sm rounded-md border border-gray-200 overflow-hidden">
+    <div class="p-6">
+      
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form and form.non_field_errors %}
+        <div class="mb-4 rounded-lg bg-red-100 border border-red-400 text-red-700 px-4 py-3">
+          {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+        <div class="grid grid-cols-1 gap-6 mb-6">
+          {% for field in form %}
+            {% include "components/form_field.html" with field=field %}
+          {% endfor %}
+        </div>
+
+        <div class="flex justify-end gap-4 pt-6 border-t border-gray-100 mt-6">
+          
+          <a href="{% url 'admin_offer_list' %}" 
+             class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 hover:text-[#b82d2d] transition duration-200">
+            Cancel
+          </a>
+
+          <button type="submit" 
+                  class="px-6 py-2 bg-[#b82d2d] text-white rounded-md font-semibold hover:bg-red-700 transition duration-200 shadow-sm">
+            Save Product Offer
+          </button>
+          
+        </div>
+      </form>
+      
+    </div>
+  </div>
+</div>
+{% endblock %}

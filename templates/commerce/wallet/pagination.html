@@ -1,0 +1,39 @@
+<div class="flex justify-center items-center mt-6 space-x-2">
+
+    {% if page_obj.has_previous %}
+        <a
+            hx-get="{% url 'my_wallet' %}?page={{ page_obj.previous_page_number }}"
+            hx-target="#profile-content"
+            hx-swap="innerHTML"
+            class="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100">
+            ‹
+        </a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+            <span class="px-3 py-1 border rounded-md bg-[#D8C6C0]">
+                {{ num }}
+            </span>
+        {% else %}
+            <a
+                hx-get="{% url 'my_wallet' %}?page={{ num }}"
+                hx-target="#profile-content"
+                hx-swap="innerHTML"
+                class="px-3 py-1 border rounded-md hover:bg-gray-100">
+                {{ num }}
+            </a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <a
+            hx-get="{% url 'my_wallet' %}?page={{ page_obj.next_page_number }}"
+            hx-target="#profile-content"
+            hx-swap="innerHTML"
+            class="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100">
+            ›
+        </a>
+    {% endif %}
+
+</div>

@@ -16,10 +16,29 @@
                 <a href="{% url 'product_details' item.product.id %}" class="hover:text-[#8f7a73] transition-colors duration-200 block">
                     <h3 class="text-lg font-bold text-gray-800 mb-1">{{ item.product.name }}</h3>
                 </a> 
-                <p class="text-sm text-gray-500 mb-3">Variant: {{ item.variant.material_type }}</p>
+                <p class="text-sm text-gray-500 font-semibold mb-3">Material: {{ item.variant.material_type }}</p>
                 
                 <div class="flex items-center gap-4 mb-4">
-                    <span class="text-2xl font-bold text-[#A89289]">₹{{ item.variant.sales_price }}</span>
+                    {% if item.offer_percent > 0 %}
+                        <div class="flex items-center gap-3">
+                            <!-- Discounted price -->
+                            <span class="text-2xl font-bold text-[#A89289]">
+                                ₹{{ item.discounted_price|floatformat:2 }}
+                            </span>
+
+                            <!-- Original price (striked) -->
+                            <span class="text-sm text-gray-400 font-semibold line-through">
+                                ₹{{ item.variant.sales_price }}
+                            </span>
+                        </div>
+                        <p class="text-green-700 font-semibold text-sm">
+                            {{ item.offer_percent }}% OFF applied
+                        </p>
+                    {% else %}
+                        <span class="text-2xl font-bold text-[#A89289]">
+                            ₹{{ item.variant.sales_price }}
+                        </span>
+                    {% endif %}
                 </div>
             </div>
 
@@ -61,110 +80,3 @@
         </div>
     </div>
 </div>
-{% comment %} 
-<div id="cart-item-{{ item.id }}" 
-     class="cart-card bg-white rounded-2xl shadow-md p-6 border border-gray-200"
->
-
-    <div class="flex gap-6">
-
-        <!-- PRODUCT IMAGE -->
-        <div class="w-32 h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-            {% if item.product.images.all %}
-                <img src="{{ item.product.images.first.image.url }}" 
-                     class="w-full h-full object-cover">
-            {% else %}
-                <img src="https://via.placeholder.com/300" class="w-full h-full object-cover">
-            {% endif %}
-        </div>
-
-        <!-- DETAILS -->
-        <div class="flex-1 flex flex-col justify-between">
-
-            <div>
-                <h3 class="text-lg font-bold text-gray-800 mb-1">
-                    {{ item.product.name }}
-                </h3>
-
-                <p class="text-sm text-gray-500 mb-3">
-                    Variant: {{ item.variant.material_type }}
-                </p>
-
-                <div class="flex items-center gap-4 mb-4">
-                    <span class="text-2xl font-bold text-[#A89289]">
-                        ₹{{ item.variant.sales_price }}
-                    </span>
-
-                    {% if item.variant.stock > 0 %}
-                        <span class="text-sm px-3 py-1 bg-green-50 text-green-700 rounded-full font-medium">
-                            In Stock
-                        </span>
-                    {% else %}
-                        <span class="text-sm px-3 py-1 bg-red-50 text-red-700 rounded-full font-medium">
-                            Out of Stock
-                        </span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- QUANTITY & REMOVE -->
-            <div class="flex items-center justify-between">
-
-                <div class="flex items-center gap-2">
-                    <label class="text-sm font-medium text-gray-700">Quantity:</label>
-
-                    <div class="flex items-center gap-2">
-
-                        <!-- DECREASE -->
-                        <button 
-                                {% if item.quantity <= 1 %}
-                                    disabled
-                                    class="w-8 h-8 flex items-center justify-center border-2 border-gray-300 rounded bg-gray-100 cursor-not-allowed"
-                                {% else %}
-                                    hx-post="{% url 'decrease_quantity' item.id %}"
-                                    hx-target="#cart-item-{{ item.id }}"
-                                    hx-swap="innerHTML"
-                                    class="w-8 h-8 flex items-center justify-center border-2 border-[#E8DFD7] rounded hover:bg-[#F5F1EF]"
-                                {% endif %}>
-                                <i class="fas fa-minus text-sm text-gray-600"></i>
-                        </button>
-
-                        <!-- QUANTITY -->
-                        <span class="quantity-input" style="border:none;background:none;">
-                            {{ item.quantity }}
-                        </span>
-
-                        <!-- INCREASE -->
-                        <button 
-                            {% if item.quantity >= item.variant.stock or item.quantity >= 5 %}
-                                disabled
-                                class="w-8 h-8 flex items-center justify-center border-2 border-gray-300 rounded bg-gray-100 cursor-not-allowed"
-                            {% else %}
-                                class="w-8 h-8 flex items-center justify-center border-2 border-[#E8DFD7] rounded hover:bg-[#F5F1EF]"
-                                hx-post="{% url 'increase_quantity' item.id %}"
-                                hx-target="#cart-item-{{ item.id }}"
-                                hx-swap="innerHTML"
-                            {% endif %}
-                        >
-                            <i class="fas fa-plus text-sm text-gray-600"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- REMOVE -->
-                <button hx-post="{% url 'remove_cart_item' item.id %}"
-                        hx-target="#cart-item-{{ item.id }}"
-                        hx-swap="innerHTML"
-                        class="px-6 py-2 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100">
-                    <i class="fas fa-trash"></i>
-                    Remove
-                </button>
-
-            </div>
-
-        </div>
-    </div>
-
-</div>
-
- {% endcomment %}

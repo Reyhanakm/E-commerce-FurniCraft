@@ -3,6 +3,10 @@ from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.urls import reverse
 import re
+import logging
+
+from django.db import IntegrityError, transaction
+from users.utils import generate_unique_referral_code
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -14,17 +18,19 @@ import random
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.utils import timezone
-from .forms import RegistrationForm,ForgotPasswordForm,ResetPasswordVerifyForm,LoginForm,AddressForm
+from .forms import ChangeEmailForm, EditProfileForm, RegistrationForm,ForgotPasswordForm, ResetOTPForm, ResetPasswordForm,LoginForm,AddressForm, SetNewPasswordForm, VerifyOTPForm, VerifyOldEmailOTPForm
 from product.models import Category
 from users.decorators import block_check
-from admin_app.models import Banner
-from utils.otp import create_and_send_otp,validate_otp,otp_cache_key
+from utils.otp import create_and_send_otp, get_remaining_otp_cooldown,validate_otp,otp_cache_key
 from django.contrib.auth import update_session_auth_hash
 
+logger = logging.getLogger('users')
 
 @never_cache
 def user_register(request):
+    logger.info("User registration started")
     if request.method == 'POST':
+        logger.info("POST request received for registration")
         form = RegistrationForm(request.POST)
         print("form is valid?", form.is_valid()) 
         print("form is error: ", form.errors)
@@ -59,13 +65,14 @@ def user_register(request):
             
             otp=create_and_send_otp(
             email=email,
-            purpose="Register",
+            purpose="register",
             subject="Your Furnicraft Registration OTP"
             )
 
             print("Debug OTP: ",otp)
             
             messages.success(request, "OTP sent to your email.")
+            logger.info(f"OTP email sent to {email}")
             return redirect('verify_otp')
 
         else:
@@ -79,15 +86,16 @@ def user_register(request):
 @block_check
 @never_cache
 def verify_otp(request):
-    if request.method == 'POST':
-        entered_otp = request.POST.get('otp')
-        email = request.session.get('pending_email')
-        
-        if not email:
+    email = request.session.get('pending_email')
+    if not email:
             messages.error(request, "Email missing. Please register again.")
             return redirect('user_register')
+    remaining_seconds = get_remaining_otp_cooldown(email, "register")
 
-        valid,msg = validate_otp(email,"Register",entered_otp)
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp')
+
+        valid,msg = validate_otp(email,"register",entered_otp)
 
         if not valid:
             messages.error(request,msg)
@@ -100,65 +108,49 @@ def verify_otp(request):
             return redirect('user_register')
 
         reg = json.loads(data)
-        actual_otp = reg.get('otp')
         print("Entered OTP:", entered_otp)
-        print("Actual OTP:", actual_otp)
 
-        user = User.objects.create_user(
-            email=email,
-            first_name=reg['first_name'],
-            last_name=reg['last_name'],
-            phone_number=reg['phone_number'],
-            password=reg['password'],
-            is_blocked=False
-        )
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=email,
+                first_name=reg['first_name'],
+                last_name=reg['last_name'],
+                phone_number=reg['phone_number'],
+                password=reg['password'],
+                referralcode=generate_unique_referral_code(),
+                is_blocked=False
+            )
 
-        Wallet.objects.get_or_create(user=user)
-        referrer_id=reg.get('referrer_id')
-        if referrer_id:
-            try:
-                referredby=User.objects.get(id=referrer_id)
-                if referredby and referredby!=user:
-                    user.referredby=referredby
-                    user.save()
+            Wallet.objects.get_or_create(user=user)
 
-                    referral,created=Referral.objects.get_or_create(
-                        referrer=referredby,
-                        referred_user=user,
-                        defaults={'reward_amound':100}
-                    )
-                    if created and not referral.reward_given:
-                        # get or create referrer wallet
-                        ref_wallet, _ = Wallet.objects.get_or_create(user=referredby)
+            referrer_id=reg.get('referredby')
+            if referrer_id:
+                try:
+                    referrer=User.objects.get(id=referrer_id)
+                    if referrer!=user:
+                        user.referredby=referrer
+                        user.save(update_fields=["referredby"])
 
-                        # credit amount
-                        reward_amount = referral.reward_amount
-                        ref_wallet.balance += reward_amount
-                        ref_wallet.save()
-
-                        # transaction log
-                        WalletTransaction.objects.create(
-                            wallet=ref_wallet,
-                            amount=reward_amount,
-                            transaction_type='credit',
-                            source='referral',
-                            is_paid=True,
-                            description=f"Referral bonus for {user.email}"
+                        Referral.objects.get_or_create(
+                            referrer=referrer,
+                            referred_user=user,
+                            defaults={'reward_amount':100}
                         )
-
-                        referral.reward_given = True
-                        referral.save()
-            except User.DoesNotExist:
-                pass
+                        
+                except User.DoesNotExist:
+                    pass
                 
         # Clear Redis cache
         cache.delete(f"user_register:{email}")
-        messages.success(request, "Account created successfully! You can now log in.")
+        cache.delete(otp_cache_key("register", email))
         del request.session['pending_email']
+
+        messages.success(request, "Account created successfully! You can now log in.")
         return redirect('user_login')
     
-    else:
-        return render(request, 'user/verify_otp.html')
+    return render(request, 'user/verify_otp.html',{
+    "remaining_seconds": remaining_seconds
+    })
 
 
 @block_check
@@ -172,6 +164,7 @@ def resend_register_otp(request):
 
     key = otp_cache_key("register", email)
     data = cache.get(key)
+
 
     if not data:
         messages.error(request, "OTP expired. Please register again.")
@@ -221,7 +214,7 @@ def forgot_password(request):
         messages.success(request, "OTP sent to your email.")
         return redirect('reset_password_verify')
 
-    return render(request, 'user/forgot_password.html', {'form': form})
+    return render(request, 'user/profile/forgot_password.html', {'form': form})
 
 
 
@@ -229,38 +222,55 @@ def forgot_password(request):
 @never_cache
 def reset_password_verify(request):
     email = request.session.get('pending_email')
-    form = ResetPasswordVerifyForm(request.POST or None)
-
     if not email:
         messages.error(request, "Session expired. Please try again.")
         return redirect('forgot_password')
+    remaining_seconds = get_remaining_otp_cooldown(email,"reset_password")
+    
+    otp_verified = request.session.get("reset_otp_verified", False)
+    otp_form = ResetOTPForm()
+    password_form = ResetPasswordForm()
+    
+    if request.method == 'POST' and not otp_verified and 'otp' in request.POST:
+        otp_form = ResetOTPForm(request.POST)
+        if otp_form.is_valid():
+            otp = otp_form.cleaned_data['otp']
 
-    if request.method == 'POST' and form.is_valid():
-        otp = form.cleaned_data['otp']
-        new_password = form.cleaned_data['new_password']
-        confirm_password = form.cleaned_data['confirm_new_password']
+            if not otp:
+                messages.error(request, "Please enter the OTP.")
+                return redirect("reset_password_verify")
 
-        valid, msg = validate_otp(email, "reset_password", otp)
-
-        if not valid:
-            messages.error(request, msg)
+            valid, msg = validate_otp(email, "reset_password", otp)
+            if not valid:
+                messages.error(request, msg)
+                return redirect("reset_password_verify")
+            
+            request.session['reset_otp_verified'] = True
+            messages.success(request, "OTP verified. Please set a new password.")
             return redirect("reset_password_verify")
 
-        if new_password != confirm_password:
-            messages.error(request, "Passwords do not match.")
-            return redirect('reset_password_verify')
+    if request.method == 'POST' and otp_verified:
+        password_form = ResetPasswordForm(request.POST)
 
-        user = User.objects.get(email=email)
-        user.set_password(new_password)
-        user.save()
+        if password_form.is_valid():
+           
+            user = get_object_or_404(User, email=email)
+            user.set_password(password_form.cleaned_data['new_password'])
+            user.save()
 
-        if "pending_email" in request.session:
-            del request.session['pending_email']
+            # invalidate sessions properly
+            update_session_auth_hash(request, user)
 
-        messages.success(request, "Password reset successful!")
-        return redirect('user_login')
+            request.session.pop('pending_email', None)
+            request.session.pop('reset_otp_verified', None)
 
-    return render(request, 'user/reset_password_verify.html', {'form': form, 'email': email})
+            messages.success(request, "Password reset successful!")
+            return redirect('user_login')
+    return render(request, 'user/reset_password_verify.html', {'password_form': password_form,
+                                                               'otp_form':otp_form, 
+                                                               'email': email,
+                                                               "otp_verified": otp_verified,
+                                                               'remaining_seconds': remaining_seconds,})
 
 
 @never_cache
@@ -325,29 +335,34 @@ def user_login(request):
 
 
 @block_check
-@never_cache
 @login_required(login_url="/login")
+@never_cache
 def user_logout(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('user_login')
 
-
+@login_required
 @block_check
 @never_cache
-@login_required
 def home(request):
-    banners=Banner.objects.filter(status=True).order_by('id')
     categories=Category.objects.all()
-    return render(request,'user/home.html',{'categories':categories,'banners':banners})
+    return render(request,'user/home.html',{'categories':categories})
 
 
 def landing(request):
-    banners=Banner.objects.filter(status=True).order_by('id')   
+  
     categories=Category.objects.all()
-    return render(request,'user/landing.html',{'categories':categories,'banners':banners})
+    return render(request,'user/landing.html',{'categories':categories})
 
 @login_required
+@never_cache
+def about(request):
+    about_image="https://res.cloudinary.com/dcaevmkgg/image/upload/v1765350456/uukfgvd5npilmdl5fhpt.png"
+    return render(request,"user/about.html",{"about_image":about_image})
+
+@login_required
+@never_cache
 def change_email_request_old_otp(request):
     if request.session.get("email_change_old_verified"):
         return redirect("change_email_enter_new")
@@ -367,6 +382,7 @@ def change_email_request_old_otp(request):
     return redirect("change_email_verify_old")
 
 @login_required
+@never_cache
 def change_email_verify_old(request):
     if not request.session.get("email_change_old_pending"):
         return redirect("change_email_request_old_otp")
@@ -374,40 +390,41 @@ def change_email_verify_old(request):
     old_email = request.user.email
 
     if request.method == "POST":
-        otp = request.POST.get("otp")
+        form = VerifyOldEmailOTPForm(request.POST, email=old_email)
 
-        valid, msg = validate_otp(old_email, "email_change_old", otp)
-
-        if not valid:
-            messages.error(request, msg)
-            return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email}) 
+        if not form.is_valid():
+            return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email,"form": form}) 
         request.session["email_change_old_verified"] = True
         request.session.pop("email_change_old_pending", None)
         messages.success(request, "Current email verified. Now enter your new email.")
         return redirect("change_email_enter_new")
-
-    return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email})
+    
+    form = VerifyOldEmailOTPForm(email=old_email)
+    return render(request, "user/profile/change_email_verify_old.html", {'old_email': old_email,"form": form})
 
 
 @login_required
+@never_cache
 def change_email_enter_new(request):
     if not request.session.get("email_change_old_verified"):
         return redirect("change_email_request_old_otp")
     
     if request.method == "POST":
-        new_email = request.POST.get("new_email")
+        form = ChangeEmailForm(request.POST, user=request.user)
 
-        if User.objects.filter(email=new_email).exists():
-            messages.error(request, "Email already in use.")
-            return render(request, "user/profile/change_email_enter_new.html") 
-        
-        request.session["pending_new_email"] = new_email
-        return redirect("change_email_request_new_otp")
+        if form.is_valid():
+            request.session["pending_new_email"] = form.cleaned_data["new_email"]
+            return redirect("change_email_request_new_otp")
 
-    return render(request, "user/profile/change_email_enter_new.html")
+        return render(request, "user/profile/change_email_enter_new.html",{"form": form}) 
+    
+    form = ChangeEmailForm(user=request.user)
+
+    return render(request, "user/profile/change_email_enter_new.html",{"form": form})
 
 
 @login_required
+@never_cache
 def change_email_request_new_otp(request):
     if not request.session.get("email_change_old_verified"):
         return redirect("change_email_request_old_otp")
@@ -429,6 +446,7 @@ def change_email_request_new_otp(request):
     return redirect("change_email_verify_new")
 
 @login_required
+@never_cache
 def change_email_verify_new(request):
     new_email = request.session.get("pending_new_email")
 
@@ -436,31 +454,57 @@ def change_email_verify_new(request):
         return redirect("change_email_enter_new")
 
     if request.method == "POST":
-        otp = request.POST.get("otp")
+        form = VerifyOTPForm(request.POST)  
 
-        valid, msg = validate_otp(new_email, "email_change_new", otp)
+        if form.is_valid():
+            otp = form.cleaned_data['otp']
+            valid, msg = validate_otp(new_email, "email_change_new", otp)
 
-        if not valid:
-            messages.error(request, msg)
-            return render(request, "user/profile/change_email_verify_new.html", {'new_email': new_email})
+            if not valid:
+                form.add_error('otp', msg)
+                return render(request, "user/profile/change_email_verify_new.html", {
+                    'new_email': new_email,
+                    'form': form
+                })
+            
+            user = request.user
+            user.email = new_email
+            
+            try:
+                user.save()
+            except IntegrityError:
+                messages.error(request, "This email was just taken by another user. Please try a different one.")
+                return redirect("change_email_enter_new")
+
+            for key in ["pending_new_email", "email_change_old_verified"]:
+                request.session.pop(key, None)
+
+            messages.success(request, "Email updated successfully!")
+
+            if request.headers.get("HX-Request"):
+                profile_form = EditProfileForm(user=user, initial={
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'phone_number': user.phone_number,
+                    'email': user.email 
+                })
+                return render(request, "user/profile/_edit_profile_form.html", {
+                    "form": profile_form, 
+                    "user": user
+                })
+            else:
+                return redirect("my_profile")
         
-        user = request.user
-        user.email = new_email
-        user.save()
+        return render(request, "user/profile/change_email_verify_new.html", {
+            'new_email': new_email,
+            'form': form
+        })
 
-        for key in ["pending_new_email", "email_change_old_verified"]:
-            request.session.pop(key, None)
-
-        messages.success(request, "Email updated successfully!")
-        redirect_url = reverse("edit_profile") 
-  
-        response = HttpResponse(status=204) 
-        response["HX-Redirect"] = redirect_url
-        
-        return response
-
-
-    return render(request, "user/profile/change_email_verify_new.html", {'new_email': new_email})
+    form = VerifyOTPForm()
+    return render(request, "user/profile/change_email_verify_new.html", {
+        'new_email': new_email, 
+        'form': form
+    })
 
 @login_required
 @never_cache
@@ -527,7 +571,15 @@ def resend_email_change_new_otp(request):
     return redirect("change_email_verify_new")
 
 @login_required
+@never_cache
 def change_password_verify_current(request):
+    if not request.user.has_usable_password():
+        messages.error(
+            request,
+            "You signed in using Google. Please set a password first."
+        )
+        return redirect("profile") 
+    
     if request.method == "GET":
         return render(request, "user/profile/change_password_verify_current.html")
 
@@ -539,64 +591,39 @@ def change_password_verify_current(request):
 
     
     request.session["password_verified"] = True
+    form = SetNewPasswordForm()
 
-    return render(request, "user/profile/change_password_new.html")
+    return render(request, "user/profile/change_password_new.html",{"form": form})
 
 @login_required
+@never_cache
 def change_password_set_new(request):
     if not request.session.get("password_verified"):
         return render(request, "user/profile/change_password_verify_current.html")
-
-    new = request.POST.get("new_password")
-    confirm = request.POST.get("confirm_password")
-
-    if new != confirm:
-        messages.error(request, "Passwords do not match")
-        return render(request, "user/profile/change_password_new.html")
-    user=request.user
-    user.set_password(new)
-    user.save()
-
-    update_session_auth_hash(request, user)
-    request.session.pop("password_verified", None)
-
-    messages.success(request, "Password changed successfully!")
-    return render(request, "user/profile/change_password_success.html")
-
-@login_required
-def add_address(request):
-    if request.method == 'POST':
-        form = AddressForm(request.POST,initial={'user':request.user})
+    
+    if request.method == "POST":
+        form = SetNewPasswordForm(request.POST)
 
         if form.is_valid():
-            address = form.save(commit=False)
-            address.user = request.user
-            address.save()  
+            new_pass = form.cleaned_data['new_password']
+            user = request.user
+            user.set_password(new_pass)
+            user.save()
 
-            if request.headers.get("HX-Request"):
-                return render(request, "user/profile/_address_list_partial.html", {
-                    "addresses": request.user.addresses.filter(is_deleted=False)
-                })
+            update_session_auth_hash(request, user)
+            request.session.pop("password_verified", None)
 
-            return redirect('my_address')
-
-        
-        if request.headers.get("HX-Request"):
-            return render(request, "user/profile/_add_address_partial.html", {
-                "form": form
-            })
-
+            messages.success(request, "Password changed successfully!")
+            return render(request, "user/profile/change_password_success.html")
+        else:
+            return render(request, "user/profile/change_password_new.html", {"form": form})
     
-    form = AddressForm(initial={'user':request.user})
-
-    return render(request, "user/profile/_add_address_partial.html", {
-        "form": form,
-        "addresses": request.user.addresses.filter(is_deleted=False)
-    })
-
+    form = SetNewPasswordForm()
+    return render(request, "user/profile/change_password_new.html", {"form": form})
 
 
 @login_required
+@never_cache
 def edit_address(request, pk):
     address = get_object_or_404(UserAddress, id=pk, user=request.user)
 
@@ -627,79 +654,155 @@ def edit_address(request, pk):
 
 @login_required
 def delete_address(request, pk):
-    address = get_object_or_404(UserAddress, id=pk, user=request.user,is_deleted=False)
-    address.is_deleted=True
+    source = request.GET.get("from", "profile")
+
+    address = get_object_or_404(UserAddress, id=pk, user=request.user)
+    address.is_deleted = True
     address.save()
 
-    messages.success(request, "Address deleted successfully!")
-    return render(request, "user/profile/_address_list_partial.html", {
-        "addresses": request.user.addresses.filter(is_deleted=False),
-        "user": request.user
-    })
+    addresses = request.user.addresses.filter(is_deleted=False).order_by('-created_at')
 
+    if source == "checkout":
+        default_address = addresses.filter(is_default=True).first()
+
+        return render(
+            request,
+            "commerce/checkout/_address_list_partial.html",
+            {
+                "addresses": addresses,
+                "selected_address": default_address.id if default_address else None
+            }
+        )
+
+    messages.success(request, "Address deleted successfully!")
+    return render(
+        request,
+        "user/profile/_address_list_partial.html",
+        {"addresses": addresses}
+    )
 
 @block_check
 @login_required
 def my_address(request):
     return render(request, "user/profile/_address_list_partial.html", {
-        "addresses": request.user.addresses.filter(is_deleted=False),
+        "addresses": request.user.addresses.filter(is_deleted=False).order_by('-created_at'),
         "user": request.user
     })
 
 
 @login_required
 def set_default_address(request, pk):
-    address = get_object_or_404(UserAddress, id=pk, user=request.user,is_deleted=False)
+    address = get_object_or_404(UserAddress, id=pk, user=request.user)
     address.is_default = True
     address.save() 
 
     return render(request, "user/profile/_address_list_partial.html", {
-        "addresses": request.user.addresses.filter(is_deleted=False),
+        "addresses": request.user.addresses.filter(is_deleted=False).order_by('-created_at'),
         "user": request.user
     })
+
+@login_required
+@never_cache
+def add_address(request):
+    source = request.GET.get("from", "profile")
+
+    if request.method == 'POST':
+        form = AddressForm(request.POST,initial={'user':request.user})
+
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            address.save()
+
+            if request.headers.get("HX-Request"):
+                if source == "checkout":
+                    return render(
+                        request,
+                        "commerce/checkout/_address_list_partial.html",
+                        {
+                            "addresses": request.user.addresses.filter(is_deleted=False).order_by('-created_at'),
+                            "selected_address": address.id,
+                            "has_address":True
+                        }
+                    )
+
+                return render(
+                    request,
+                    "user/profile/_address_list_partial.html",
+                    {
+                        "addresses": request.user.addresses.filter(is_deleted=False).order_by('-created_at')
+                    }
+                )
+
+            return redirect("my_address")
+
+        if request.headers.get("HX-Request"):
+            return render(
+                request,
+                "user/profile/_add_address_partial.html",
+                {"form": form}
+            )
+
+    form = AddressForm(initial={'user':request.user})
+    return render(
+        request,
+        "user/profile/_add_address_partial.html",
+        {"form": form}
+    )
 
 
 @block_check
 @login_required
+@never_cache
 def my_profile(request):
     user=request.user
+    if not user.referralcode:
+        with transaction.atomic():
+            # re-check inside transaction
+            user.refresh_from_db()
+            if not user.referralcode:
+                user.referralcode=generate_unique_referral_code()
+                user.save(update_fields=["referralcode"])
     if request.headers.get("HX-Request"):
         return render(request,"user/profile/_profile_partial.html",{"user":user})
     return render(request,'user/profile/my_profile.html',{'user':user})
 
-# @login_required
-# def edit_image(request):
-#     user=request.user
-#     if request.method=='POST':
-#         if "image" in request.FILES:
-#             user.image=request.FILES["image"]
-#             user.save()
-        
-#         if request.headers.get("HX-Request"):
-#             return render(request,"user/profile/_profile_partial.html",{'user':user})
-        
-#         return redirect("my_profile")
-#     return render(request,"user/profile/_edit_image_partial.html",{"user":user})
 
 @login_required
+@never_cache
 def edit_profile(request):
     user = request.user
-    
-    if request.method == 'POST':
-        
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.phone_number = request.POST.get('phone_number', user.phone_number) 
-        
-        
-        if 'image' in request.FILES:
-            user.image = request.FILES['image']
-            
-        user.save()
-        
-        return render(request, "user/profile/_profile_partial.html", {'user': user})
 
-    return render(request, "user/profile/_edit_profile_form.html", {'user': user})
+    if request.method == "POST":
+        form = EditProfileForm(request.POST,request.FILES,user=user)
+
+        if form.is_valid():
+            user.first_name = form.cleaned_data["first_name"]
+            user.last_name = form.cleaned_data["last_name"]
+            user.phone_number = form.cleaned_data["phone_number"]
+
+            if form.cleaned_data.get("image"):
+                user.image = form.cleaned_data["image"]
+
+            user.full_clean()   
+            user.save()
+
+            return render(request,"user/profile/_profile_partial.html",{"user": user})
+        else:
+            messages.error(request, "Please correct the errors below.")
+
+        return render(request,"user/profile/_edit_profile_form.html",{"form": form,"user": user})
+
+    form = EditProfileForm(
+        initial={
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone_number": user.phone_number,
+        },
+        user=user
+    )
+
+    return render(request,"user/profile/_edit_profile_form.html",{"form": form,"user": user})
             
 
 

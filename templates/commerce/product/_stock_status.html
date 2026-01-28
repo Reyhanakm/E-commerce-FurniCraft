@@ -1,7 +1,53 @@
 <div class="space-y-4">
+    {# 1. Cart Quantity Feedback #}
+    {% if in_cart_qty > 0 %}
+    <p class="text-lg text-[#A89289] font-semibold">
+        <i class="fas fa-shopping-cart mr-1"></i> 
+        <strong>{{ in_cart_qty }}</strong> of this item in your cart.
+    </p>
+    {% endif %}
+
+    {# 2. Stock Availability Feedback #}
+    <p class="text-sm font-medium text-gray-700">
+        Stock Available to Add: 
+        {% if available_to_add > 0 %}
+            <span class="text-green-600 font-bold">{{ available_to_add }}</span>
+        {% else %}
+            <span class="text-red-600 font-bold">Max Quantity Reached</span>
+        {% endif %}
+        <span class="text-gray-400 text-xs ml-1">(Total Stock: {{ total_stock }})</span>
+    </p>
+</div>
+{# 3. Script to handle Parent Button State #}
+<script>
+    (function() {
+        const submitButton = document.getElementById('add-to-cart-btn-{{ variant.id }}');
+        // Convert to integer safely
+        const maxAllowed = parseInt('{{ available_to_add|default:"0" }}'); 
+
+        if (submitButton) {
+            if (maxAllowed <= 0) {
+                // Disable interaction
+                submitButton.setAttribute('disabled', 'true');
+                // Add visual cues (Tailwind classes)
+                submitButton.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                submitButton.classList.remove('hover:bg-[#8f7a73]', 'bg-[#A89289]');
+                
+                // Optional: Change text to indicate why
+                // submitButton.innerHTML = '<i class="fas fa-ban mr-2"></i>Limit Reached';
+            } else {
+                // Enable interaction
+                submitButton.removeAttribute('disabled');
+                // Restore visual cues
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                submitButton.classList.add('hover:bg-[#8f7a73]', 'bg-[#A89289]');
+            }
+        }
+    })();
+</script>
+{% comment %} <div class="space-y-4">
   
     {% if in_cart_qty > 0 %}
-      stock_status
     <p class="text-lg text-[#A89289] font-semibold mb-4">
         <i class="fas fa-shopping-cart mr-1"></i> 
         **{{ in_cart_qty }}** of this item ({{ variant.material_type }}) in your cart.
@@ -47,4 +93,4 @@
         }
     </script>
 </div>
-</div>
+</div> {% endcomment %}

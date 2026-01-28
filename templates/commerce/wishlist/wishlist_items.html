@@ -1,7 +1,7 @@
-{% if products %}
+{% if wishlist_data %}
     <div class="space-y-6">
-        {% for p in products %}
-            {% include "commerce/wishlist/wishlist_item_card.html" with product=p %}
+        {% for item in wishlist_data %}
+            {% include "commerce/wishlist/wishlist_item_card.html" with variant=item.variant pricing=item.pricing %}
         {% endfor %}
     </div>
 {% else %}

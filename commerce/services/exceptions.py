@@ -1,0 +1,2 @@
+class InsufficientWalletBalance(Exception):
+    pass

@@ -2,6 +2,9 @@
 {% block content %}
 
 <style>
+    .review-item {
+    transition: all 0.3s ease;
+}
     #zoomResult {
         position: absolute;
         left: 900px;
@@ -47,7 +50,6 @@
         <span class="text-gray-700 font-medium">{{ product.name }}</span>
     </nav>
 <div id="cart-message"></div>
-product_details
     {% if product.is_active %}
         <div class="bg-white rounded-2xl shadow-xl p-10 border border-gray-200 fade-in">
             <!-- Main Product Section -->
@@ -88,26 +90,26 @@ product_details
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{{ product.name }}</h1>
                     <p class="text-gray-500 text-sm mb-6">SKU: #{{ product.id }}</p>
 
-
+                {% if reviews %}                
                     <div class="star-rating mb-6">
-                        <div class="stars" id="productRating">
-                            <i class="fas fa-star text-yellow-400"></i>
-                            <i class="fas fa-star text-yellow-400"></i>
-                            <i class="fas fa-star text-yellow-400"></i>
-                            <i class="fas fa-star text-yellow-400"></i>
-                            <i class="fas fa-star-half-alt text-yellow-400"></i>
+                        <div class="stars">
+                            {% for _ in ""|center:avg_rating %}
+                                <i class="fas fa-star text-yellow-400"></i>
+                            {% endfor %}
                         </div>
-                        <span class="text-sm font-semibold text-gray-700">4.5</span>
-                        <span class="text-xs text-gray-500">(238 reviews)</span>
+                        <span class="text-sm font-semibold text-gray-700">
+                            ({{ avg_rating }})
+                        </span>
+                        <span class="text-xs text-gray-500">
+                            ({{ reviews|length }} review{{ reviews|length|pluralize }})
+                        </span>
                     </div>
+                    {% endif %}
 
-                    <div id="variantInfo"
-                        hx-get="{% url 'load_variant_info' product.variants.first.id %}" 
-                        hx-trigger="update-cart from:body"
-                        hx-swap="innerHTML"  
+                    <div id="variantInfo" 
                         class="bg-gradient-to-br from-[#F5F1EF] to-[#EEDDD8] rounded-2xl p-6 shadow-md mb-8 border border-[#E8DFD7]">
                         
-                         {% include "product/components/variant_info.html" with variant=product.variants.first is_in_wishlist=is_in_wishlist %}
+                         {% include "product/components/variant_info.html" with variant=product.variants.first is_in_wishlist=is_in_wishlist pricing=pricing%}
 
                     </div>
 
@@ -123,7 +125,6 @@ product_details
                                     hx-get="{% url 'load_variant_info' v.id %}"
                                     hx-target="#variantInfo"
                                     hx-swap="innerHTML"
-                                    hx-trigger="click, update-cart from:body"
                                     class="px-5 py-3 rounded-full border-2 border-gray-300 bg-white 
                                            hover:border-[#A89289] hover:bg-[#F5F1EF] hover:text-[#A89289] 
                                            transition-all duration-200 font-medium text-sm cursor-pointer">
@@ -142,48 +143,52 @@ product_details
                     <p class="text-gray-700 leading-relaxed">{{ dv.description }}</p>
                 {% endwith %}
             </div>
-
-
-            <div class="mt-12 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
-
+    <div class="mt-12 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
                 <h2 class="text-2xl font-bold text-gray-800 mb-8">Customer Reviews</h2>
-
-
-                <div class="border-b-2 border-gray-200 pb-8 mb-8">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-[#A89289] rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-user text-white"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="font-bold text-gray-800 text-lg">Aarav Sharma</h3>
-                                <span class="text-xs text-gray-500">Verified Purchase</span>
-                            </div>
-                            <div class="flex items-center gap-2 mb-3">
-                                <div class="flex text-yellow-400">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
+                
+                {% if reviews %}
+                    <div id="reviews-container">
+                        {% for review in reviews %}
+                        <div class="review-item border-b border-gray-200 pb-8 mb-8 {% if forloop.counter > 2 %}hidden{% endif %}">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-[#A89289] rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-user text-white"></i>
                                 </div>
-                                <span class="text-xs text-gray-500">(5/5 stars)</span>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="font-bold text-gray-800 text-lg">{{ review.user.first_name }}</h3>
+                                        <span class="text-xs text-gray-500">Verified Purchase</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <div class="flex text-yellow-400">
+                                            {% if review.rating %}
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                        <span class="text-xs text-gray-500">({{ review.rating }}/5 stars)</span>
+                                    </div>
+                                    <p class="text-gray-700 leading-relaxed">{{ review.comment }}</p>
+                                </div>
                             </div>
-                            <p class="text-gray-700 leading-relaxed">
-                                Excellent product! High quality materials and beautiful finish. Absolutely worth the price. The craftsmanship is exceptional and it arrived in perfect condition.
-                            </p>
                         </div>
+                        {% endfor %}
                     </div>
-                </div>
 
-
-                <button class="w-full py-3 text-[#A89289] font-semibold border-2 border-[#A89289] rounded-lg hover:bg-[#F5F1EF] transition-all duration-200">
-                    Load More Reviews
-                </button>
-
+                    {% if reviews|length > 2 %}
+                        <button id="loadMoreBtn" class="w-full py-3 text-[#A89289] font-semibold border-2 border-[#A89289] rounded-lg hover:bg-[#F5F1EF] transition-all duration-200">
+                            Load more reviews
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <p class="text-gray-500">No reviews yet.</p>
+                {% endif %}
             </div>
 
-            <!-- Related Products -->
+        <!-- Related Products -->
             <div class="mt-16">
                 <h2 class="text-2xl font-bold text-gray-800 mb-8">Related Products</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -206,7 +211,15 @@ product_details
                                     <h3 class="font-bold text-sm text-gray-800 line-clamp-2">{{ p.name }}</h3>
                                     {% with v=p.variants.all.0 %}
                                         {% if v %}
-                                            <p class="text-lg font-bold text-[#A89289]">₹{{ v.sales_price }}</p>
+                                            <p class="text-lg font-bold text-[#A89289]">
+                                                ₹{{ p.display_price }}
+                                            </p>
+                                            {% if p.pricing and p.pricing.is_offer_applied %}
+                                                <span class="text-xs text-red-600 font-semibold">
+                                                    {{ p.pricing.offer_percent }}% OFF
+                                                </span>
+                                            {% endif %}
+
                                         {% endif %}
                                     {% endwith %}
                                 </div>
@@ -214,7 +227,7 @@ product_details
                         </a>
                     {% endfor %}
                 </div>
-            </div>
+            </div> 
 
         </div>
 
@@ -300,7 +313,42 @@ function initLensZoom() {
 }
 
 document.addEventListener("DOMContentLoaded", initLensZoom);
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    if (!loadMoreBtn) return;
+
+    // Track state
+    let isExpanded = false;
+
+    loadMoreBtn.addEventListener("click", function () {
+        const allReviews = document.querySelectorAll(".review-item");
+        
+        if (!isExpanded) {
+            // Show all reviews
+            allReviews.forEach(review => {
+                review.classList.remove("hidden");
+                review.classList.add("fade-in"); // Optional: re-trigger your fade animation
+            });
+            this.innerText = "Show less";
+            isExpanded = true;
+        } else {
+            allReviews.forEach((review, index) => {
+                if (index >= 2) {
+                    review.classList.add("hidden");
+                }
+            });
+            this.innerText = "Load more reviews";
+            isExpanded = false;
+            
+            loadMoreBtn.parentElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+});
 </script>
+
 {% endblock script %}
 
 {% endblock %}

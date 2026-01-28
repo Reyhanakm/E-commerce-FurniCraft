@@ -1,8 +1,11 @@
+{% with default_variant=p.variants.first %}
 <div class="group block bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1
-            transition-all duration-300 overflow-hidden h-full border border-gray-100 flex flex-col relative">
+            transition-all duration-300 overflow-hidden h-full border border-gray-100
+            flex flex-col relative">
 
+    <!-- IMAGE -->
     <div class="relative overflow-hidden bg-gray-100 aspect-square block">
-        
+
         <a href="{% url 'product_details' p.id %}" class="block h-full w-full">
             {% with image=p.images.all.0 %}
                 {% if image %}
@@ -17,84 +20,137 @@
             {% endwith %}
         </a>
 
-        <button id="heart-btn-{{ p.id }}" 
-                hx-post="{% url 'toggle_wishlist' p.id %}" 
+        <!-- OFFER BADGE -->
+        {% if p.pricing and p.pricing.is_offer_applied %}
+            <span class="absolute top-3 left-3 bg-red-500 text-white
+                         text-xs font-semibold px-2 py-1 rounded shadow z-10">
+                {{ p.pricing.offer_percent }}% OFF
+            </span>
+        {% endif %}
+
+        <!-- WISHLIST -->
+        
+    {% if default_variant %}
+          <button id="heart-btn-{{ default_variant.id }}"
+                hx-post="{% url 'toggle_wishlist' default_variant.id %}"
                 hx-swap="innerHTML"
-                hx-target="#heart-btn-{{ p.id }}" 
-                class="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 hover:bg-[#A89289] 
-                    text-gray-400 hover:text-white shadow-sm hover:shadow-md backdrop-blur-sm
-                    flex items-center justify-center transition-all duration-300 z-10
-                    transform translate-x-12 group-hover:translate-x-0 opacity-0 group-hover:opacity-100"
+                hx-target="#heart-btn-{{ default_variant.id }}"
+                class="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90
+                       hover:bg-[#A89289] text-gray-400 hover:text-white
+                       shadow-sm hover:shadow-md backdrop-blur-sm
+                       flex items-center justify-center transition-all duration-300
+                       transform translate-x-12 group-hover:translate-x-0
+                       opacity-0 group-hover:opacity-100 z-10"
                 title="Add to Wishlist">
-            
-            {% if p.id in wishlist_product_ids %}
+
+            {% if default_variant.id in wishlist_product_ids %}
                 <i class="fas fa-heart text-red-500"></i>
             {% else %}
                 <i class="far fa-heart"></i>
             {% endif %}
-
-        </button>
+        </button>  
+    {% endif %}
+            
     </div>
 
+    <!-- CONTENT -->
     <div class="p-5 flex-1 flex flex-col justify-between">
-        
+
+        <!-- NAME + VARIANTS -->
         <div class="space-y-3">
             <a href="{% url 'product_details' p.id %}">
-                <h3 class="font-bold text-lg text-gray-800 line-clamp-2 
+                <h3 class="font-bold text-lg text-gray-800 line-clamp-2
                            group-hover:text-[#A89289] transition">
                     {{ p.name }}
                 </h3>
             </a>
+            <div class="flex items-center gap-2 mt-1">
+            <div class="flex text-yellow-400 text-xs">
+                {% if p.average_rating %}
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= p.average_rating %}
+                            <i class="fas fa-star"></i>
+                        {% elif forloop.counter <= p.average_rating|add:0.5 %}
+                            <i class="fas fa-star-half-alt"></i>
+                        {% else %}
+                            <i class="far fa-star text-gray-300"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <span class="text-gray-600 text-xs ml-1 font-semibold">{{ p.average_rating|floatformat:1 }}</span>
+                {% else %}
+                    <div class="flex text-gray-300 text-xs">
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                {% endif %}
+            </div>
+                    
+            {% if p.review_count %}
+                <span class="text-[10px] text-gray-400">({{ p.review_count }})</span>
+            {% endif %}
+        </div>
 
             <div class="flex flex-wrap gap-2">
                 {% for v in p.variants.all %}
-                    <span class="px-3 py-1 text-xs font-medium rounded-full 
-                               bg-gradient-to-r from-[#F5F1EF] to-[#EEDDD8]
-                               border border-[#D8C6C0] text-gray-700">
+                    <span class="px-3 py-1 text-xs font-medium rounded-full
+                                 bg-gradient-to-r from-[#F5F1EF] to-[#EEDDD8]
+                                 border border-[#D8C6C0] text-gray-700">
                         {{ v.material_type }}
                     </span>
                 {% endfor %}
             </div>
         </div>
 
+        <!-- PRICE + CART -->
         <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-            
-            {% with v=p.variants.all.0 %}
-                {% if v %}
-                    <div class="flex flex-col">
-                        <p class="text-xl font-bold text-[#A89289]">₹{{ v.sales_price }}</p>
-                        {% if v.regular_price and v.regular_price > v.sales_price %}
-                            <p class="text-xs text-gray-400 line-through">₹{{ v.regular_price }}</p>
-                        {% endif %}
-                    </div>
 
-                    {% if v.stock > 0 %}
-                        <form hx-post="{% url 'add_cart_variant' v.id %}" 
-                              hx-swap="none"
-                              hx-indicator="#btn-loader-{{ v.id }}">
-                            {% csrf_token %}
-                            
-                            <button type="submit" 
-                                    class="w-10 h-10 rounded-full bg-[#F5F1EF] text-[#A89289] 
-                                           hover:bg-[#A89289] hover:text-white transition-all duration-300
-                                           flex items-center justify-center shadow-sm hover:shadow-md
-                                           relative overflow-hidden">
-                                <i class="fas fa-shopping-cart text-sm"></i>
-                                <div id="btn-loader-{{ v.id }}" 
-                                     class="htmx-indicator absolute inset-0 bg-[#A89289] flex items-center justify-center">
-                                    <i class="fas fa-spinner fa-spin text-white text-xs"></i>
-                                </div>
-                            </button>
-                        </form>
-                    {% else %}
-                         <span class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded">No Stock</span>
-                    {% endif %}
-
+            <!-- PRICE -->
+            <div class="flex flex-col">
+                {% if p.pricing and p.pricing.is_offer_applied %}
+                    <p class="text-xs text-gray-400 line-through">
+                        ₹{{ p.pricing.base_price|floatformat:2 }}
+                    </p>
+                    <p class="text-xl font-bold text-[#A89289]">
+                        ₹{{ p.pricing.current_price|floatformat:2 }}
+                    </p>
                 {% else %}
-                    <span class="text-gray-400 text-sm">Unavailable</span>
+                    <p class="text-xl font-bold text-[#A89289]">
+                        ₹{{ p.display_price|floatformat:2 }}
+                    </p>
                 {% endif %}
-            {% endwith %}
-            
+            </div>
+
+            <!-- CART (variant-based) -->
+                {% if default_variant and default_variant.stock > 0 %}
+                    {% comment %} <form 
+                        {% csrf_token %} {% endcomment %}
+                        <button type="button"
+                                hx-post="{% url 'add_cart_variant' default_variant.id %}"
+                                hx-swap="none"
+                                hx-indicator="#btn-loader-{{ default_variant.id }}"
+                                class="w-10 h-10 rounded-full bg-[#F5F1EF] text-[#A89289]
+                                       hover:bg-[#A89289] hover:text-white
+                                       transition-all duration-300
+                                       flex items-center justify-center
+                                       shadow-sm hover:shadow-md relative">
+                            <i class="fas fa-shopping-cart text-sm"></i>
+                            <div id="btn-loader-{{ default_variant.id }}"
+                                 class="htmx-indicator absolute inset-0 bg-[#A89289]
+                                        flex items-center justify-center">
+                                <i class="fas fa-spinner fa-spin text-white text-xs"></i>
+                            </div>
+                        </button>
+                    {% comment %} </form> {% endcomment %}
+                {% else %}
+                    <span class="text-xs font-bold text-red-500
+                                 bg-red-50 px-2 py-1 rounded">
+                        No Stock
+                    </span>
+                {% endif %}
         </div>
     </div>
 </div>
+{% endwith %}

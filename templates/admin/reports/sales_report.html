@@ -1,0 +1,122 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Sales Report -Furnicraft Admin{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-semibold mb-6">Sales Report</h1>
+
+<!-- Filters -->
+<form method="get" class="flex flex-wrap gap-4 mb-6 items-end">
+
+  <select name="range" class="border rounded px-3 py-2">
+    <option value="">Select Range</option>
+    <option value="daily" {% if range_type == "daily" %}selected{% endif %}>Today</option>
+    <option value="weekly" {% if range_type == "weekly" %}selected{% endif %}>Last 7 Days</option>
+    <option value="monthly" {% if range_type == "monthly" %}selected{% endif %}>This Month</option>
+  </select>
+
+  <div>
+    <label class="text-sm">From</label>
+<input
+  type="date"
+  name="start_date"
+  value="{{ start_date|date:'Y-m-d' }}"
+  class="border rounded px-3 py-2"
+/>  </div>
+
+  <div>
+    <label class="text-sm">To</label>
+<input
+  type="date"
+  name="end_date"
+  value="{{ end_date|date:'Y-m-d' }}"
+  class="border rounded px-3 py-2"
+/>
+  </div>
+
+  <button class="bg-[#b82d2d] text-white px-4 py-2 rounded">
+    Apply
+  </button>
+
+  <a
+  href="{% url 'sales_report_excel' %}?range={{ range_type }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}"
+  class="bg-green-600 text-white px-4 py-2 rounded"
+>
+  Download Excel
+</a>
+<a
+  href="{% url 'sales_report_pdf' %}?range={{ range_type }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}"
+  class="bg-red-600 text-white px-4 py-2 rounded"
+>
+  Download PDF
+</a>
+
+</form>
+
+<!-- Summary -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white p-4 rounded shadow">
+    <p class="text-sm text-gray-500">Orders</p>
+    <p class="text-xl font-semibold">{{ order_count }}</p>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow">
+    <p class="text-sm text-gray-500">Total Sales</p>
+    <p class="text-xl font-semibold">₹{{ total_sales }}</p>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow">
+    <p class="text-sm text-gray-500">Product Discount</p>
+    <p class="text-xl font-semibold">₹{{ product_discount }}</p>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow">
+    <p class="text-sm text-gray-500">Coupon Discount</p>
+    <p class="text-xl font-semibold">₹{{ coupon_discount }}</p>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded shadow overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-3 text-left">S.No</th>
+        <th class="p-3 text-left">Order ID</th>
+        <th class="p-3 text-left">Date</th>
+        <th class="p-3 text-left">Product</th>
+        <th class="p-3">Qty</th>
+        <th class="p-3 text-right">Net Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in page_obj %}
+      <tr class="border-t">
+        <td class="p-3">{{ forloop.counter0|add:page_obj.start_index  }}</td>
+        <td class="p-3">{{ item.order.order_id }}</td>
+        <td class="p-3">{{ item.order.created_at|date:"Y-m-d" }}</td>
+        <td class="p-3">{{ item.product.product }}</td>
+        <td class="p-3 text-center">{{ item.quantity }}</td>
+        <td class="p-3 text-right">₹{{ item.price }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="p-4 text-center text-gray-500">
+          No sales found
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "pagination.html" %}
+
+<script>
+document.querySelector("select[name='range']").addEventListener("change", function () {
+  if (this.value) {
+    document.querySelector("input[name='start_date']").value = "";
+    document.querySelector("input[name='end_date']").value = "";
+  }
+});
+</script>
+{% endblock %}

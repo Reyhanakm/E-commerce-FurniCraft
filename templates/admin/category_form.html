@@ -36,6 +36,12 @@
 
       {% comment %} {{ form.image }}  <!-- Hidden field storing cloudinary public_id --> {% endcomment %}
              {% include 'components/form_field.html' with field=form.image %}
+             {% if form.image.errors %}
+                {% for error in form.image.errors %}
+                  <p class="text-red-600 text-sm mt-2">{{ error }}</p>
+                {% endfor %}
+              {% endif %}
+
 
 
       <div id="imagePreview" class="mt-4">
@@ -72,41 +78,59 @@
 const imageField = document.getElementById("id_image");
 const imagePreview = document.getElementById("imagePreview");
 
-const uploadWidget = cloudinary.createUploadWidget({
-    cloudName: "dcaevmkgg",
-    uploadPreset: "product_preset",
-    multiple: false,
-    folder: "furnicraft_products",
-}, 
-function(error, result) {
-    if (!error && result && result.event === "success") {
-        imageField.value = result.info.public_id;
-        imagePreview.innerHTML = `
-          <div class="relative w-max">
-            <img src="${result.info.secure_url}" class="w-32 rounded-md border mb-2" id="previewImg">
-            <button type="button" id="removeImageBtn"
-              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex justify-center items-center">
-              ×
-            </button>
-          </div>
-        `;
-        attachRemoveHandler();
-    }
-});
+let uploadWidget = null;
 
-document.getElementById("upload_widget").onclick = () => uploadWidget.open();
+function createUploadWidget() {
+    uploadWidget = cloudinary.createUploadWidget(
+    {
+        cloudName: "dcaevmkgg",
+        uploadPreset: "product_preset",
+        multiple: false,
+        folder: "furnicraft_products",
+    },
+    function (error, result) {
+        if (!error && result && result.event === "success") {
+            // FORCE overwrite every time
+            imageField.value = result.info.public_id;
+
+            imagePreview.innerHTML = `
+              <div class="relative w-max">
+                <img src="${result.info.secure_url}"
+                     class="w-32 rounded-md border mb-2">
+                <button type="button"
+                        id="removeImageBtn"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full">
+                  ×
+                </button>
+              </div>
+            `;
+            attachRemoveHandler();
+        }
+    });
+}
+
+document.getElementById("upload_widget").onclick = () => {
+
+  if (uploadWidget) {
+        uploadWidget.close({ quiet: true });
+        uploadWidget = null;
+    }
+
+    createUploadWidget();
+    uploadWidget.open();
+};
 
 function attachRemoveHandler() {
     const removeBtn = document.getElementById("removeImageBtn");
     if (removeBtn) {
-        removeBtn.onclick = function() {
+        removeBtn.onclick = () => {
             imageField.value = "";
             imagePreview.innerHTML = "";
         };
     }
 }
-attachRemoveHandler();
 </script>
+
 
 <style>
   input, select, textarea {

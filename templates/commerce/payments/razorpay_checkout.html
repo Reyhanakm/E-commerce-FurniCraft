@@ -1,0 +1,145 @@
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<button id="rzp-button" style="display:none"></button>
+<script>
+var options = {
+    key: "{{ razorpay_key }}",
+    currency: "INR",
+    name: "FurniCraft",
+    description: "Order {{ order.order_id }}",
+    order_id: "{{ razorpay_order_id }}",
+
+    handler: function (response) {
+        fetch("{% url 'razorpay_success' %}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.replace(
+                    "{% url 'order_success' order.order_id %}"
+                );
+            } else {
+                window.location.replace(
+                    "{% url 'payment_failed' order.order_id %}"
+                );
+            }
+        });
+    },
+
+    modal: {
+        ondismiss: function () {
+            // UI-only redirect — NO backend call
+            window.location.replace(
+                "{% url 'payment_failed' order.order_id %}"
+            );
+        }
+    }
+};
+
+var rzp = new Razorpay(options);
+
+// ONE failure handler
+rzp.on('payment.failed', function () {
+    fetch("{% url 'razorpay_failed' %}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            order_id: "{{ order.order_id }}"
+        })
+    })
+    .then(() => {
+        window.location.replace(
+            "{% url 'payment_failed' order.order_id %}"
+        );
+    });
+});
+
+rzp.open();
+</script>
+
+
+{% comment %} <script>
+var options = {
+    key: "{{ razorpay_key }}",
+    currency: "INR",
+    name: "FurniCraft",
+    description: "Order {{ order.order_id }}",
+    order_id: "{{ razorpay_order_id }}", 
+    
+    method: {
+        netbanking: true,
+        card: true,
+        upi: true,
+        wallet: false
+    },
+
+
+    handler: function (response) {
+        fetch("{% url 'razorpay_success' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.getElementById("csrf-token").value
+            },
+            body: JSON.stringify(response)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = "/commerce/order/success/{{ order.order_id }}/";
+            } else {
+                window.location.href ="{% url 'payment_failed' order.order_id %}";
+            }
+        });
+    },
+
+    modal: {
+        ondismiss: function () {
+            fetch("{% url 'razorpay_failed' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.getElementById("csrf-token").value
+                },
+                body: JSON.stringify({
+                    order_id: "{{ order.order_id }}"
+                    })
+                }).then(() => {
+                window.location.href = "{% url 'payment_failed' order.order_id %}";
+            });
+        }
+    }
+};
+
+var rzp = new Razorpay(options);
+let opened = false;
+rzp.on('payment.failed', function (response) {
+
+    fetch("{% url 'razorpay_failed' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.getElementById("csrf-token").value
+        },
+        body: JSON.stringify({
+            order_id: "{{ order.order_id }}",
+            reason: response.error.reason
+        })
+    }).finally(() => {
+        window.location.href =
+            "{% url 'payment_failed' order.order_id %}";
+    });
+});
+
+window.onload = function () {
+   if (!opened) {
+        opened = true;
+        rzp.open();
+    }
+};
+</script> {% endcomment %}
+

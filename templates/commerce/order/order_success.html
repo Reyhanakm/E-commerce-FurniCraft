@@ -1,5 +1,6 @@
 {% extends "product/navbar_footer.html" %}
 {% block content %}
+{% load product_filters %}
 
 <div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow">
 
@@ -16,10 +17,13 @@
 
         <p><strong>Order ID:</strong> {{ order.order_id }}</p>
         <p><strong>Date:</strong> {{ order.created_at|date:"d M, Y - h:i A" }}</p>
-        <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
-        <p><strong>Payment Status:</strong> {{ order.get_is_paid_display }}</p>
+        <p><strong >Payment Method:</strong> <span class ="text-blue-600 font-bold">{{ order.get_payment_method_display }}</span></p>
+        <p><strong>Payment Status:</strong> <span class="{% if order.payment_status == 'paid'%}text-green-600{% elif order.payment_status == 'failed'%}text-red-600{%endif%} font-bold">{{ order.get_payment_status_display }}</span></p>
+        <a href="{% url 'user_order_detail' order.order_id %}"
+            class="text-sm bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition">
+            View Details
+        </a>
     </div>
-
     <div class="border rounded-lg p-4 mb-6">
         <h2 class="text-xl font-semibold mb-2">Delivery Address</h2>
 
@@ -37,22 +41,40 @@
     <div class="flex justify-between border-b py-2">
 
         <div class="flex gap-3">
-            {% with img=item.product.product.images.first %}
-                {% if img %}
-                    <img src="{{ img.image.url }}" class="w-16 h-16 object-cover rounded">
-                {% endif %}
-            {% endwith %}
-
+            {% with primary_image=item.product.product.images.all|get_primary_image %}
+                            {% if primary_image %}
+                                <img src="{{ primary_image.image.url }}" class="w-16 h-16 object-cover border rounded-md">
+                            {% else %}
+                                <div class="w-16 h-16 bg-gray-100 flex items-center justify-center 
+                                            text-gray-400 text-xs border rounded-md">
+                                    No Image
+                                </div>
+                            {% endif %}
+                            {% endwith %}
             <div>
                 <p class="font-medium">{{ item.product.product.name }}</p>
-                <p class="text-sm text-gray-600">Variant: {{ item.product.material_type }}</p>
+                <p class="text-sm text-gray-600 font-medium">Material: {{ item.product.material_type }}</p>
                 <p class="text-sm">Qty: {{ item.quantity }}</p>
+                {% if item.offer_percent > 0 %}
+                    <p class="text-xs font-medium text-green-600">
+                        {{ item.offer_percent }}% OFF applied
+                    </p>
+                {% endif %}
+
             </div>
         </div>
 
         <div class="text-right">
-            <p>₹{{ item.unit_price }}</p>
-            <p class="text-sm text-gray-600">Total: ₹{{ item.price }}</p>
+            {% if item.offer_percent > 0 %}
+                <p class="text-sm text-gray-400 line-through">
+                    ₹{{ item.unit_price }}
+                </p>
+                <p class="font-semibold text-[#A89289]">
+                    ₹{{ item.price }}
+                </p>
+            {% else %}
+                <p>₹{{ item.unit_price }}</p>
+            {% endif %}
         </div>
 
     </div>
@@ -63,20 +85,43 @@
     <div class="border rounded-lg p-4 mb-6">
         <h2 class="text-xl font-semibold mb-2">Payment Summary</h2>
 
-        <p class="flex justify-between">
-            <span>Subtotal:</span>
-            <span>₹{{ order.total_price_before_discount }}</span>
-        </p>
+        <p class="flex justify-between font-medium">
+                <span>Subtotal:</span>
+                <span>₹{{ order.total_price_before_discount }}</span>
+            </p>
 
-        <p class="flex justify-between">
-            <span>Delivery Charge:</span>
-            <span>₹{{ order.delivery_charge }}</span>
-        </p>
+            {% if order.offer_discount > 0 %}
+            <p class="flex justify-between text-green-600 font-medium">
+                <span>Offer Discount:</span>
+                <span>- ₹{{ order.offer_discount }}</span>
+            </p>
+            {% endif %}
 
-        <p class="flex justify-between font-bold text-lg">
-            <span>Total Paid:</span>
-            <span>₹{{ order.total_price }}</span>
-        </p>
+            {% if order.coupon %}
+            <p class="flex justify-between font-medium text-green-600">
+                <span>Coupon ({{ order.coupon.code }}):</span>
+                <span>- ₹{{ order.coupon_discount }}</span>
+            </p>
+            {% endif %}
+
+            <p class="flex justify-between font-medium">
+                <span>Delivery Charge:</span>
+                
+                {% if order.delivery_charge > 0 %}
+                     <span>₹{{ order.delivery_charge }}</span>
+                {% else %}
+                    <span class="text-green-600 font-medium">Free</span>
+                {% endif %}
+                    
+               
+            </p>
+
+            <hr class="my-2">
+
+            <p class="flex justify-between font-bold text-lg">
+                <span>Total Paid:</span>
+                <span>₹{{ order.total_price }}</span>
+            </p>
     </div>
 
     <a href="{% url 'home' %}"
@@ -85,4 +130,13 @@
     </a>
 
 </div>
+<script>
+    window.addEventListener("pageshow", function (event) {
+        if (event.persisted) {
+            // Page restored from back-forward cache
+            window.location.href = "{% url 'my_orders_page' %}";
+        }
+    });
+</script>
+
 {% endblock %}

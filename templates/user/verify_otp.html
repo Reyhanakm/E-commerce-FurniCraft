@@ -9,7 +9,7 @@
         </h2>
 
         <!-- OTP Form -->
-        <form method="POST" action="{% url 'verify_otp' %}">
+        <form method="POST" action="{% url 'verify_otp' %}"novalidate>
             {% csrf_token %}
             <input type="hidden" name="email" value="{{ email }}">
 
@@ -22,6 +22,7 @@
                 name="otp"
                 maxlength="6"
                 placeholder="Enter OTP"
+                
                 required
                 class="w-full border border-[#D6D1B1] rounded-lg px-4 py-3 focus:ring-2 
                        focus:ring-[#6D6A42] focus:outline-none mb-4 text-gray-700"
@@ -38,7 +39,7 @@
 
         <!-- Countdown -->
         <p id="timer" class="text-center text-gray-600 mt-5">
-            Resend OTP in <span id="countdown" class="font-bold">60</span>s
+            Resend OTP in <span id="countdown" class="font-bold"></span>s
         </p>
 
         <!-- Resend Button -->
@@ -53,22 +54,38 @@
 
 <!-- OTP Timer Script -->
 <script>
-let seconds = 60;
-let countdownEl = document.getElementById("countdown");
-let resendBtn = document.getElementById("resendBtn");
-let timerEl = document.getElementById("timer");
+    let seconds = {{ remaining_seconds|default:0 }};
 
-let timer = setInterval(function() {
-    seconds--;
-    countdownEl.textContent = seconds;
+    const countdownEl = document.getElementById("countdown");
+    const resendBtn = document.getElementById("resendBtn");
+    const timerEl = document.getElementById("timer");
 
-    if (seconds <= 0) {
-        clearInterval(timer);
-        timerEl.style.display = "none";
-        resendBtn.classList.remove("hidden");
+    function startTimer() {
+        if (seconds <= 0) {
+            timerEl.style.display = "none";
+            resendBtn.classList.remove("hidden");
+            return;
+        }
+
+        resendBtn.classList.add("hidden");
+        timerEl.style.display = "block";
+        countdownEl.textContent = seconds;
+
+        const interval = setInterval(() => {
+            seconds--;
+            countdownEl.textContent = seconds;
+
+            if (seconds <= 0) {
+                clearInterval(interval);
+                timerEl.style.display = "none";
+                resendBtn.classList.remove("hidden");
+            }
+        }, 1000);
     }
-}, 1000);
+
+    startTimer();
 </script>
+
 
 {% endblock %}
 

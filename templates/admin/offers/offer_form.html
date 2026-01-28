@@ -1,0 +1,109 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ title }} | FurniCraft Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
+
+    <!-- Title -->
+    <h1 class="text-2xl font-semibold text-[#8b7b5b] mb-6">
+      {{ title }}
+    </h1>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if product_form and product_form.non_field_errors %}
+        <div class="mb-4 rounded-lg bg-red-100 border border-red-400 text-red-700 px-4 py-3">
+          {% for error in product_form.non_field_errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if category_form and category_form.non_field_errors %}
+        <div class="mb-4 rounded-lg bg-red-100 border border-red-400 text-red-700 px-4 py-3">
+          {% for error in category_form.non_field_errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+
+      {% if show_offer_type %}
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Offer Type
+        </label>
+        <select id="offer-type"
+                name="offer_type"
+                class="w-full border rounded-md px-3 py-2">
+          <option value="product" {% if offer_type == "product" %}selected{% endif %}>
+            Product Offer
+          </option>
+          <option value="category" {% if offer_type == "category" %}selected{% endif %}>
+            Category Offer
+          </option>
+        </select>
+      </div>
+      {% endif %}
+
+     <!-- Product Offer Form -->
+        {% if product_form %}
+        <div id="product-form" class="{% if offer_type == 'category' %}hidden{% endif %}">
+          {% for field in product_form %}
+            {% include "components/form_field.html" with field=field %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Category Offer Form -->
+        {% if category_form %}
+        <div id="category-form" class="{% if offer_type == 'product' %}hidden{% endif %}">
+          {% for field in category_form %}
+            {% include "components/form_field.html" with field=field %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-4 pt-6 border-t border-gray-200 mt-6">
+        <a href="{% url 'admin_offer_list' %}"
+           class="px-5 py-2 rounded-md border text-gray-700
+                  hover:bg-gray-100 transition">
+          Cancel
+        </a>
+
+        <button type="submit"
+                class="px-6 py-2 rounded-md bg-[#b82d2d] text-white
+                       hover:bg-[#9f2626] transition font-medium">
+          Save Offer
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-4">
+        If both category and product offers apply, the higher discount will be used.
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- Simple toggle script -->
+<script>
+  const typeSelect = document.getElementById("offer-type");
+  const productForm = document.getElementById("product-form");
+  const categoryForm = document.getElementById("category-form");
+
+  if (typeSelect) {
+    typeSelect.addEventListener("change", () => {
+      if (typeSelect.value === "product") {
+        productForm.classList.remove("hidden");
+        categoryForm.classList.add("hidden");
+      } else {
+        categoryForm.classList.remove("hidden");
+        productForm.classList.add("hidden");
+      }
+    });
+  }
+</script>
+{% endblock %}

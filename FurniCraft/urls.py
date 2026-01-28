@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+from .views import error_404, error_500, error_403
 
 urlpatterns = [
     path('accounts/',include('allauth.urls')),
@@ -24,5 +25,9 @@ urlpatterns = [
     path('product/',include('product.urls')),
     path('commerce/',include('commerce.urls')),
 
-
 ]
+
+handler400 = "FurniCraft.views.error_400"
+handler404 = 'FurniCraft.views.error_404'
+handler500 = 'FurniCraft.views.error_500'
+handler403 = 'FurniCraft.views.error_403'

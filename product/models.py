@@ -1,5 +1,10 @@
 from django.db import models
 from cloudinary.models import CloudinaryField
+from users.models import User
+from commerce.models import Orders
+from datetime import time
+from django.utils import timezone
+from django.core.validators import MinValueValidator,MaxValueValidator
 
 class CategoryManager(models.Manager):
 
@@ -124,15 +129,11 @@ class ProductVariant(models.Model):
     is_deleted=models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True)
 
-    def discount_percent(self):
-        if self.regular_price > 0:
-            return int(((self.regular_price - self.sales_price) / self.regular_price) * 100)
-        return 0
 
     objects=VariantManager()
 
     class Meta:
-        ordering=['-created_at']
+        ordering=['id']
 
     def __str__(self):
         return self.material_type
@@ -164,7 +165,7 @@ class ImageManager(models.Manager):
 
 class ProductImage(models.Model):
     product=models.ForeignKey(Product,on_delete=models.CASCADE,related_name='images')
-    image=CloudinaryField()
+    image=CloudinaryField('image',resource_type='image')
     is_primary=models.BooleanField(default=False)
     is_deleted=models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True)
@@ -172,7 +173,7 @@ class ProductImage(models.Model):
     objects=ImageManager()
 
     class Meta:
-        ordering=['-created_at']
+        ordering=['-is_primary','-id']
 
     def __str__(self):
         return f"Image for {self.product.name}"
@@ -181,13 +182,153 @@ class ProductImage(models.Model):
       
         if self.is_primary:
 
-            ProductImage.objects.filter(product=self.product, is_primary=True).exclude(pk=self.pk).update(is_primary=False)
+            ProductImage.objects.all_with_deleted().filter(product=self.product, is_primary=True).exclude(pk=self.pk).update(is_primary=False)
         else:
             if not ProductImage.objects.filter(product=self.product, is_primary=True).exclude(pk=self.pk).exists():
                 self.is_primary = True
 
         super().save(*args, **kwargs)
     
+class Coupon(models.Model):
+    DISCOUNT_CHOICES=[
+        ('percentage','Percentage'),
+        ('flat','Flat Amount')
+    ]
+    code =models.CharField(max_length=20,unique=True)
+    discount_type=models.CharField(max_length=20,choices=DISCOUNT_CHOICES)
+    discount_value=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
+    minimum_purchase_amount=models.DecimalField(max_digits=10,decimal_places=2,default=0.0)
+    maximum_discount_limit=models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
+    usage_limit=models.PositiveIntegerField(blank=True,null=True,help_text="Total usage limit across all users")
+    per_user_limit = models.PositiveIntegerField(default=1,help_text="How many times a user can use this coupon")
+    valid_from = models.DateTimeField()
+    valid_until = models.DateTimeField()
+    is_active=models.BooleanField(default=True)
+    is_deleted=models.BooleanField(default=False)
+
+    description = models.TextField(blank=True,null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    update_at  = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.code
+    def save(self, *args, **kwargs):
+        if self.valid_from:
+            self.valid_from = timezone.make_aware(
+                timezone.datetime.combine(self.valid_from.date(), time.min)
+            )
+        if self.valid_until:
+            self.valid_until = timezone.make_aware(
+                timezone.datetime.combine(self.valid_until.date(), time.max)
+            )
+        super().save(*args, **kwargs)
     
 
+class CouponUsage(models.Model):
+    coupon = models.ForeignKey(Coupon,related_name="usages",on_delete=models.CASCADE)
+    user = models.ForeignKey(User,related_name="coupon_usages",on_delete=models.CASCADE)
+    order = models.ForeignKey(Orders,related_name="coupon_usage",on_delete=models.SET_NULL,null=True,blank=True)
+    used_at = models.DateTimeField(auto_now_add=True)
+    
+class CategoryOffer(models.Model):
+    name=models.CharField(max_length=200,blank=True,null=True,default='C-offer')
+    category = models.ForeignKey(Category,related_name='category_offers',on_delete=models.CASCADE)
+    discount_type = models.CharField(max_length=20,default='percentage')
+    discount_percent=models.DecimalField(max_digits=10,decimal_places=2)
+    max_discount_amount=models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
+    start_date=models.DateTimeField()
+    end_date= models.DateTimeField()
+    is_active=models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
 
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_active','end_date'])
+        ]
+    @property
+    def status(self):
+        now = timezone.localtime(timezone.now())
+        start = timezone.localtime(self.start_date)
+        end = timezone.localtime(self.end_date)
+
+        if not self.is_active:
+            return "inactive"
+        if start > now:
+            return "upcoming"
+        if end < now:
+            return "expired"
+        return "active"
+    
+    def __str__(self):
+        return f"{self.category.name} offer"
+
+class ProductOffer(models.Model):
+    name = models.CharField(max_length=200,blank=True,null=True,default='P-offer')
+    product=models.ForeignKey(Product,related_name='product_offers',on_delete=models.CASCADE)
+    discount_type = models.CharField(max_length=20,default='percentage')
+    discount_percent = models.DecimalField(max_digits=10,decimal_places=2)
+    max_discount_amount = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
+    
+    start_date=models.DateTimeField()
+    end_date=models.DateTimeField()
+    is_active= models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_active','end_date'])
+        ]
+
+    @property
+    def status(self):
+        now = timezone.localtime(timezone.now())
+        start = timezone.localtime(self.start_date)
+        end = timezone.localtime(self.end_date)
+
+        if not self.is_active:
+            return "inactive"
+        if start > now:
+            return "upcoming"
+        if end < now:
+            
+            return "expired"
+        return "active"
+
+    def __str__(self):
+        return f"{self.product.name} offer"
+    
+class Review(models.Model):
+    user = models.ForeignKey(
+        User,
+        related_name="reviews",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    product = models.ForeignKey(
+        ProductVariant,
+        related_name="reviews",
+        on_delete=models.CASCADE
+    )
+    comment = models.TextField()
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    image = CloudinaryField('review_image', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'product'],
+                name='unique_review_per_user_per_product'
+            )
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        user = self.user.email if self.user else "Anonymous"
+        return f"{user} rated {self.product} ({self.rating}/5)"

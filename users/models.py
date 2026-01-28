@@ -1,8 +1,10 @@
 from django.db import models
+import uuid
 from django.contrib.auth.models import AbstractBaseUser,PermissionsMixin,BaseUserManager
 from django.utils import timezone
 from cloudinary.models import CloudinaryField 
 from django.conf import settings
+from django.core.validators import RegexValidator
 
 class UserManager(BaseUserManager):
     def create_user(self,email,password=None,**extra_fields):
@@ -19,13 +21,14 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff',True)
         return self.create_user(email,password,**extra_fields)
 
+phone_validator = RegexValidator(regex=r'^[6-9]\d{9}$',message="Enter a valid 10-digit Indian phone number")
 
 class User(AbstractBaseUser,PermissionsMixin):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique= True,max_length= 100)
-    phone_number = models.CharField(max_length=15,blank= True, null= True)
-    referralcode = models.CharField(max_length=50,blank=True,null= True)
+    phone_number = models.CharField(max_length=10,validators=[phone_validator],blank= True, null= True,unique=True)
+    referralcode = models.CharField(max_length=50,blank=True,null= True,unique=True)
     referredby = models.ForeignKey('self',on_delete=models.SET_NULL,blank= True,null= True,related_name='referrals')
 
     image = CloudinaryField('image',folder="profile_images",default='gejrgsa4pnhygnhq32hi',null=True,blank=True)
@@ -41,6 +44,11 @@ class User(AbstractBaseUser,PermissionsMixin):
 
     USERNAME_FIELD ='email'
     REQUIRED_FIELDS = ['first_name','last_name']
+
+    def save(self, *args, **kwargs):
+        if self.phone_number == "":
+            self.phone_number = None
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.email

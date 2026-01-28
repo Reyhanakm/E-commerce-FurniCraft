@@ -57,6 +57,15 @@
                         My orders
                     </button>
                 </li>
+                <li>
+                    <button 
+                        hx-get="{% url 'my_wallet' %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[#A89289] hover:text-white transition">
+                        My Wallet
+                    </button>
+                </li>
 
             </ul>
         </aside>
@@ -102,38 +111,52 @@
                 <p class="text-gray-800 font-medium">{{ user.email }}</p>
             </div>
             <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Referral Code</span>
+
+                {% if user.referralcode %}
+                    <div class="flex items-center justify-between mt-1 gap-2">
+                        <p 
+                            id="referral-code"
+                            class="text-gray-800 font-medium tracking-wider">
+                            {{ user.referralcode }}
+                        </p>
+
+                        <button
+                            onclick="copyReferralCode()"
+                            class="px-3 py-1 text-xs bg-[#A89289] text-white rounded hover:opacity-90 transition">
+                            Copy
+                        </button>
+                    </div>
+                    <p 
+                        id="copy-msg"
+                        class="text-xs text-green-600 mt-1 hidden">
+                        Copied to clipboard!
+                    </p>
+                {% else %}
+                    <p class="text-gray-500 text-sm">Not available</p>
+                {% endif %}
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
                 <span class="text-xs text-gray-500 uppercase font-bold">Phone</span>                               
-                <p class="text-gray-800 font-medium">{% if user.phone_number %}{{ user.phone_number }}{% endif %}</p>
+                <p class="text-gray-800 font-medium">{% if user.phone_number %}{{ user.phone_number }}{% else %}Not provided{% endif %}</p>
             </div>
         </div>
     </div>
 </div>
-    {% comment %} <h2 class="text-2xl font-semibold text-gray-800 mb-4">
-        Welcome, {{ user.first_name }} {{ user.last_name }} 👋
-    </h2>
-
-    <div class="space-y-3">
-        <div class="mt-4 flex flex-col items-center">
-            <img 
-                src="{{ user.image.url }}" 
-                alt="Profile Image"
-                class="w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm"
-            >
-        </div>
-        <h4 class="text-gray-700"><span class="font-medium">First Name:</span> {{ user.first_name }}</h4>
-
-        <h4 class="text-gray-700"><span class="font-medium">Last Name:</span> {{ user.last_name }}</h4>
-
-        <h4 class="text-gray-700"><span class="font-medium">Email:</span> {{ user.email }}</h4>
-
-        <h4 class="text-gray-700"><span class="font-medium">Phone:</span> {{ user.phone_number }}</h4>
-
-        
-    </div> {% endcomment %}
-
+    
 </section>
 
 
     </div>
 </div>
+<script>
+function copyReferralCode() {
+    const code = document.getElementById("referral-code").innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        const msg = document.getElementById("copy-msg");
+        msg.classList.remove("hidden");
+        setTimeout(() => msg.classList.add("hidden"), 1500);
+    });
+}
+</script>
 {% endblock %}

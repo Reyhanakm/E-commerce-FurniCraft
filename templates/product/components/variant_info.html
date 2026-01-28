@@ -1,16 +1,21 @@
 <div class="flex items-baseline gap-3 mb-2">
-    <p class="text-4xl font-bold text-[#A89289]">
-        ₹{{ variant.sales_price }}
-    </p>
-    {% if variant.regular_price and variant.regular_price > variant.sales_price %}
+    {% if pricing.is_offer_applied %}
+        <p class="text-4xl font-bold text-[#A89289]">
+            ₹{{ pricing.current_price|floatformat:2 }}
+        </p>
         <p class="text-xl text-gray-500 line-through">
-            ₹{{ variant.regular_price }}
+            ₹{{ pricing.base_price|floatformat:2 }}
         </p>
         <span class="px-3 py-1 bg-red-100 text-red-700 text-sm font-bold rounded-full">
-            {{ variant.discount_percent }}% OFF
+            {{ pricing.offer_percent }}% OFF
         </span>
+    {% else %}
+        <p class="text-4xl font-bold text-[#A89289]">
+            ₹{{ pricing.base_price|floatformat:2 }}
+        </p>
     {% endif %}
 </div>
+
 <p class="text-lg ms-4 text-gray-600">(Inclusive of all taxes)</p>
 
 <div class="mb-4 pt-3 border-t border-[#D8C6C0]">
@@ -19,7 +24,7 @@
     </p>
     <div class="text-xs text-gray-600">
         <p>✓ Free shipping on orders above ₹1000</p>
-        <p>✓ Use code: <span class="font-bold text-[#A89289]">WELCOME10</span> for 10% off</p>
+        {% comment %} <p>✓ Use code: <span class="font-bold text-[#A89289]">WELCOME10</span> for 10% off</p> {% endcomment %}
     </div>
 </div>
 
@@ -27,9 +32,10 @@
     
     <div id="stock-info-{{ variant.id }}" 
          hx-get="{% url 'stock_status_for_variant' variant.id %}"
-         hx-trigger="load, reload-stock,update-cart from:body"
+         hx-trigger="load, reload-stock, update-cart from:body"
          hx-swap="innerHTML">
-         </div>
+         <p class="text-sm text-gray-400 animate-pulse">Checking stock...</p>
+    </div>
 
     {% if variant.stock > 0 %}
     <div class="flex mt-4">
@@ -39,7 +45,7 @@
             hx-indicator="#add-to-cart-btn-{{ variant.id }}" 
             hx-trigger="submit" 
             hx-on:htmx:after-request="htmx.trigger('#stock-info-{{ variant.id }}', 'reload-stock')"
-            {# hx-trigger-after-settle="reload-stock from:#stock-info-{{ variant.id }}" #} 
+            onsubmit="return false;"
             class="w-full mr-3"
         >
             {% csrf_token %}
@@ -48,14 +54,12 @@
                 id="add-to-cart-btn-{{ variant.id }}"  
                 class="w-full bg-[#A89289] text-white py-4 rounded-xl text-lg font-semibold
                     hover:bg-[#8f7a73] transition-all duration-200 shadow-lg hover:shadow-xl
-                    active:scale-95">
+                    active:scale-95
+                    disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none">
                 <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
             </button>
         </form>
         
-        {% comment %} <button class="text-[#A89289] text-2xl hover:text-[#8f7a73] transition-all duration-200 flex-shrink-0">
-            <i class="fas fa-heart"></i>
-        </button> {% endcomment %}
         <button 
             id="wishlist-btn-{{ variant.id }}"
             hx-post="{% url 'toggle_wishlist' variant.id %}"
@@ -84,3 +88,4 @@
     {% endif %}
     
 </div>
+

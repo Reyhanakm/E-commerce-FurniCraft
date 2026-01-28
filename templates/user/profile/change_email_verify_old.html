@@ -6,19 +6,23 @@
 <form method="POST" 
       hx-post="{% url 'change_email_verify_old' %}" 
       hx-target="#emailModalContent" 
-      hx-swap="innerHTML">
+      hx-swap="innerHTML" novalidate>
     {% csrf_token %}
-
     {% if messages %}
         {% for message in messages %}
-            <div class="p-2 my-2 text-sm text-red-700 bg-red-100 rounded-lg">{{ message }}</div>
+            <div class="mb-4 p-3 rounded-lg text-sm 
+                {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+                {% else %}bg-blue-50 text-blue-600 border border-blue-200{% endif %}">
+                {{ message }}
+            </div>
         {% endfor %}
+    {% elif error %}
+    <p class="text-red-600 text-sm mt-2">{{ error }}</p>
     {% endif %}
 
-    <label class="block text-sm text-gray-600 mb-1">Enter OTP</label>
-    <input type="text" name="otp" maxlength="6" required
-           class="w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-[#A89289] focus:outline-none">
-
+    {% for field in form %}
+        {% include "components/auth_field.html" %}
+    {% endfor %}
     <div class="flex justify-between items-center mt-6">
         <a href="{% url 'resend_email_change_old_otp' %}" 
            hx-post="{% url 'resend_email_change_old_otp' %}" 

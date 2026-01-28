@@ -35,8 +35,35 @@
                 <p class="text-gray-800 font-medium">{{ user.email }}</p>
             </div>
             <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Referral Code</span>
+
+                {% if user.referralcode %}
+                    <div class="flex items-center justify-between mt-1 gap-2">
+                        <p 
+                            id="referral-code"
+                            class="text-gray-800 font-medium tracking-wider">
+                            {{ user.referralcode }}
+                        </p>
+
+                        <button
+                            onclick="copyReferralCode()"
+                            class="px-3 py-1 text-xs bg-[#A89289] text-white rounded hover:opacity-90 transition">
+                            Copy
+                        </button>
+                    </div>
+
+                    <p 
+                        id="copy-msg"
+                        class="text-xs text-green-600 mt-1 hidden">
+                        Copied to clipboard!
+                    </p>
+                {% else %}
+                    <p class="text-gray-500 text-sm">Not available</p>
+                {% endif %}
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
                 <span class="text-xs text-gray-500 uppercase font-bold">Phone</span>                               
-                <p class="text-gray-800 font-medium">{{ user.phone_number|default:"Not provided" }}</p>
+                <p class="text-gray-800 font-medium">{% if user.phone_number %}{{ user.phone_number }}{% else %}Not provided{% endif %}</p>
             </div>
         </div>
     </div>

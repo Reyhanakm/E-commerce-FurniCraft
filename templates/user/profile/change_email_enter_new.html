@@ -6,18 +6,22 @@
 <form method="POST"
       hx-post="{% url 'change_email_enter_new' %}" 
       hx-target="#emailModalContent" 
-      hx-swap="innerHTML">
+      hx-swap="innerHTML" novalidate>
     {% csrf_token %}
 
     {% if messages %}
         {% for message in messages %}
-            <div class="p-2 my-2 text-sm text-red-700 bg-red-100 rounded-lg">{{ message }}</div>
+            <div class="mb-4 p-3 rounded-lg text-sm 
+                {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+                {% else %}bg-blue-50 text-blue-600 border border-blue-200{% endif %}">
+                {{ message }}
+            </div>
         {% endfor %}
     {% endif %}
 
-    <label class="block text-sm text-gray-600 mb-1">New Email</label>
-    <input type="email" name="new_email" required
-           class="w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-[#A89289] focus:outline-none">
+    {% for field in form %}
+        {% include "components/auth_field.html" %}
+    {% endfor %}
 
     <div class="flex justify-end gap-3 mt-6">
         <button type="button" onclick="closeEmailModal()" class="text-gray-600">Cancel</button>
