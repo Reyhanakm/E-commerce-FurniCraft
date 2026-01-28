@@ -1,21 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify OTP | FurniCraft</title>
-</head>
-<body>
-    <h2>Verify OTP</h2>
-    <form action="" method='POST'>
-        {% csrf_token %}
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="text" name="otp" placeholder= "Enter OTP " required>
-         <button type="submit">Verify</button>
-    </form>
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex justify-center items-center min-h-[70vh] bg-gray-50 px-4">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-8 border border-[#D6D1B1]">
 
-    {% for message in messages %}
-    <p>{{message}}</p>
-    {% endfor %}
-</body>
-</html>
+        <!-- Title -->
+        <h2 class="text-3xl font-bold text-[#6D6A42] text-center mb-6">
+            Verify Your OTP
+        </h2>
+
+        <!-- OTP Form -->
+        <form method="POST" action="{% url 'verify_otp' %}"novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="email" value="{{ email }}">
+
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Enter the 6-digit OTP sent to your email
+            </label>
+
+            <input 
+                type="text"
+                name="otp"
+                maxlength="6"
+                placeholder="Enter OTP"
+                
+                required
+                class="w-full border border-[#D6D1B1] rounded-lg px-4 py-3 focus:ring-2 
+                       focus:ring-[#6D6A42] focus:outline-none mb-4 text-gray-700"
+            >
+
+            <button 
+                type="submit"
+                class="w-full bg-[#8D6E63] text-white py-3 rounded-lg font-semibold 
+                       hover:bg-[#5D4037] transition"
+            >
+                Verify OTP
+            </button>
+        </form>
+
+        <!-- Countdown -->
+        <p id="timer" class="text-center text-gray-600 mt-5">
+            Resend OTP in <span id="countdown" class="font-bold"></span>s
+        </p>
+
+        <!-- Resend Button -->
+        <a id="resendBtn" 
+           href="{% url 'resend_otp' %}" 
+           class="hidden text-center block mt-5 text-[#8D6E63] font-semibold hover:underline">
+           Resend OTP
+        </a>
+
+    </div>
+</div>
+
+<!-- OTP Timer Script -->
+<script>
+    let seconds = {{ remaining_seconds|default:0 }};
+
+    const countdownEl = document.getElementById("countdown");
+    const resendBtn = document.getElementById("resendBtn");
+    const timerEl = document.getElementById("timer");
+
+    function startTimer() {
+        if (seconds <= 0) {
+            timerEl.style.display = "none";
+            resendBtn.classList.remove("hidden");
+            return;
+        }
+
+        resendBtn.classList.add("hidden");
+        timerEl.style.display = "block";
+        countdownEl.textContent = seconds;
+
+        const interval = setInterval(() => {
+            seconds--;
+            countdownEl.textContent = seconds;
+
+            if (seconds <= 0) {
+                clearInterval(interval);
+                timerEl.style.display = "none";
+                resendBtn.classList.remove("hidden");
+            }
+        }, 1000);
+    }
+
+    startTimer();
+</script>
+
+
+{% endblock %}
+

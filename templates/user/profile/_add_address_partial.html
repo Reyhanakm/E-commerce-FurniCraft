@@ -1,0 +1,29 @@
+{% load widget_tweaks%}
+<div class="space-y-6">
+
+    <h2 class="text-2xl font-semibold text-gray-800">Add New Address</h2>
+
+    <form
+        method="POST"
+        hx-post="{% url 'add_address' %}?from={{ request.GET.from| default:'profile' }}"
+        hx-target="{% if request.GET.from == 'checkout' %}#address-container{% else %}#profile-content{% endif %}"
+        hx-swap="innerHTML"
+        hx-on="htmx:afterRequest: this.closest('#add-address')?.remove()"
+        class="bg-white border rounded-xl p-6 space-y-4" novalidate>
+
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% for field in form %}
+        <div class="space-y-1">
+            <label class="text-gray-700 font-medium">{{ field.label }}</label>
+            {{ field|add_class:"w-full px-3 py-2 border rounded-lg focus:ring-[#A89289]" }}
+            <p class="text-red-500 text-sm">{{ field.errors }}</p>
+        </div>
+        {% endfor %}
+
+        <button class="px-5 py-2 bg-[#A89289] text-white rounded">
+            Save Address
+        </button>
+    </form>
+</div>

@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FurniCraft Admin{% endblock %}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-gray-50 font-sans">
+
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#f5f2e9] p-6 flex flex-col justify-between">
+      <div>
+        <div class="text-xl font-semibold text-[#8b7b5b] mb-10">🪑 FurniCraft</div>
+        <nav id="sidebar-nav" class="space-y-3">
+          <a href="{% url 'admin_dashboard' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Dashboard</a>
+          <a href="{% url 'sales_report' %}"class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Sales Report</a>
+          <a href="{% url 'admin_product_list'%}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Products</a>
+          <a href="{% url 'order_list'%}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Orders</a>
+          <a href="{% url 'customer_list' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Customers</a>
+          <a href="{% url 'admin_category_list' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Category</a>
+          {% comment %} <a href="{% url 'banner_page' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Banner</a> {% endcomment %}
+          <a href="{% url 'admin_coupon_list' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Coupons</a>
+          <a href="{% url 'admin_offer_list' %}" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Offers</a>
+          {% comment %} <a href="#" class="nav-link block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200">Settings</a> {% endcomment %}
+        </nav>
+          <a href="{% url 'admin_logout' %}" class="block text-gray-700 hover:text-black bg-[#e6daca] rounded-md px-3 py-2 transition-colors duration-200 mt-10">Logout</a>
+
+      </div>
+    </aside>
+
+    <main class="flex-1 p-8">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+  {% include 'components/loading_overlay.html' %}
+
+  <!-- functions for AJAX, Toast & Confirm -->
+  <script>
+    //for all AJAX calls
+    function getCSRFToken() {
+      return document.cookie.split('; ').find(r => r.startsWith('csrftoken='))?.split('=')[1];
+    }
+
+    const toastColors = {
+      success: 'bg-green-600',
+      error: 'bg-red-600',
+      warning: 'bg-yellow-500',
+      info: 'bg-blue-600',
+      neutral: 'bg-gray-700'
+    };
+
+    function showToast(message, type = 'success', duration = 2000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.className = `transform translate-x-full opacity-0 transition-all duration-500 ease-out text-white px-4 py-2 rounded-lg shadow-lg ${toastColors[type] || toastColors.neutral}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+      setTimeout(() => {
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => toast.remove(), 500);
+      }, duration);
+    }
+
+    // SweetAlert confirmation
+    function confirmAction(message, confirmText, callback, color = '#b82d2d') {
+      Swal.fire({
+        title: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: color,
+        cancelButtonColor: '#6b7280',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          callback(); 
+        }
+      });
+    }
+  </script>
+
+  {% block extra_scripts %}{% endblock %}
+
+  <script>
+  //  Automatically highlight the active sidebar link
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('#sidebar-nav .nav-link').forEach(link => {
+    const linkPath = link.getAttribute('href');
+
+    if (linkPath !== '#' && currentPath.startsWith(linkPath)) {
+      link.classList.add('bg-[#b82d2d]', 'text-white', 'rounded-md');
+      link.classList.remove('text-gray-700', 'hover:text-black','bg-[#e6daca]');
+    }
+  });
+
+function openImageModal({
+  url,
+  alt = 'Image',
+  bg = '#f5f2e9',
+  width = 'auto',
+  padding = '1rem',
+  allowOutsideClick = true,
+  imageClass = 'rounded-lg object-contain max-h-[80vh]',
+  popupClass = 'rounded-2xl shadow-lg border border-gray-200',
+}) {
+  Swal.fire({
+    imageUrl: url,
+    imageAlt: alt,
+    showConfirmButton: false,
+    showCloseButton: true,
+    background: bg,
+    width: width,
+    padding: padding,
+    allowOutsideClick: allowOutsideClick,
+    customClass: {
+      popup: popupClass,
+      image: imageClass
+    },
+    didOpen: (popup) => {
+      popup.style.transition = 'all 0.2s ease-in-out';
+    },
+  });
+}
+function showLoader() {
+    document.getElementById("globalLoadingOverlay").classList.remove("hidden");
+}
+
+function hideLoader() {
+    document.getElementById("globalLoadingOverlay").classList.add("hidden");
+}
+
+function confirmToggle(formId, message) {
+  Swal.fire({
+    title: message,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#b82d2d',
+    cancelButtonColor: '#6b7280',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      document.getElementById(formId).submit();
+    }
+  });
+}
+</script>
+
+
+</body>
+{% if request.user.is_authenticated %}
+  {% include 'components/messages.html' %}
+{% endif %}
+</html>

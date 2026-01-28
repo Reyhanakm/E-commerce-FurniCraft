@@ -1,0 +1,167 @@
+{% extends "product/navbar_footer.html" %}
+
+{% block content %}
+
+<div class="bg-gray-50 min-h-screen py-8">
+
+  <form 
+      hx-get="{% url 'products' %}"
+      hx-target="#product-container-wrapper"
+      hx-trigger="change, keyup delay:300ms from:input"
+  >
+
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 px-4">
+
+      <!-- SIDEBAR FILTERS -->
+      <aside class="w-full md:w-72 bg-white shadow-md rounded-2xl p-6 h-max md:sticky md:top-24 border border-gray-200">
+
+        <!-- Category Filter -->
+        <div class="mb-8">
+          <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-list text-[#A89289]"></i>
+            Categories
+          </h2>
+
+          <div class="space-y-2">
+            {% for cat in categories %}
+              <label class="flex items-center gap-3 cursor-pointer group">
+                <input
+                    type="checkbox"
+                    name="category"
+                    value="{{ cat.id }}"
+                    class="w-4 h-4 rounded border-gray-300 text-[#A89289] focus:ring-[#A89289]"
+                    {% if cat.id|stringformat:'s' in request.GET.getlist.category %}
+                        checked
+                    {% endif %}
+                >
+                <span class="text-gray-700 group-hover:text-[#A89289] transition">
+                    {{ cat.name }}
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="border-t-2 border-gray-200 my-6"></div>
+
+        <!-- Price Range Filter -->
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-tag text-[#A89289]"></i>
+            Price Range
+          </h2>
+
+          <div class="space-y-2">
+            {% for pr, label in price_options %}
+              <label class="flex items-center gap-3 cursor-pointer group">
+                <input
+                    type="checkbox"
+                    name="price_range"
+                    value="{{ pr }}"
+                    class="w-4 h-4 rounded border-gray-300 text-[#A89289] focus:ring-[#A89289]"
+                    {% if pr in selected_price_ranges %}checked{% endif %}
+                >
+                <span class="text-gray-700 group-hover:text-[#A89289] transition">
+                    {{ label }}
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <div class="flex-1">
+        
+        <!-- TOP CONTROLS: Search + Sort + Clear -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+          <!-- Search -->
+          <div class="relative sm:col-span-2 lg:col-span-2">
+            <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
+
+            <input 
+                type="text"
+                name="search"
+                value="{{ request.GET.search }}"
+                placeholder="Search products..."
+                class="w-full pl-11 pr-10 py-3 border-2 border-gray-200 rounded-xl
+                       focus:outline-none focus:border-[#A89289] focus:ring-2
+                       focus:ring-[#A89289]/20 transition"
+                hx-trigger="keyup changed delay:300ms"
+                hx-get="{% url 'products' %}"
+                hx-target="#product-container-wrapper"
+                hx-include="closest form"
+            >
+
+            <!-- Clear search -->
+            <button
+                type="button"
+                class="absolute right-4 top-3.5 text-gray-400 hover:text-[#A89289] 
+                       font-bold text-lg transition"
+                hx-get="{% url 'products' %}"
+                hx-target="#product-container-wrapper"
+                hx-include="closest form"
+                hx-vals='{"search": ""}'
+                onclick="this.closest('div').querySelector('input[name=search]').value=''"
+            >
+                ✕
+            </button>
+          </div>
+
+          <!-- Sort -->
+          <div>
+            <select name="sort"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl
+                       focus:outline-none focus:border-[#A89289] focus:ring-2
+                       focus:ring-[#A89289]/20 transition font-medium">
+                  
+              <option value="">Sort By</option>
+              <option value="low_to_high" {% if request.GET.sort == 'low_to_high' %}selected{% endif %}>
+                💰 Price: Low → High
+              </option>
+              <option value="high_to_low" {% if request.GET.sort == 'high_to_low' %}selected{% endif %}>
+                💰 Price: High → Low
+              </option>
+              <option value="a_to_z" {% if request.GET.sort == 'a_to_z' %}selected{% endif %}>
+                A → Z
+              </option>
+              <option value="z_to_a" {% if request.GET.sort == 'z_to_a' %}selected{% endif %}>
+                Z → A
+              </option>
+              <option value="new" {% if request.GET.sort == 'new' %}selected{% endif %}>
+                New Arrivals
+              </option>
+
+            </select>
+          </div>
+
+          <!-- Clear All Filters -->
+          <div>
+            <a href="{% url 'products' %}"
+               class="block bg-gray-200 hover:bg-gray-300 text-center py-3 px-4
+                      rounded-xl text-gray-800 font-semibold transition-all duration-200 
+                      hover:shadow-md">
+              <i class="fas fa-redo mr-2"></i>
+              Clear All
+            </a>
+          </div>
+
+        </div>
+
+        <div id="product-container-wrapper">
+            {% include "product/components/product_grid.html" %}
+      
+            {% include "product/components/pagination.html" %}
+        </div>
+
+      </div>
+
+    </div>
+
+  </form>
+
+</div>
+
+{% endblock content %}

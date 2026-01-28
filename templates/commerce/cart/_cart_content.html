@@ -1,0 +1,55 @@
+{% if cart_items %}
+<div id="cart-items-wrapper" class="space-y-6">
+    {% for item in cart_items %}
+            {% include "commerce/cart/_cart_item.html" %}
+    {% endfor %}
+</div>
+
+{% else %}
+
+<div class="bg-white rounded-2xl shadow-xl p-16 border border-gray-200 text-center">
+    <div class="max-w-md mx-auto">
+        <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Your Cart is Empty</h2>
+        <p class="text-gray-600 mb-8">You haven't added any items yet.</p>
+        <a href="{% url 'products' %}" 
+           class="inline-block bg-[#A89289] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#8f7a73]">
+            <i class="fas fa-arrow-left mr-2"></i> Start Shopping
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% comment %} {% if cart_items %}
+<div id="cart-items-wrapper" class="space-y-6">
+    
+    <!-- CART ITEMS -->
+    {% for item in cart_items %}
+        {% include "commerce/cart/_cart_item.html" %}
+    {% endfor %}
+
+    <!-- ORDER SUMMARY -->
+    <div id="cart-totals-wrapper" class="mt-10"
+                 hx-trigger="load, update-cart from:body"
+                 hx-swap="innerHTML">
+        {% include "commerce/cart/_cart_totals.html" %}
+    </div>
+
+</div>
+
+{% else %}
+
+<!-- EMPTY CART UI -->
+<div class="bg-white rounded-2xl shadow-xl p-16 border border-gray-200 text-center">
+    <div class="max-w-md mx-auto">
+        <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Your Cart is Empty</h2>
+        <p class="text-gray-600 mb-8">You haven't added any items yet.</p>
+        <a href="{% url 'products' %}" 
+           class="inline-block bg-[#A89289] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#8f7a73]">
+            <i class="fas fa-arrow-left mr-2"></i> Start Shopping
+        </a>
+    </div>
+</div>
+
+{% endif %} {% endcomment %}

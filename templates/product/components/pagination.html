@@ -1,0 +1,42 @@
+<div class="flex justify-center items-center mt-8 space-x-2">
+
+    {% if page_obj.has_previous %}
+        <button 
+            hx-get="?page={{ page_obj.previous_page_number }}&{{ querystring }}"
+            hx-target="#product-container-wrapper"
+            hx-push-url="true"
+            class="px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+        >
+            ‹
+        </button>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+            <span class="px-3 py-1 border border-gray-400 rounded-md bg-[#D8C6C0] text-gray-900">
+                {{ num }}
+            </span>
+        {% else %}
+            <button 
+                hx-get="?page={{ num }}&{{ querystring }}"
+                hx-target="#product-container-wrapper"
+                hx-push-url="true"
+                class="px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+            >
+                {{ num }}
+            </button>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <button 
+            hx-get="?page={{ page_obj.next_page_number }}&{{ querystring }}"
+            hx-target="#product-container-wrapper"
+            hx-push-url="true"
+            class="px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100"
+        >
+            ›
+        </button>
+    {% endif %}
+
+</div>

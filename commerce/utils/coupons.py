@@ -1,0 +1,104 @@
+from decimal import Decimal
+from django.utils import timezone
+from product.models import Coupon, CouponUsage
+from django.db.models import Count,Q
+
+def validate_and_calculate_coupon(coupon_code, user, subtotal):
+    try:
+        coupon = Coupon.objects.get(
+            code__iexact=coupon_code,
+            is_active=True,
+            is_deleted=False
+        )
+    except Coupon.DoesNotExist:
+        return None, Decimal("0"), "Invalid coupon code."
+
+    now = timezone.now()
+
+    if now < coupon.valid_from:
+        return None, Decimal("0"), "This coupon is not active yet."
+
+    if now > coupon.valid_until:
+        return None, Decimal("0"), "This coupon has expired."
+
+    if subtotal < coupon.minimum_purchase_amount:
+        return None, Decimal("0"), f"Minimum order value ₹{coupon.minimum_purchase_amount} required."
+    
+    if coupon.usage_limit is not None:
+        if coupon.usages.count() >= coupon.usage_limit:
+            return None, Decimal("0"), "Coupon usage limit reached."
+
+    user_usage_count = CouponUsage.objects.filter(
+        coupon=coupon,
+        user=user
+    ).count()
+
+    if user_usage_count >= coupon.per_user_limit:
+        return None, Decimal("0"), "You have already used this coupon."
+
+    # calculate discount
+    if coupon.discount_type == "percentage":
+        discount = subtotal * Decimal(coupon.discount_value) / 100
+    else:
+        discount = Decimal(coupon.discount_value)
+
+    # apply max discount cap
+    if coupon.maximum_discount_limit is not None:
+        discount = min(discount, coupon.maximum_discount_limit)
+
+    return coupon, discount, None
+
+
+def calculate_item_coupon_share(order, item):
+    """
+    Returns coupon discount portion applicable to a single order item
+    """
+    if not order.coupon or order.coupon_discount <= 0:
+        return Decimal("0.00")
+
+    base_subtotal = (Decimal(order.original_total or 0) + order.coupon_discount) - order.delivery_charge
+    if base_subtotal <= 0:
+        return Decimal("0.00")
+    
+    item_value =item.price 
+
+    item_coupon_share = ( item_value / base_subtotal) * order.coupon_discount
+
+    return item_coupon_share.quantize(Decimal("0.01"),rounding = 'ROUND_HALF_UP')
+
+
+def get_available_coupons(*, user, subtotal, now=None):
+    """
+    Returns a list of available coupons with eligibility info.
+    """
+    if now is None:
+        now = timezone.now()
+
+    coupons_qs = Coupon.objects.filter(
+        is_active=True,
+        valid_from__lte=now,
+        valid_until__gte=now
+    ).annotate(
+        total_usage_count=Count('usages'),
+        user_usage_count=Count('usages', filter=Q(usages__user=user))
+    )
+
+    available_coupons = []
+
+    for c in coupons_qs:
+        if c.usage_limit is not None and c.total_usage_count >= c.usage_limit:
+            continue
+
+        if c.user_usage_count >= c.per_user_limit:
+            continue
+
+        is_eligible = subtotal >= c.minimum_purchase_amount
+        shortage = max(Decimal("0"), c.minimum_purchase_amount - subtotal)
+
+        available_coupons.append({
+            "obj": c,
+            "is_eligible": is_eligible,
+            "reason": None if is_eligible else f"Add ₹{shortage}"
+        })
+
+    return available_coupons

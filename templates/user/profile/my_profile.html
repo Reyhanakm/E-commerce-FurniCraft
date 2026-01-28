@@ -1,0 +1,162 @@
+
+<style>
+.errorlist li {
+    color: #dc2626 !important;  
+    font-size: 0.875rem;       
+    margin-top: 4px;
+}
+</style>{% extends "product/navbar_footer.html" %}
+
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+
+    <div class="flex gap-6">
+
+        <!-- LEFT SIDEBAR -->
+        <aside class="w-1/4 bg-white rounded-xl shadow-md p-6 border border-gray-100">
+
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Manage Profile</h2>
+
+            <ul class="space-y-3">
+                <button 
+                        hx-get="{% url 'my_profile' %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[#A89289] hover:text-white transition">
+                        My profile
+                    </button>
+
+                <!-- Address List -->
+                <li>
+                    <button 
+                        hx-get="{% url 'my_address' %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[#A89289] hover:text-white transition">
+                        My Addresses
+                    </button>
+                </li>
+
+                <!-- Add Address -->
+                <li>
+                    <button 
+                        hx-get="{% url 'add_address' %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[#A89289] hover:text-white transition">
+                        Add New Address
+                    </button>
+                </li>
+                <li>
+                    <button 
+                        hx-get="{% url 'my_orders' %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[#A89289] hover:text-white transition">
+                        My orders
+                    </button>
+                </li>
+                <li>
+                    <button 
+                        hx-get="{% url 'my_wallet' %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-[#A89289] hover:text-white transition">
+                        My Wallet
+                    </button>
+                </li>
+
+            </ul>
+        </aside>
+
+     <!-- RIGHT CONTENT AREA -->
+<section 
+    id="profile-content"
+    class="w-3/4 bg-white rounded-xl shadow-md p-6 border border-gray-100">
+    <div class="animate-fade-in-down">
+    <div class="flex justify-between items-start mb-4">
+        <h2 class="text-2xl font-semibold text-gray-800">
+            Welcome, {{ user.first_name }} 👋
+        </h2>
+        
+        <button 
+            hx-get="{% url 'edit_profile' %}" 
+            hx-target="#profile-content" 
+            class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm font-medium">
+            Edit Profile ✎
+        </button>
+    </div>
+
+    <div class="space-y-4">
+        <div class="flex flex-col items-center">
+            <img 
+                src="{{ user.image.url }}" 
+                alt="Profile Image"
+                class="w-32 h-32 rounded-full object-cover border border-gray-200 shadow-sm"
+            >
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">First Name</span>
+                <p class="text-gray-800 font-medium">{{ user.first_name }}</p>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Last Name</span>
+                <p class="text-gray-800 font-medium">{{ user.last_name }}</p>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Email</span>
+                <p class="text-gray-800 font-medium">{{ user.email }}</p>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Referral Code</span>
+
+                {% if user.referralcode %}
+                    <div class="flex items-center justify-between mt-1 gap-2">
+                        <p 
+                            id="referral-code"
+                            class="text-gray-800 font-medium tracking-wider">
+                            {{ user.referralcode }}
+                        </p>
+
+                        <button
+                            onclick="copyReferralCode()"
+                            class="px-3 py-1 text-xs bg-[#A89289] text-white rounded hover:opacity-90 transition">
+                            Copy
+                        </button>
+                    </div>
+                    <p 
+                        id="copy-msg"
+                        class="text-xs text-green-600 mt-1 hidden">
+                        Copied to clipboard!
+                    </p>
+                {% else %}
+                    <p class="text-gray-500 text-sm">Not available</p>
+                {% endif %}
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg">
+                <span class="text-xs text-gray-500 uppercase font-bold">Phone</span>                               
+                <p class="text-gray-800 font-medium">{% if user.phone_number %}{{ user.phone_number }}{% else %}Not provided{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+    
+</section>
+
+
+    </div>
+</div>
+<script>
+function copyReferralCode() {
+    const code = document.getElementById("referral-code").innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        const msg = document.getElementById("copy-msg");
+        msg.classList.remove("hidden");
+        setTimeout(() => msg.classList.add("hidden"), 1500);
+    });
+}
+</script>
+{% endblock %}

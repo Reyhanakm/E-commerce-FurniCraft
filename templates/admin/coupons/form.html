@@ -1,0 +1,121 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto px-6 py-6">
+
+  <h1 class="text-2xl font-semibold text-gray-800 mb-6">
+    {{ title }}
+  </h1>
+
+  <form method="post" novalidate
+        class="bg-white shadow rounded-xl p-6 border border-gray-200 space-y-5">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="p-3 rounded-lg bg-red-100 text-red-700">
+        {% for error in form.non_field_errors %}
+          <p>{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% for field in form %}
+      {% if field.name == "maximum_discount_limit" and field.discout_type != 'percentage' %}
+        <div id="max-discount-wrapper" style="display: block !important;">  
+          {% include "components/form_field.html" with field=field %}
+        </div>
+      {% else %}
+        {% include "components/form_field.html" with field=field %}
+      {% endif %}
+      {% endfor %}
+
+    <div class="flex justify-end gap-4 pt-4 border-t">
+      <a href="{% url 'admin_coupon_list' %}"
+         class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+        Cancel
+      </a>
+
+      <button type="submit"
+              class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700">
+        Save
+      </button>
+    </div>
+  </form>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const discountType = document.getElementById("id_discount_type");
+    const maxDiscountInput = document.getElementById("id_maximum_discount_limit");
+    const wrapper = document.getElementById("max-discount-wrapper");
+
+    function toggleField() {
+        if (discountType.value === "flat") {
+            if (maxDiscountInput) maxDiscountInput.style.display = "none";
+            if (wrapper) wrapper.style.display = "none";
+        } else {
+            if (maxDiscountInput) maxDiscountInput.style.display = "block";
+            if (wrapper) wrapper.style.display = "block";
+        }
+    }
+
+    toggleField(); 
+    discountType.addEventListener("change", toggleField);
+});
+</script>
+
+</script>
+
+
+</script>
+
+{% endblock %}
+
+{% comment %} {% extends "admin/base_admin.html" %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto px-6 py-6">
+
+  <h1 class="text-2xl font-semibold text-gray-800 mb-6">
+    {{ title }}
+  </h1>
+
+  <form method="post" novalidate
+        class="bg-white shadow rounded-xl p-6 border border-gray-200 space-y-5">
+    {% csrf_token %}
+
+    {% for field in form %}
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          {{ field.label }}
+        </label>
+
+        {{ field }}
+
+        {% if field.help_text %}
+          <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
+        {% endif %}
+
+        {% for error in field.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <!-- Actions -->
+    <div class="flex justify-end gap-4 pt-4 border-t">
+      <a href="{% url 'admin_coupon_list' %}"
+         class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+        Cancel
+      </a>
+
+      <button type="submit"
+              class="px-5 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700">
+        Save
+      </button>
+    </div>
+  </form>
+
+</div>
+
+{% endblock %} {% endcomment %}

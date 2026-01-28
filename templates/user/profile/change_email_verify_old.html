@@ -1,0 +1,42 @@
+<h3 class="text-lg font-semibold mb-4 text-gray-800">Verify Current Email</h3>
+<p class="text-gray-600 text-sm mb-4">
+    We have sent an OTP to your **current email**.
+</p>
+
+<form method="POST" 
+      hx-post="{% url 'change_email_verify_old' %}" 
+      hx-target="#emailModalContent" 
+      hx-swap="innerHTML" novalidate>
+    {% csrf_token %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-4 p-3 rounded-lg text-sm 
+                {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+                {% else %}bg-blue-50 text-blue-600 border border-blue-200{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% elif error %}
+    <p class="text-red-600 text-sm mt-2">{{ error }}</p>
+    {% endif %}
+
+    {% for field in form %}
+        {% include "components/auth_field.html" %}
+    {% endfor %}
+    <div class="flex justify-between items-center mt-6">
+        <a href="{% url 'resend_email_change_old_otp' %}" 
+           hx-post="{% url 'resend_email_change_old_otp' %}" 
+           hx-target="#emailModalContent" 
+           hx-swap="innerHTML"
+           class="text-sm text-[#A89289] hover:text-[#8f7a73] hover:underline">
+            Resend OTP
+        </a>
+        <div class="flex gap-3">
+            <button type="button" onclick="closeEmailModal()" class="text-gray-600">Cancel</button>
+            <button type="submit"
+                    class="px-5 py-2 bg-[#A89289] text-white rounded-md hover:bg-[#8f7a73] transition">
+                Verify
+            </button>
+        </div>
+    </div>
+</form>

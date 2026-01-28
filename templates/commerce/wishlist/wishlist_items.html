@@ -1,0 +1,20 @@
+{% if wishlist_data %}
+    <div class="space-y-6">
+        {% for item in wishlist_data %}
+            {% include "commerce/wishlist/wishlist_item_card.html" with variant=item.variant pricing=item.pricing %}
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="py-20 text-center bg-gray-50 border border-dashed border-gray-300 rounded-xl">
+        <i class="fas fa-heart-broken text-5xl text-gray-400 mb-4"></i>
+        <h2 class="text-xl font-semibold text-gray-700 mb-2">Your Wishlist is Empty</h2>
+        <p class="text-gray-500 mb-6">
+            Time to find some beautiful furniture! Items added here will be saved for later.
+        </p>
+        <a href="{% url 'products' %}"
+           class="inline-block bg-[#A89289] text-white px-6 py-3 rounded-lg font-semibold 
+                  hover:bg-[#8f7a73] transition-all duration-200 shadow-md">
+            Start Shopping
+        </a>
+    </div>
+{% endif %}

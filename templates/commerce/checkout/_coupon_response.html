@@ -1,0 +1,23 @@
+<div id="coupon-section">
+    {% include "commerce/checkout/_coupon_totals.html" %}
+</div>
+
+<div id="cod-section" hx-swap-oob="true">
+    <label class="flex items-center gap-3">
+        <input
+            type="radio"
+            name="payment_method"
+            value="cod"
+            {% if not cod_allowed %}disabled{% endif %}
+        >
+        <span {% if not cod_allowed %}class="text-gray-400"{% endif %}>
+            Cash On Delivery
+        </span>
+    </label>
+
+    {% if not cod_allowed %}
+    <p class="text-sm text-red-500 mt-1">
+        Cash on Delivery is available only for orders up to ₹1000.
+    </p>
+    {% endif %}
+</div>

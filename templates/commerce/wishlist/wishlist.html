@@ -1,0 +1,31 @@
+{% extends "product/navbar_footer.html" %}
+{% block content %}
+
+<div class="max-w-7xl mx-auto py-10 px-4 md:px-6">
+
+    <nav class="text-sm text-gray-500 mb-8">
+        <a href="{% url 'home'%}" class="hover:text-[#A89289] transition">Home</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-700 font-medium">Your Wishlist</span>
+    </nav>
+    
+    <h1 class="text-4xl font-extrabold text-gray-800 mb-6 border-b pb-2">
+        Your Dream List
+    </h1>
+    
+    <div id="wishlist-container" 
+         hx-get="{% url 'load_wishlist_items' %}" 
+         hx-trigger="load, wishlistUpdated from:body"
+         hx-swap="innerHTML"
+         class="min-h-[50vh]">
+         
+         <div class="text-center py-20 text-gray-500">
+             <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
+             <p>Loading your favorite items...</p>
+         </div>
+         
+    </div>
+
+</div>
+
+{% endblock %}

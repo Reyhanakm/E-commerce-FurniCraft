@@ -1,0 +1,108 @@
+{% comment %} <div class="space-y-6">
+
+    <h2 class="text-xl font-semibold text-gray-800">Change Profile Image</h2>
+
+    <form 
+        method="POST"
+        enctype="multipart/form-data"
+        hx-post="{% url 'edit_image' %}"
+        hx-target="#profile-content"
+        hx-swap="innerHTML"
+        hx-indicator="#loading-spinner"
+        hx-encoding="multipart/form-data"
+        class="space-y-4 bg-white p-6 border border-gray-200 rounded-xl shadow-sm"
+    >
+        {% csrf_token %}
+
+        <div class="flex justify-center mb-4">
+            <img 
+                id="preview-img" 
+                src="{{ user.image.url }}" 
+                alt="Profile Preview" 
+                class="w-32 h-32 rounded-full object-cover border-4 border-gray-100 shadow-sm"
+            >
+            </div>
+
+        <label class="block text-gray-700 font-medium">Choose New Image</label>
+        
+        <input 
+            type="file" 
+            name="image"
+            accept="image/*"
+            class="block w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#A89289] file:text-white hover:file:bg-[#8c7a73]"
+            onchange="previewImage(event)"
+        >
+        <div id="loading-spinner" class="htmx-indicator hidden mt-2 text-blue-600 font-bold">
+        Uploading... Please wait ⏳
+    </div>
+        <button class="px-5 py-2 bg-[#A89289] text-white rounded-lg hover:bg-[#8c7a73] transition w-full mt-2">
+            Upload Image
+        </button>
+
+        <button 
+            type="button"
+            hx-get="{% url 'my_profile' %}"
+            hx-target="#profile-content"
+            hx-swap="innerHTML"
+            class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg w-full">
+            Cancel
+        </button>
+    </form>
+</div>
+
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('preview-img');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                // Set the image source to the file's data
+                preview.src = e.target.result;
+            }
+
+            // Read the file as a data URL
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script> {% endcomment %}
+
+{% comment %} <div class="space-y-6">
+
+    <h2 class="text-xl font-semibold text-gray-800">Change Profile Image</h2>
+
+    <form 
+        method="POST"
+        enctype="multipart/form-data"
+        hx-post="{% url 'edit_image' %}"
+        hx-target="#profile-content"
+        hx-swap="innerHTML"
+        hx-encoding="multipart/form-data"
+        class="space-y-4 bg-white p-6 border border-gray-200 rounded-xl shadow-sm"
+    >
+        {% csrf_token %}
+
+        <label class="block text-gray-700 font-medium">Choose New Image</label>
+        <input 
+            type="file" 
+            name="image"
+            accept="image/*"
+            class="block w-full text-gray-700"
+        >
+
+        <button class="px-5 py-2 bg-[#A89289] text-white rounded-lg hover:bg-[#8c7a73] transition">
+            Upload Image
+        </button>
+
+        <button 
+            type="button"
+            hx-get="{% url 'my_profile' %}"
+            hx-target="#profile-content"
+            hx-swap="innerHTML"
+            class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg">
+            Cancel
+        </button>
+    </form>
+</div> {% endcomment %}

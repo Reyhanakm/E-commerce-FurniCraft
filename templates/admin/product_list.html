@@ -1,0 +1,177 @@
+{% extends 'admin/base_admin.html' %}
+{% load custom_tags %}
+
+
+{% block title %}Products - FurniCraft Admin{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-semibold text-gray-800">Product Management</h1>
+
+  <!-- Search Form -->
+  <form method="get" class="flex items-center gap-3">
+    <div class="relative">
+      <input type="text" name="q" value="{{ search_query }}" placeholder="Search Products..."
+             class="pl-10 pr-4 py-2 border rounded-md focus:ring focus:ring-gray-200 w-64" />
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 absolute left-3 top-2.5 text-gray-400"
+           fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z" />
+      </svg>
+
+      {% if search_query %}
+        <a href="{% url 'admin_product_list' %}"
+           class="absolute right-3 top-2 text-gray-400 hover:text-red-500 font-bold">✕</a>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="bg-[#b82d2d] text-white px-4 py-2 rounded-md hover:bg-[#a22727]">
+      Search
+    </button>
+  </form>
+</div>
+
+<!-- Add Product Button -->
+<div class="mb-5">
+  <a href="{% url 'add_product' %}" 
+     class="bg-[#b82d2d] text-white px-4 py-2 rounded-md hover:bg-[#a22727] transition-all duration-200">
+     + Add New Product
+  </a>
+</div>
+
+<div class="bg-white shadow-sm rounded-md overflow-hidden">
+  <table class="min-w-full text-left border-collapse">
+    <thead>
+      <tr class="bg-[#b82d2d] text-white">
+        <th class="px-4 py-2">S.No</th>
+        <th class="px-4 py-2">Name</th>
+         <th class="px-4 py-2">Image</th>
+        <th class="px-4 py-2">Created At</th>
+        <th class="px-4 py-2">Status</th>
+        <th class="px-4 py-2 ">Variants</th>
+        <th class="px-4 py-2 text-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="text-gray-700">
+      {% for pdt in products %}
+      <tr class="border-b hover:bg-gray-50">
+        <td class="px-4 py-3">{{ forloop.counter0|add:page_obj.start_index }}</td>
+        <td class="px-4 py-3 font-medium">{{ pdt.name }}</td>
+        <td class="px-4 py-3">
+        {% if primary_images|get_item:pdt.id %}
+              <img src="{{ primary_images|get_item:pdt.id }}" alt="{{ pdt.name }}"
+              class="w-14 h-14 object-cover rounded-md border hover:scale-105 transition-transform duration-200 cursor-pointer"
+              >
+        {% else %}
+      <div class="w-14 h-14 bg-gray-100 flex items-center justify-center text-gray-400 text-sm border rounded-md">
+        N/A
+      </div>
+    {% endif %}
+  </td> 
+        <td class="px-4 py-3 text-sm text-gray-600">{{ pdt.created_at|date:"M. j, Y" }}</td>
+        <td class="px-4 py-3">
+          {% if pdt.is_deleted %}
+            <span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">Deleted</span>
+          {% else %}
+            <span class="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">Active</span>
+          {% endif %}
+        </td>
+              
+        <!-- Manage Variants Button -->
+        {% comment %} <td class="px-4 py-3">
+
+          <a href="{% url 'admin_variant_list' pdt.id %}"
+             class="bg-[#b82d2d] text-white px-3 py-1 rounded-md text-sm hover:bg-[#a22727]">
+             Manage Variants
+          </a>
+        </td> {% endcomment %}
+        <td class="px-4 py-3">
+          {% if not pdt.is_deleted %}
+            <a href="{% url 'admin_variant_list' pdt.id %}"
+              class="bg-[#b82d2d] text-white px-3 py-1 rounded-md text-sm hover:bg-[#a22727]">
+              Manage Variants
+            </a>
+          {% else %}
+            <span
+              class="bg-gray-300 text-gray-600 px-3 py-1 rounded-md text-sm cursor-not-allowed">
+              Variants Disabled
+            </span>
+          {% endif %}
+        </td>
+
+
+          <td class="px-4 py-3 text-center">
+          {% if pdt.is_deleted %}
+            <button type="button"
+                    onclick="confirmRestore('{% url 'restore_product' pdt.id %}', '{{ pdt.name }}')"
+                    class="text-green-600 hover:text-green-800 font-medium">
+              Restore
+            </button>
+          {% else %}
+                    <a href="{% url 'edit_product' pdt.id %}" 
+                        class="text-blue-600 hover:text-blue-800 font-medium mr-2">
+                        Edit
+                      </a>
+
+            <button type="button"
+                    onclick="confirmDelete('{% url 'delete_product' pdt.id %}','{{ pdt.name }}')"
+                    class="text-red-600 hover:text-red-800 font-medium">
+              Delete
+            </button>
+          {% endif %}
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center py-6 text-gray-500">No products found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+
+{% include 'pagination.html' %}
+
+
+<!-- SweetAlert Delete & Restore -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Delete confirmation using SweetAlert (already available in base_admin)
+  function confirmDelete(url, name) {
+    confirmAction(`Delete "${name}"?`, "Yes, Delete", () => {
+      window.location.href = url;
+    });
+  }
+
+function confirmRestore(url, name) {
+  Swal.fire({
+    title: `Restore ${name}?`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#28a745",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Yes, Restore"
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCSRFToken() },
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire("Restored!", `${name} has been restored.`, "success");
+          setTimeout(() => location.reload(), 800);
+        } else {
+          Swal.fire("Error", data.message || "Restore failed", "error");
+        }
+      })
+      .catch(() => Swal.fire("Error", "Network error", "error"));
+    }
+  });
+}
+ 
+</script>
+
+{% endblock %}

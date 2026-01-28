@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - FurniCraft</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'beige-light': '#F1EEDC',
+                        'beige-dark': '#D6D1B1',
+                        'olive': '#6D6A42',
+                        'text-gray': '#4D4D4D',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+        }
+        .product-card img {
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover img {
+            transform: scale(1.05);
+        }
+        .add-to-cart-btn {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        .product-card:hover .add-to-cart-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .wishlist-btn:hover i {
+            color: #EF4444;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- ============================================ -->
+    <!-- NAVBAR -->
+    <!-- ============================================ -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo & Navigation Links -->
+                <div class="flex items-center space-x-8">
+                    <a href="#" class="bg-yellow-50 px-6 py-3 rounded">
+                        <span class="text-gray-800 font-bold text-xl">FurniCraft</span>
+                    </a>
+                    <div class="hidden md:flex space-x-8">
+                        <a href="#" class="text-gray-600 hover:text-olive font-medium">Home</a>
+                        <a href="#" class="text-gray-900 hover:text-olive font-medium border-b-2 border-olive">Shop</a>
+                        <a href="#" class="text-gray-600 hover:text-olive font-medium">Contact</a>
+                        <a href="#" class="text-gray-600 hover:text-olive font-medium">About</a>
+                    </div>
+                </div>
+                
+                <!-- Search & Icons -->
+                <div class="flex items-center space-x-6">
+                    <div class="relative hidden lg:block">
+                        <input type="text" placeholder="What are you looking for?" 
+                               class="pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-olive w-72">
+                        <button class="absolute right-2 top-2.5">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-5">
+                        <a href="#" class="text-gray-700 hover:text-olive relative">
+                            <i class="far fa-heart text-2xl"></i>
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                        </a>
+                        <a href="#" class="text-gray-700 hover:text-olive relative">
+                            <i class="fas fa-shopping-cart text-2xl"></i>
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">2</span>
+                        </a>
+                        <a href="#" class="text-gray-700 hover:text-olive">
+                            <i class="far fa-user-circle text-2xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- BREADCRUMB -->
+    <!-- ============================================ -->
+    <div class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center space-x-2 text-sm">
+                <a href="#" class="text-gray-500 hover:text-olive">Home</a>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                <a href="#" class="text-gray-500 hover:text-olive">Shop</a>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                <span class="text-gray-900 font-medium">Living Room</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT SECTION -->
+    <!-- ============================================ -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- ============================================ -->
+            <!-- LEFT SIDEBAR - FILTERS -->
+            <!-- ============================================ -->
+            <aside class="lg:col-span-3 space-y-6 hidden lg:block">
+                
+                <!-- Categories Filter -->
+                <div class="bg-white rounded-lg shadow-sm border-l-4 border-olive p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Categories</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive" checked>
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Living Room</span>
+                            <span class="ml-auto text-sm text-gray-400">(48)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Bedroom</span>
+                            <span class="ml-auto text-sm text-gray-400">(32)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Dining Room</span>
+                            <span class="ml-auto text-sm text-gray-400">(24)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Office</span>
+                            <span class="ml-auto text-sm text-gray-400">(19)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Outdoor</span>
+                            <span class="ml-auto text-sm text-gray-400">(15)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Material Filter -->
+                <div class="bg-white rounded-lg shadow-sm border-l-4 border-olive p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Material</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Wood</span>
+                            <span class="ml-auto text-sm text-gray-400">(35)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Metal</span>
+                            <span class="ml-auto text-sm text-gray-400">(28)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Fabric</span>
+                            <span class="ml-auto text-sm text-gray-400">(42)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Leather</span>
+                            <span class="ml-auto text-sm text-gray-400">(16)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 text-olive border-gray-300 rounded focus:ring-olive">
+                            <span class="ml-3 text-text-gray group-hover:text-olive">Glass</span>
+                            <span class="ml-auto text-sm text-gray-400">(12)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="bg-white rounded-lg shadow-sm border-l-4 border-olive p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Price Range</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <input type="number" placeholder="Min" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-olive" value="0">
+                            <span class="text-gray-500">—</span>
+                            <input type="number" placeholder="Max" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-olive" value="5000">
+                        </div>
+                        <input type="range" min="0" max="5000" value="2500" class="w-full h-2 bg-beige-dark rounded-lg appearance-none cursor-pointer accent-olive">
+                        <div class="flex justify-between text-sm text-gray-500">
+                            <span>$0</span>
+                            <span>$5,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apply Filters Button -->
+                <button class="w-full bg-olive text-white py-3 rounded-lg hover:bg-opacity-90 transition-all font-semibold">
+                    Apply Filters
+                </button>
+
+                <!-- Clear Filters -->
+                <button class="w-full bg-white text-olive border-2 border-olive py-3 rounded-lg hover:bg-olive hover:text-white transition-all font-semibold">
+                    Clear All
+                </button>
+
+            </aside>
+
+            <!-- ============================================ -->
+            <!-- PRODUCT GRID -->
+            <!-- ============================================ -->
+            <main class="lg:col-span-9">
+                
+                <!-- Sort & View Options Bar -->
+                <div class="bg-white rounded-lg shadow-sm p-4 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-text-gray font-medium">Showing 1–12 of 48 results</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-text-gray">Sort by:</span>
+                        <select class="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-olive bg-white">
+                            <option>Featured</option>
+                            <option>Price: Low to High</option>
+                            <option>Price: High to Low</option>
+                            <option>Newest First</option>
+                            <option>Best Rating</option>
+                        </select>
+                        <button class="p-2 border border-gray-300 rounded hover:bg-gray-50">
+                            <i class="fas fa-th text-gray-600"></i>
+                        </button>
+                        <button class="p-2 border border-gray-300 rounded hover:bg-gray-50">
+                            <i class="fas fa-list text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    
+                    <!-- Product Card 1 -->
+                    <div class="product-card bg-beige-light rounded-lg shadow-sm overflow-hidden relative group">
+                        <!-- Discount Badge -->
+                        <div class="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10">
+                            -30%
+                        </div>
+                        <!-- Wishlist Button -->
+                        <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:shadow-lg z-10">
+                            <i class="far fa-heart text-gray-600"></i>
+                        </button>
+                        
+                        <!-- Product Image -->
+                        <div class="aspect-square bg-white flex items-center justify-center overflow-hidden p-6">
+                            <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop" alt="Product" class="w-full h-full object-contain">
+                        </div>
+                        
+                        <!-- Product Info -->
+                        <div class="p-4">
+                            <h3 class="text-gray-900 font-semibold text-base mb-2 line-clamp-2">Modern Velvet Armchair</h3>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="text-red-500 font-bold text-lg">$399</span>
+                                <span class="text-gray-400 line-through text-sm">$570</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star-half-alt text-yellow-400 text-xs"></i>
+                                <span class="text-gray-500 text-xs ml-2">(88)</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Add to Cart Button (Shows on Hover) -->
+                        <div class="add-to-cart-btn absolute bottom-4 left-4 right-4">
+                            <button class="w-full bg-olive text-white py-2 rounded-lg hover:bg-opacity-90 transition-all font-semibold shadow-lg">
+                                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 2 -->
+                    <div class="product-card bg-beige-light rounded-lg shadow-sm overflow-hidden relative group">
+                        <div class="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10">
+                            -25%
+                        </div>
+                        <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:shadow-lg z-10">
+                            <i class="far fa-heart text-gray-600"></i>
+                        </button>
+                        <div class="aspect-square bg-white flex items-center justify-center overflow-hidden p-6">
+                            <img src="https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=400&h=400&fit=crop" alt="Product" class="w-full h-full object-contain">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-gray-900 font-semibold text-base mb-2 line-clamp-2">Wooden Coffee Table</h3>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="text-red-500 font-bold text-lg">$299</span>
+                                <span class="text-gray-400 line-through text-sm">$400</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="far fa-star text-yellow-400 text-xs"></i>
+                                <span class="text-gray-500 text-xs ml-2">(65)</span>
+                            </div>
+                        </div>
+                        <div class="add-to-cart-btn absolute bottom-4 left-4 right-4">
+                            <button class="w-full bg-olive text-white py-2 rounded-lg hover:bg-opacity-90 transition-all font-semibold shadow-lg">
+                                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 3 -->
+                    <div class="product-card bg-beige-light rounded-lg shadow-sm overflow-hidden relative group">
+                        <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:shadow-lg z-10">
+                            <i class="far fa-heart text-gray-600"></i>
+                        </button>
+                        <div class="aspect-square bg-white flex items-center justify-center overflow-hidden p-6">
+                            <img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=400&h=400&fit=crop" alt="Product" class="w-full h-full object-contain">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-gray-900 font-semibold text-base mb-2 line-clamp-2">Ergonomic Office Chair</h3>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="text-red-500 font-bold text-lg">$450</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <span class="text-gray-500 text-xs ml-2">(120)</span>
+                            </div>
+                        </div>
+                        <div class="add-to-cart-btn absolute bottom-4 left-4 right-4">
+                            <button class="w-full bg-olive text-white py-2 rounded-lg hover:bg-opacity-90 transition-all font-semibold shadow-lg">
+                                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 4 -->
+                    <div class="product-card bg-beige-light rounded-lg shadow-sm overflow-hidden relative group">
+                        <div class="absolute top-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10">
+                            New
+                        </div>
+                        <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:shadow-lg z-10">
+                            <i class="far fa-heart text-gray-600"></i>
+                        </button>
+                        <div class="aspect-square bg-white flex items-center justify-center overflow-hidden p-6">
+                            <img src="https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&h=400&fit=crop" alt="Product" class="w-full h-full object-contain">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-gray-900 font-semibold text-base mb-2 line-clamp-2">Luxury Bed Frame Queen Size</h3>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="text-red-500 font-bold text-lg">$899</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star-half-alt text-yellow-400 text-xs"></i>
+                                <span class="text-gray-500 text-xs ml-2">(95)</span>
+                            </div>
+                        </div>
+                        <div class="add-to-cart-btn absolute bottom-4 left-4 right-4">
+                            <button class="w-full bg-olive text-white py-2 rounded-lg hover:bg-opacity-90 transition-all font-semibold shadow-lg">
+                                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 5 -->
+                    <div class="product-card bg-beige-light rounded-lg shadow-sm overflow-hidden relative group">
+                        <div class="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10">
+                            -20%
+                        </div>
+                        <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:shadow-lg z-10">
+                            <i class="far fa-heart text-gray-600"></i>
+                        </button>
+                        <div class="aspect-square bg-white flex items-center justify-center overflow-hidden p-6">
+                            <img src="https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400&h=400&fit=crop" alt="Product" class="w-full h-full object-contain">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-gray-900 font-semibold text-base mb-2 line-clamp-2">Minimalist Dining Table</h3>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="text-red-500 font-bold text-lg">$599</span>
+                                <span class="text-gray-400 line-through text-sm">$750</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="far fa-star text-yellow-400 text-xs"></i>
+                                <span class="text-gray-500 text-xs ml-2">(72)</span>
+                            </div>
+                        </div>
+                        <div class="add-to-cart-btn absolute bottom-4 left-4 right-4">
+                            <button class="w-full bg-olive text-white py-2 rounded-lg hover:bg-opacity-90 transition-all font-semibold shadow-lg">
+                                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 6 -->
+                    <div class="product-card bg-beige-light rounded-lg shadow-sm overflow-hidden relative group">
+                        <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:shadow-lg z-10">
+                            <i class="far fa-heart text-gray-600"></i>
+                        </button>
+                        <div class="aspect-square bg-white flex items-center justify-center overflow-hidden p-6">
+                            <img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=400&h=400&fit=crop" alt="Product" class="w-full h-full object-contain">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-gray-900 font-semibold text-base mb-2 line-clamp-2">Scandinavian Bookshelf</h3>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="text-red-500 font-bold text-lg">$349</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                <i class="far fa-star text-yellow-400 text-xs"></i>
+                                <span class="text-gray-500 text-xs ml-2">(54)</span>
+                            </div>
+                        </div>
+                        <div class="add-to-cart-btn absolute bottom-4 left-4 right-4">
+                            <button class="w-full bg-olive text-white py-2 rounded-lg hover:bg-opacity-90 transition-all font-semibold shadow-lg">
+                                <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 7 -->
+                    <div class="product-card bg-beige-light rounded-lg shadow-sm overflow-hidden relative group">
+                        <div class="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10">
+                            -15%
+                        </div>
+                        <button class="wishlist-btn absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:shadow-lg z-10">
+                            <i class="far fa-heart text-gray-600"></i>
+                        </button>
+                        <div class="aspect-square bg-white flex items-center justify-center overflow-hidden p-6">
+                            <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop" alt="Product" class="w-full h-full object-contain">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-gray-900 font-semibold text-base mb-2 line-clamp-2">Leather Recliner Chair</h3>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="text-red-500 font-bold text-lg">$680</span>
+                                <span class="text-gray-400 line-through text-sm">$800</span>
+    

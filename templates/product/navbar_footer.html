@@ -1,0 +1,277 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FurniCraft - Premium Furniture Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
+
+    
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-[#F1EEDC] shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center space-x-8">
+                    <a href="{% url 'home' %}" class="bg-[#F1EEDC] px-6 py-3 rounded border border-[#D6D1B1]">
+                        <span class="text-[#6D6A42] font-bold text-xl">FurniCraft</span>
+                    </a>
+                    <div class="hidden md:flex space-x-8">
+                        <a href="{% url 'home' %}" class="text-black font-medium border-b-2 border-black">Home</a>
+                        <a href="{% url 'products' %}" class="text-[#4D4D4D] hover:text-black font-medium">Products</a> 
+                        <a href="{% url 'about' %}" class="text-[#4D4D4D] hover:text-black font-medium">About</a>
+                    </div>
+                </div>
+                    
+                    <div class="flex items-center space-x-5">
+                        
+                        <a href="{% url 'wishlist'%}" class="text-gray-700 hover:text-[#A89289] relative">
+                                <i class="fas fa-heart text-2xl"></i>
+                                
+                                <span id="wishlist-badge"
+                                    hx-get="{% url 'wishlist_count' %}"
+                                    hx-trigger="load, wishlistUpdated from:body"  hx-swap="innerHTML"
+                                    class="absolute -top-1 -right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-[#F1EEDC]">
+                                    0 
+                                </span>
+                        </a>
+                        
+                        <a href="{% url 'cart_page'%}" class="text-gray-700 hover:text-amber-700 relative">
+                            <i class="fas fa-shopping-cart text-2xl"></i>
+                            
+                            <span id="cart-badge"
+                                hx-get="{% url 'cart_count' %}"
+                                hx-trigger="update-cart from:body,reload-stock from:body, load"
+                                hx-swap="innerHTML"
+                                class="absolute -top-1 -right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-[#F1EEDC]">
+                                </span>
+                        </a>
+
+                        {% if user.is_authenticated %}
+
+
+                            <div class="relative group inline-block">
+                                <button class="flex items-center space-x-2 text-gray-700 hover:text-[#0E0E0E]">
+                                    <i class="far fa-user-circle text-2xl"></i>
+                                </button>
+                                <div class="absolute right-0 mt-0 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block hover:block">
+                                    <a href="{% url 'my_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Account</a> 
+                                    <a href="{% url 'my_orders_page' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
+                                    <a href="{% url 'user_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <a href="{% url 'user_login' %}" class="text-gray-700 hover:text-amber-700">
+                                <i class="far fa-user text-2xl"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% include "components/messages.html"%}
+    <main class="flex-1">
+        {% block content %}
+        {% endblock content %}
+    </main>
+     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+ <!-- Footer -->
+    <footer class="bg-black text-white py-12">
+       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+             <div class="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
+                 <div>
+                    <h3 class="font-bold text-xl mb-4">FurniCraft</h3>
+                    <p class="text-gray-400">Your destination for premium furniture</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Shop</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white">All Products</a></li>
+                        <li><a href="#" class="hover:text-white">Living Room</a></li>
+                        <li><a href="#" class="hover:text-white">Bedroom</a></li>
+                        <li><a href="#" class="hover:text-white">Dining</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Customer</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white">My Account</a></li>
+                        <li><a href="#" class="hover:text-white">Orders</a></li>
+                        <li><a href="#" class="hover:text-white">Returns</a></li>
+                        <li><a href="#" class="hover:text-white">Wishlist</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white">FAQs</a></li>
+                        <li><a href="#" class="hover:text-white">Shipping</a></li>
+                        <li><a href="#" class="hover:text-white">Privacy</a></li>
+                    </ul>
+                </div>
+               <div>
+                    <h4 class="font-bold mb-4">Follow Us</h4>
+                    <div class="flex gap-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in text-xl"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
+                <p>&copy; 2025 FurniCraft. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+{% block script %}
+    
+{% endblock script %}
+{% include "components/loading_overlay.html" %}
+<style>
+  .errorlist {
+    color: #ef4444; 
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  .errorlist li {
+    list-style: none;
+  }
+</style>
+
+<style>
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+        }
+    </style>
+
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+
+ <script>
+    
+    document.body.addEventListener('htmx:configRequest', (event) => {
+    const token = document.cookie
+      .split('; ')
+      .find(r => r.startsWith('csrftoken='))?.split('=')[1];
+
+    if (token) {
+        event.detail.headers['X-CSRFToken'] = token;
+    }
+    });
+
+    const toastColors = {
+      success: 'bg-green-600',
+      error: 'bg-red-600',
+      warning: 'bg-yellow-500',
+      info: 'bg-blue-600',
+      neutral: 'bg-gray-700'
+    };
+
+    function showToast(message, type = 'success', duration = 2500) {
+      const container = document.getElementById('toast-container');
+    // container.innerHTML = "";
+    while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.className = `transform translate-x-full opacity-0 transition-all duration-500 ease-out text-white px-4 py-2 rounded-lg shadow-lg ${toastColors[type] || toastColors.neutral}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+      setTimeout(() => {
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => toast.remove(), 500);
+      }, duration);
+    }
+    </script>
+
+{% block extrascripts %}{% endblock %}
+    
+<script>
+    function confirmAction(message, confirmText, callback, color = '#b82d2d') {
+      Swal.fire({
+        title: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: color,
+        cancelButtonColor: '#6b7280',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          callback(); 
+        }
+      });
+    }
+    document.body.addEventListener('htmx:afterOnLoad', function(evt) {
+    const xhr = evt.detail.xhr;
+    
+    const hxTrigger = xhr.getResponseHeader('HX-Trigger');
+    if (!hxTrigger) return;
+    
+    if (hxTrigger) {
+        try {
+            const triggerData = JSON.parse(hxTrigger);
+
+            if (triggerData.toast) {
+                const message = triggerData.toast.message;
+                const type = triggerData.toast.type;
+                
+                showToast(message, type); 
+            }
+            
+        } catch (e) {
+            console.error("Failed to parse HX-Trigger JSON:", e);
+        }
+    }
+
+    if (xhr.status === 302) {
+        evt.detail.shouldSwap = false;
+        
+        setTimeout(() => {
+            window.location.href = xhr.getResponseHeader('Location');
+        }, 100); 
+    }
+});
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('[class*="bg-red-50"], [class*="bg-green-50"], [class*="bg-yellow-50"], [class*="bg-blue-50"]').forEach(el => {
+                if (el.parentElement && el.parentElement.classList.contains('fixed')) {
+                    el.style.transition = 'opacity 0.5s';
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 500);
+                }
+            });
+        }, 5000); 
+        // HTMX backend support
+        document.body.addEventListener("toast", e => showToast(e.detail.message));
+
+</script>    
+</body>
+</html>
+                

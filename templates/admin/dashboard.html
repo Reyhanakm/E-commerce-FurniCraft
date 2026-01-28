@@ -1,13 +1,519 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dashboard| FurniCraft</title>
-</head>
-<body>
-    <h2> Welcome {{request.user.first_name }}!</h2>
-    <p>This is your admin dashboard.</p>
-    <a href="{% url 'admin_logout' %}">Logout</a>
-</body>
-</html>
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Dashboard | FurniCraft{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="p-6">
+    <h2 class="text-2xl font-semibold mb-2">Dashboard</h2>
+</div>
+<div class="bg-white p-6 rounded shadow">
+    <div class="flex gap-4 mb-4">
+        <select id="filterType" class="border p-2 rounded">
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            
+        </select>
+        <select id="monthSelect" class="border p-2 rounded">
+            {% for m in months %}
+                <option value="{{ forloop.counter }}"
+                    {% if forloop.counter == current_month %}selected{% endif %}>
+                    {{ m }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select id="yearSelect" class="border p-2 rounded">
+            {% for y in years %}
+                <option value="{{ y }}"{% if y == current_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+<div class="bg-white p-6 rounded shadow">
+    <h3 class="text-lg font-semibold mb-4 text-center">
+        Order Trends
+    </h3>
+
+    <div class="flex justify-center">
+        <div class="relative h-80 w-full max-w-5xl">
+           
+            <canvas id="ordersChart"></canvas>
+        </div>
+
+    </div>
+</div>
+
+
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+    <!-- Best Selling Categories -->
+    <div class="bg-white p-6 rounded shadow">
+        <h3 class="text-lg font-semibold mb-4 text-center">
+            Best Selling Categories
+        </h3>
+
+        <div class="flex justify-center">
+            <div class="relative h-80 w-80 md:w-[28rem]">
+                <div id="categoryLoader"
+                    class="absolute inset-0 flex items-center justify-center bg-white/70 hidden">
+                    <span class="text-sm text-gray-500">Loading...</span>
+                </div>
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <table class="w-full text-sm mt-4 border">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-2 text-left">Category</th>
+                    <th class="px-3 py-2 text-right">Qty Sold</th>
+                    <th class="px-3 py-2 text-right">Revenue (₹)</th>
+                </tr>
+            </thead>
+            <tbody id="categoryTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Best Selling Material Types -->
+    <div class="bg-white p-6 rounded shadow">
+        <h3 class="text-lg font-semibold mb-4 text-center">
+            Best Selling Material Types
+        </h3>
+
+        <div class="flex justify-center">
+            <div class="relative h-80 w-80 md:w-[28rem]">
+                
+                <canvas id="materialChart"></canvas>
+            </div>
+        </div>
+
+        <table class="w-full text-sm mt-4 border">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-2 text-left">Material Type</th>
+                    <th class="px-3 py-2 text-right">Qty Sold</th>
+                    <th class="px-3 py-2 text-right">Revenue (₹)</th>
+                </tr>
+            </thead>
+            <tbody id="materialTableBody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="bg-white p-6 rounded shadow mt-6">
+    <h3 class="text-lg font-semibold mb-4 text-center">
+        Best Selling Products
+    </h3>
+
+    <div class="flex justify-center">
+        <div class="relative h-96 w-full max-w-5xl">
+
+            <canvas id="productChart"></canvas>
+        </div>
+    </div>
+
+    <table class="w-full text-sm mt-4 border">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-3 py-2 text-left">Product</th>
+                <th class="px-3 py-2 text-right">Qty Sold</th>
+                <th class="px-3 py-2 text-right">Revenue (₹)</th>
+            </tr>
+        </thead>
+        <tbody id="productTableBody"></tbody>
+    </table>
+</div>
+
+
+<script>
+    function showLoader(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("hidden");
+}
+
+function hideLoader(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add("hidden");
+}
+
+let chart;
+let categoryChart=null, materialChart=null, productChart=null;
+const chartDataUrl = "{% url 'admin_chart_data' %}";
+
+//DEFINE ELEMENTS FIRST
+const filterType = document.getElementById("filterType");
+const monthSelect = document.getElementById("monthSelect");
+const yearSelect = document.getElementById("yearSelect");
+
+function toggleMonthSelect() {
+    monthSelect.style.display = filterType.value === "weekly" ? "block" : "none";
+}
+
+function loadChart() {
+    const filter = filterType.value;
+    const year = yearSelect.value;
+    const month = monthSelect.value;
+
+    let url = `${chartDataUrl}?filter=${filter}&year=${year}`;
+
+    if (filter === "weekly") {
+        url += `&month=${month}`;
+    }
+    if (filter === "weekly" && !month) {
+    console.warn("Month not selected yet");
+    return;
+}
+
+    fetch(url)
+        .then(res => {
+            if (!res.ok) throw new Error("Chart data load failed");
+            return res.json();
+        })
+        .then(data => {
+            const ctx = document.getElementById("ordersChart").getContext("2d");
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "Total Orders",
+                        data: data.values,
+                        backgroundColor: "rgba(79, 70, 229, 0.8)"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Unable to load chart data");
+
+        });
+}
+
+
+
+function getSharedFilterParams() {
+    const filter = filterType.value;
+    const year = yearSelect.value;
+    const month = monthSelect.value;
+
+    let params = `filter=${filter}&year=${year}`;
+
+    if (filter === "weekly" && month) {
+        params += `&month=${month}`;
+    }
+
+    if (window.startDate && window.endDate) {
+        params += `&start_date=${startDate}&end_date=${endDate}`;
+    }
+
+    return params;
+}
+
+function loadCategoryChart() {
+const categoryChartUrl =
+    "{% url 'best_selling_categories_chart' %}";
+
+fetch(`${categoryChartUrl}?${getSharedFilterParams()}`)
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data.categories || data.categories.length === 0) {
+            console.warn("No category data available");
+            if (categoryChart) {
+                    categoryChart.destroy();
+                    categoryChart = null;
+                }
+
+                document.getElementById("categoryTableBody").innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-gray-400 py-4">
+                            No data for selected period
+                        </td>
+                    </tr>
+                `;
+
+            return;
+        }
+
+        //  EXTRACT VALUES
+        const labels = data.categories.map(c => c.name);
+        const values = data.categories.map(c => c.quantity);
+
+        const total = values.reduce((a, b) => a + b, 0);
+
+        const ctx =
+            document.getElementById("categoryChart").getContext("2d");
+if (categoryChart) categoryChart.destroy();
+        categoryChart=new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        "#6366f1", "#22c55e", "#f97316",
+                        "#ef4444", "#14b8a6",
+                        "#a855f7", "#eab308",
+                        "#0ea5e9", "#84cc16", "#f43f5e"
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            generateLabels: (chart) => {
+                                const dataset = chart.data.datasets[0];
+                                return chart.data.labels.map((label, i) => {
+                                    const value = dataset.data[i];
+                                    const percent = total
+                                        ? ((value / total) * 100).toFixed(1)
+                                        : 0;
+
+                                    return {
+                                        text: `${label} — ${percent}%`,
+                                        fillStyle: dataset.backgroundColor[i],
+                                        index: i
+                                    };
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const tbody = document.getElementById("categoryTableBody");
+        if (tbody) {
+            tbody.innerHTML = "";
+            data.categories.forEach(cat => {
+                tbody.insertAdjacentHTML("beforeend", `
+                    <tr class="border-t">
+                        <td class="px-3 py-2">${cat.name}</td>
+                        <td class="px-3 py-2 text-right">${cat.quantity}</td>
+                        <td class="px-3 py-2 text-right">₹${cat.revenue.toFixed(2)}</td>
+                    </tr>
+                `);
+            });
+        }
+    })
+    .catch(err => {
+        console.error("Category chart error:", err);
+
+    });
+
+}
+function loadMaterialChart() {
+
+const materialChartUrl =
+    "{% url 'best_selling_material_types_chart' %}";
+
+fetch(`${materialChartUrl}?${getSharedFilterParams()}`)
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data.materials || data.materials.length === 0) {
+            console.warn("No material data available");
+            if (materialChart) {
+                    materialChart.destroy();
+                    materialChart = null;
+                }
+
+                document.getElementById("materialTableBody").innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-gray-400 py-4">
+                            No data for selected period
+                        </td>
+                    </tr>
+                `;
+
+            return;
+        }
+
+        const labels = data.materials.map(m => m.name);
+        const values = data.materials.map(m => m.quantity);
+        const total = values.reduce((a, b) => a + b, 0);
+
+        const ctx =
+            document.getElementById("materialChart").getContext("2d");
+if (materialChart) materialChart.destroy();
+
+        materialChart=new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        "#0ea5e9", "#22c55e", "#f97316",
+                        "#ef4444", "#6366f1",
+                        "#a855f7", "#eab308",
+                        "#14b8a6", "#84cc16", "#f43f5e"
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            generateLabels: (chart) => {
+                                const dataset = chart.data.datasets[0];
+                                return chart.data.labels.map((label, i) => {
+                                    const value = dataset.data[i];
+                                    const percent = total
+                                        ? ((value / total) * 100).toFixed(1)
+                                        : 0;
+
+                                    return {
+                                        text: `${label} — ${percent}%`,
+                                        fillStyle: dataset.backgroundColor[i],
+                                        index: i
+                                    };
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Populate table
+        const tbody = document.getElementById("materialTableBody");
+        tbody.innerHTML = "";
+
+        data.materials.forEach(m => {
+            tbody.insertAdjacentHTML("beforeend", `
+                <tr class="border-t">
+                    <td class="px-3 py-2">${m.name}</td>
+                    <td class="px-3 py-2 text-right">${m.quantity}</td>
+                    <td class="px-3 py-2 text-right">₹${m.revenue.toFixed(2)}</td>
+                </tr>
+            `);
+        });
+
+    })
+    .catch(err => {
+        console.error("Material chart error:", err);
+
+    });
+}
+function loadProductChart() {
+
+const productChartUrl =
+    "{% url 'best_selling_products_chart' %}";
+fetch(`${productChartUrl}?${getSharedFilterParams()}`)
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data.products || data.products.length === 0) {
+            console.warn("No product data available");
+            if (productChart) {
+                productChart.destroy();
+                productChart = null;
+            }
+
+            document.getElementById("productTableBody").innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center text-gray-400 py-4">
+                        No data for selected period
+                    </td>
+                </tr>
+            `;           
+             return;
+        }
+
+        const labels = data.products.map(p => p.name);
+        const values = data.products.map(p => p.quantity);
+
+        const ctx =
+            document.getElementById("productChart").getContext("2d");
+if (productChart) productChart.destroy();
+
+       productChart= new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Quantity Sold",
+                    data: values,
+                    backgroundColor: "#6366f1"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+
+        // Populate table
+        const tbody = document.getElementById("productTableBody");
+        tbody.innerHTML = "";
+
+        data.products.forEach(p => {
+            tbody.insertAdjacentHTML("beforeend", `
+                <tr class="border-t">
+                    <td class="px-3 py-2">${p.name}</td>
+                    <td class="px-3 py-2 text-right">${p.quantity}</td>
+                    <td class="px-3 py-2 text-right">₹${p.revenue.toFixed(2)}</td>
+                </tr>
+            `);
+        });
+    })
+    .catch(err => {
+        console.error("Product chart error:", err);
+
+    });
+}
+// EVENTS
+function refreshAllCharts() {
+    loadChart();            
+    loadCategoryChart();
+    loadMaterialChart();
+    loadProductChart();
+}
+
+filterType.addEventListener("change", () => {
+    toggleMonthSelect();
+        refreshAllCharts();
+
+});
+yearSelect.addEventListener("change", refreshAllCharts);
+monthSelect.addEventListener("change", refreshAllCharts);
+
+//init
+toggleMonthSelect();
+refreshAllCharts();
+</script>
+
+
+
+
+
+{% endblock %}

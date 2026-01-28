@@ -1,0 +1,39 @@
+    .category-card {
+        background-color: #d9c5bb; /* beige card */
+        border-color: #e6dcd6;
+        transition: all 0.3s ease;
+    }
+    .category-card:hover {
+        transform: translateY(-6px);
+        /* transform: translateY(-8px); */
+
+    }
+    .category-card img {
+        transition: transform 0.3s ease;
+    }
+    .category-card:hover img {
+        transform: scale(1.08);
+        /* transform: scale(1.1); */
+
+    }
+
+    .theme-text {
+        color: #3e2f2c; /* dark brown text */
+    }
+
+    .theme-btn {
+        background-color: #8c6e63;
+        color: white;
+    }
+    .theme-btn:hover {
+        background-color: #72584f;
+    }
+
+    .theme-border {
+        border-color: #e6dcd6;
+    }
+
+    .theme-star {
+        color: #ffbe55;
+    }
+

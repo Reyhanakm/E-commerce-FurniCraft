@@ -1,0 +1,354 @@
+{% extends "product/navbar_footer.html" %}
+{% block content %}
+
+<style>
+    .review-item {
+    transition: all 0.3s ease;
+}
+    #zoomResult {
+        position: absolute;
+        left: 900px;
+        top: 200px;
+    } 
+    .zoom-lens-active {
+        cursor: zoom-in;
+    }
+    .variant-selected {
+        border-color: #A89289 !important;
+        background-color: #F5F1EF !important;
+        color: #A89289 !important;
+    }
+    .star-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .stars {
+        display: flex;
+        gap: 0.25rem;
+    }
+    .stars i {
+        font-size: 1rem;
+    }
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+
+<div class="max-w-7xl mx-auto py-8 px-4 md:px-6">
+
+    <nav class="text-sm text-gray-500 mb-8">
+        <a href="{% url 'home'%}" class="hover:text-[#A89289] transition">Home</a>
+        <span class="mx-2">/</span>
+        <a href="{% url 'category_products' product.category.id %}"
+           class="hover:text-[#A89289] transition">{{ product.category.name }}</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-700 font-medium">{{ product.name }}</span>
+    </nav>
+<div id="cart-message"></div>
+    {% if product.is_active %}
+        <div class="bg-white rounded-2xl shadow-xl p-10 border border-gray-200 fade-in">
+            <!-- Main Product Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+
+
+                <div class="flex gap-4">
+
+                    <div class="flex flex-col gap-3 w-24">
+                        {% for img in product.images.all %}
+                            <img src="{{ img.image.url }}"
+                                onclick="swapImage('{{ img.image.url }}')"
+                                class="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 cursor-pointer hover:border-[#A89289] transition-all duration-200 transform hover:scale-105">
+                        {% endfor %}
+                    </div>
+
+                    <div class="flex-1">
+                        <div class="relative w-full aspect-square border-2 border-gray-200 rounded-2xl shadow-lg overflow-hidden bg-gray-100 zoom-lens-active"
+                            id="zoomContainer">
+
+                            <img id="mainImage"
+                                src="{{ product.images.first.image.url }}"
+                                class="w-full h-full object-cover pointer-events-none">
+
+                            <div id="zoomLens"
+                                class="absolute hidden bg-white/20 border-2 border-[#A89289] rounded-lg backdrop-blur-sm"
+                                style="width:120px; height:120px;"></div>
+
+                        </div>
+
+                        <div id="zoomResult"
+                            class="hidden fixed w-96 h-96 border-2 border-[#A89289] rounded-2xl shadow-2xl bg-no-repeat bg-cover z-50"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col">
+
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{{ product.name }}</h1>
+                    <p class="text-gray-500 text-sm mb-6">SKU: #{{ product.id }}</p>
+
+                {% if reviews %}                
+                    <div class="star-rating mb-6">
+                        <div class="stars">
+                            {% for _ in ""|center:avg_rating %}
+                                <i class="fas fa-star text-yellow-400"></i>
+                            {% endfor %}
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700">
+                            ({{ avg_rating }})
+                        </span>
+                        <span class="text-xs text-gray-500">
+                            ({{ reviews|length }} review{{ reviews|length|pluralize }})
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <div id="variantInfo" 
+                        class="bg-gradient-to-br from-[#F5F1EF] to-[#EEDDD8] rounded-2xl p-6 shadow-md mb-8 border border-[#E8DFD7]">
+                        
+                         {% include "product/components/variant_info.html" with variant=product.variants.first is_in_wishlist=is_in_wishlist pricing=pricing%}
+
+                    </div>
+
+                       
+
+                    <!-- Material Selection -->
+                    <div class="mb-8">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Choose Material</h2>
+                        <div class="flex flex-wrap gap-3" id="variantArea">
+                            {% for v in product.variants.all %}
+                                <button 
+                                    onclick="highlightVariant(this)"
+                                    hx-get="{% url 'load_variant_info' v.id %}"
+                                    hx-target="#variantInfo"
+                                    hx-swap="innerHTML"
+                                    class="px-5 py-3 rounded-full border-2 border-gray-300 bg-white 
+                                           hover:border-[#A89289] hover:bg-[#F5F1EF] hover:text-[#A89289] 
+                                           transition-all duration-200 font-medium text-sm cursor-pointer">
+                                    {{ v.material_type }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="mt-10 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Product Description</h2>
+                {% with dv=product.variants.first %}
+                    <p class="text-gray-700 leading-relaxed">{{ dv.description }}</p>
+                {% endwith %}
+            </div>
+    <div class="mt-12 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-8">Customer Reviews</h2>
+                
+                {% if reviews %}
+                    <div id="reviews-container">
+                        {% for review in reviews %}
+                        <div class="review-item border-b border-gray-200 pb-8 mb-8 {% if forloop.counter > 2 %}hidden{% endif %}">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-[#A89289] rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="font-bold text-gray-800 text-lg">{{ review.user.first_name }}</h3>
+                                        <span class="text-xs text-gray-500">Verified Purchase</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <div class="flex text-yellow-400">
+                                            {% if review.rating %}
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                        <span class="text-xs text-gray-500">({{ review.rating }}/5 stars)</span>
+                                    </div>
+                                    <p class="text-gray-700 leading-relaxed">{{ review.comment }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if reviews|length > 2 %}
+                        <button id="loadMoreBtn" class="w-full py-3 text-[#A89289] font-semibold border-2 border-[#A89289] rounded-lg hover:bg-[#F5F1EF] transition-all duration-200">
+                            Load more reviews
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <p class="text-gray-500">No reviews yet.</p>
+                {% endif %}
+            </div>
+
+        <!-- Related Products -->
+            <div class="mt-16">
+                <h2 class="text-2xl font-bold text-gray-800 mb-8">Related Products</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {% for p in related_products|slice:":4" %}
+                        <a href="{% url 'product_details' p.id %}"
+                           class="group block bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border border-gray-100">
+                            <div class="flex flex-col h-full">
+                                <div class="relative overflow-hidden bg-gray-100 aspect-square">
+                                    {% with image=p.images.all.0 %}
+                                        {% if image %}
+                                            <img src="{{ image.image.url }}" 
+                                                 class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        {% else %}
+                                            <img src="https://via.placeholder.com/300" 
+                                                 class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                                <div class="p-4 space-y-2 flex-1 flex flex-col">
+                                    <h3 class="font-bold text-sm text-gray-800 line-clamp-2">{{ p.name }}</h3>
+                                    {% with v=p.variants.all.0 %}
+                                        {% if v %}
+                                            <p class="text-lg font-bold text-[#A89289]">
+                                                ₹{{ p.display_price }}
+                                            </p>
+                                            {% if p.pricing and p.pricing.is_offer_applied %}
+                                                <span class="text-xs text-red-600 font-semibold">
+                                                    {{ p.pricing.offer_percent }}% OFF
+                                                </span>
+                                            {% endif %}
+
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div> 
+
+        </div>
+
+    {% else %}
+
+    <div class="bg-white rounded-2xl shadow-xl p-16 border border-gray-200 text-center fade-in">
+            <div class="max-w-md mx-auto">
+                <i class="fas fa-exclamation-circle text-6xl text-red-500 mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Product Unavailable</h2>
+                <p class="text-gray-600 mb-8">
+                    Sorry! This product is no longer available or has been removed. 
+                    Please browse our other products or contact support for assistance.
+                </p>
+                <a href="{% url 'products' %}"
+                   class="inline-block bg-[#A89289] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#8f7a73] transition-all duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Products
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+
+<!-- Image Swap Script -->
+<script>
+function swapImage(url) {
+    document.getElementById('mainImage').src = url;
+    setTimeout(initLensZoom, 50);
+}
+
+function highlightVariant(button) {
+    document.querySelectorAll("#variantArea button").forEach(btn => {
+        btn.classList.remove("variant-selected");
+    });
+    button.classList.add("variant-selected");
+}
+
+</script>
+
+{% block script %}
+<script>
+function initLensZoom() {
+    const container = document.getElementById("zoomContainer");
+    const img = document.getElementById("mainImage");
+    const lens = document.getElementById("zoomLens");
+    const result = document.getElementById("zoomResult");
+
+    if (!container || !img || !lens || !result) return;
+
+    result.style.backgroundImage = `url(${img.src})`;
+
+    const zoom = 3.5;
+
+    container.addEventListener("mouseenter", () => {
+        lens.style.display = "block";
+        result.style.display = "block";
+    });
+
+    container.addEventListener("mouseleave", () => {
+        lens.style.display = "none";
+        result.style.display = "none";
+    });
+
+    container.addEventListener("mousemove", moveLens);
+
+    function moveLens(e) {
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        let lensX = x - lens.offsetWidth / 2;
+        let lensY = y - lens.offsetHeight / 2;
+
+        lensX = Math.max(0, Math.min(lensX, rect.width - lens.offsetWidth));
+        lensY = Math.max(0, Math.min(lensY, rect.height - lens.offsetHeight));
+
+        lens.style.left = lensX + "px";
+        lens.style.top = lensY + "px";
+
+        result.style.backgroundSize = `${rect.width * zoom}px ${rect.height * zoom}px`;
+        result.style.backgroundPosition = `-${lensX * zoom}px -${lensY * zoom}px`;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initLensZoom);
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
+    if (!loadMoreBtn) return;
+
+    // Track state
+    let isExpanded = false;
+
+    loadMoreBtn.addEventListener("click", function () {
+        const allReviews = document.querySelectorAll(".review-item");
+        
+        if (!isExpanded) {
+            // Show all reviews
+            allReviews.forEach(review => {
+                review.classList.remove("hidden");
+                review.classList.add("fade-in"); // Optional: re-trigger your fade animation
+            });
+            this.innerText = "Show less";
+            isExpanded = true;
+        } else {
+            allReviews.forEach((review, index) => {
+                if (index >= 2) {
+                    review.classList.add("hidden");
+                }
+            });
+            this.innerText = "Load more reviews";
+            isExpanded = false;
+            
+            loadMoreBtn.parentElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+});
+</script>
+
+{% endblock script %}
+
+{% endblock %}

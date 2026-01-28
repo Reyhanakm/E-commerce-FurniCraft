@@ -1,0 +1,151 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}{{ form.instance.id|yesno:"Edit Category,Add Category" }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <h1 class="text-2xl font-semibold text-gray-800 mb-6">
+    {{ form.instance.id|yesno:"Edit Category,Add Category" }}
+  </h1>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <!-- Category Details Card -->
+    <div class="bg-white shadow-sm rounded-md p-6 mb-6">
+      <h2 class="text-lg font-medium text-gray-800 mb-4">Category Details</h2>
+
+      <div class="grid grid-cols-2 gap-4">
+        {{ form.non_field_errors }}
+        <div>
+          {% include 'components/form_field.html' with field=form.name %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Image Card -->
+    <div class="bg-white shadow-sm rounded-md p-6 mb-6">
+      <h2 class="text-lg font-medium text-gray-800 mb-4">Category Image</h2>
+
+      <button type="button"
+              id="upload_widget"
+              class="bg-[#b82d2d] hover:bg-[#a22727] text-white px-4 py-2 rounded-md">
+        Upload Image
+      </button>
+
+      {% comment %} {{ form.image }}  <!-- Hidden field storing cloudinary public_id --> {% endcomment %}
+             {% include 'components/form_field.html' with field=form.image %}
+             {% if form.image.errors %}
+                {% for error in form.image.errors %}
+                  <p class="text-red-600 text-sm mt-2">{{ error }}</p>
+                {% endfor %}
+              {% endif %}
+
+
+
+      <div id="imagePreview" class="mt-4">
+        {% if category_image_url %}
+          <div class="relative w-max">
+            <img src="{{ category_image_url }}" class="w-32 rounded-md border mb-2" id="previewImg">
+            <button type="button" id="removeImageBtn"
+              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex justify-center items-center">
+              ×
+            </button>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex justify-end gap-3">
+      <a href="{% url 'admin_category_list' %}"
+         class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+        Cancel
+      </a>
+      <button type="submit"
+              class="px-6 py-2 bg-[#b82d2d] text-white rounded-md hover:bg-[#a22727] transition">
+        Save Category
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<!-- Cloudinary Upload Widget -->
+<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+<script>
+const imageField = document.getElementById("id_image");
+const imagePreview = document.getElementById("imagePreview");
+
+let uploadWidget = null;
+
+function createUploadWidget() {
+    uploadWidget = cloudinary.createUploadWidget(
+    {
+        cloudName: "dcaevmkgg",
+        uploadPreset: "product_preset",
+        multiple: false,
+        folder: "furnicraft_products",
+    },
+    function (error, result) {
+        if (!error && result && result.event === "success") {
+            // FORCE overwrite every time
+            imageField.value = result.info.public_id;
+
+            imagePreview.innerHTML = `
+              <div class="relative w-max">
+                <img src="${result.info.secure_url}"
+                     class="w-32 rounded-md border mb-2">
+                <button type="button"
+                        id="removeImageBtn"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full">
+                  ×
+                </button>
+              </div>
+            `;
+            attachRemoveHandler();
+        }
+    });
+}
+
+document.getElementById("upload_widget").onclick = () => {
+
+  if (uploadWidget) {
+        uploadWidget.close({ quiet: true });
+        uploadWidget = null;
+    }
+
+    createUploadWidget();
+    uploadWidget.open();
+};
+
+function attachRemoveHandler() {
+    const removeBtn = document.getElementById("removeImageBtn");
+    if (removeBtn) {
+        removeBtn.onclick = () => {
+            imageField.value = "";
+            imagePreview.innerHTML = "";
+        };
+    }
+}
+</script>
+
+
+<style>
+  input, select, textarea {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #f1c5c5;
+    border-color: #b82d2d;
+  }
+</style>
+
+{% endblock %}
+

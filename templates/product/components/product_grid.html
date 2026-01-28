@@ -1,0 +1,13 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="product-container">
+
+{% for p in products %}
+    {# Use the reusable product card component #}
+    {% include "product/components/product_card.html" with p=p wishlist_product_ids=wishlist_product_ids %}
+
+{% empty %}
+    <div class="col-span-full py-16 text-center">
+        <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+        <p class="text-gray-500 text-lg font-medium">No products found.</p>
+    </div>
+{% endfor %}
+</div>
