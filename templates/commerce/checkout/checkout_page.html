@@ -186,16 +186,16 @@ function confirmPlaceOrder() {
     let color = "#2563eb";
 
     if (paymentMethod === "razorpay") {
-        message = "You will be redirected to Razorpay to complete the payment. Continue?";
+        message = "Confirm Razorpay payment?";
         confirmText = "Pay Now";
     } 
     else if (paymentMethod === "wallet") {
-        message = "Wallet balance will be used to place this order. Continue?";
+        message = "Confirm Wallet payment?";
         confirmText = "Pay with Wallet";
         color = "#16a34a";
     } 
     else if (paymentMethod === "cod") {
-        message = "You will pay in cash when the order is delivered. Continue?";
+        message = "Confirm COD, Continue?";
         confirmText = "Confirm Order";
         color = "#ca8a04";
     }
