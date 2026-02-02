@@ -32,6 +32,12 @@ class RegistrationForm(forms.Form):
             raise forms.ValidationError("Phone number must contain digits only.")
         if len(phone) != 10:
             raise forms.ValidationError("Phone number must be 10 digits long.")
+        if phone[0] not in "6789":
+            raise forms.ValidationError("Enter a valid Indian mobile number.")
+
+        if phone == phone[0] * 10:
+            raise forms.ValidationError("Invalid phone number.")
+
         if User.objects.filter(phone_number=phone).exists():
             raise forms.ValidationError("Phone number already registered.")
 
@@ -248,6 +254,11 @@ class EditProfileForm(forms.Form):
             return phone
         if not re.match(r'^[6-9]\d{9}$', phone):
             raise forms.ValidationError("Enter a valid 10-digit Indian phone number")
+        if phone[0] not in "6789":
+            raise forms.ValidationError("Enter a valid Indian mobile number.")
+
+        if phone == phone[0] * 10:
+            raise forms.ValidationError("Invalid phone number.")
 
         if User.objects.exclude(id=self.user.id).filter(phone_number=phone).exists():
             raise forms.ValidationError("Phone number already registered.")
