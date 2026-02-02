@@ -203,7 +203,8 @@ def apply_order_time_filters(qs, request):
 @login_required(login_url='admin_login')
 def best_selling_categories_chart(request):
     qs = OrderItem.objects.filter(
-        order__payment_status__in=["paid", "partially_refunded"]
+        order__payment_status__in=["paid", "partially_refunded"],
+        status="delivered"
     )
 
     qs = apply_order_time_filters(qs, request)
@@ -233,7 +234,8 @@ def best_selling_categories_chart(request):
 @login_required(login_url='admin_login')
 def best_selling_material_types_chart(request):
     qs = OrderItem.objects.filter(
-        order__payment_status__in=["paid", "partially_refunded"]
+        order__payment_status__in=["paid", "partially_refunded"],
+        status="delivered"
     )
     qs = apply_order_time_filters(qs, request)
 
@@ -261,7 +263,8 @@ def best_selling_material_types_chart(request):
 @login_required(login_url='admin_login')
 def best_selling_products_chart(request):
     qs = OrderItem.objects.filter(
-        order__payment_status__in=["paid", "partially_refunded"]
+        order__payment_status__in=["paid", "partially_refunded"],
+        status="delivered"
     )
 
     qs = apply_order_time_filters(qs, request)
