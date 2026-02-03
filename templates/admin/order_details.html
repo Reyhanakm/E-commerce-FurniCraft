@@ -57,8 +57,8 @@
 
             <p class="mt-4">
                 <span class="font-medium">Total Amount:</span>
-                {% if order.total_price %}
-                    ₹{{ order.total_price }}
+                {% if order.original_total %}
+                    ₹{{ order.original_total }}
                 {% else %}
                     ₹{{ order.total_price_before_discount }}
                 {% endif %}
