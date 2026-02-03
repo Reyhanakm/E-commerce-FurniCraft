@@ -183,6 +183,15 @@ class AddressForm(forms.ModelForm):
         phone = self.cleaned_data.get('phone_no')
         if phone and not re.fullmatch(r'\d{10}', phone):
             raise forms.ValidationError("Phone number must be exactly 10 digits.")
+        if phone and not phone.isdigit():
+            raise forms.ValidationError("Phone number must contain digits only.")
+        if phone and len(phone) != 10:
+            raise forms.ValidationError("Phone number must be 10 digits long.")
+        if phone and phone[0] not in "6789":
+            raise forms.ValidationError("Enter a valid Indian mobile number.")
+        if phone and phone == phone[0] * 10:
+            raise forms.ValidationError("Invalid phone number.")
+
         return phone
 
     def clean_pincode(self):

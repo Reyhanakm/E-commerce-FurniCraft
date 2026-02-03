@@ -668,8 +668,9 @@ def place_order(request):
             
             if usage_count >= coupon.per_user_limit:
                 raise ValueError("Per user limit exceeded")
-            if total_usages >= coupon.usage_limit:
-                raise ValueError("Total usage limit exceeded")
+            if coupon.usage_limit is not None:
+                if total_usages >= coupon.usage_limit:
+                    raise ValueError("Total usage limit exceeded")
             CouponUsage.objects.create(
             coupon=coupon,
             user=user,
