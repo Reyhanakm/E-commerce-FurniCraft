@@ -16,7 +16,7 @@ def pay_using_wallet(*, user, order, amount):
         order=order,
         amount=amount,
         transaction_type="debit",
-        source="order_debit"
+        source="order debit"
     )
 
     order.payment_status = "paid"

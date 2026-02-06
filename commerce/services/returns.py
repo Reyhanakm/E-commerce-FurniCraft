@@ -67,7 +67,7 @@ def approve_return_service(return_request: OrderReturn):
         process_refund_to_wallet(
             order=order, 
             amount=potential_refund, 
-            source=f"order_return:{item.id}"
+            source=f"order return: (product:{item.id})"
         )
 
     # Finalize statuses
