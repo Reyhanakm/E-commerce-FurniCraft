@@ -25,5 +25,20 @@
         <button class="px-5 py-2 bg-[#A89289] text-white rounded">
             Save Address
         </button>
+        {% if request.GET.from != 'checkout' %}
+        <button 
+                type="button"
+                hx-get="{% url 'my_address' %}"
+                hx-target="#profile-content"
+                hx-swap="innerHTML"
+                class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg">
+                Cancel
+            </button>
+        {% else %}
+            <a href="{% url 'checkout' %}"
+                class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg inline-block">
+                    Cancel
+            </a>
+        {% endif %}
     </form>
 </div>

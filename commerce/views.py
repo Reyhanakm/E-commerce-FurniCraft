@@ -967,7 +967,7 @@ def cancel_order_item(request,item_id):
             refund_amount=item.price - coupon_share
             refund_amount = max(refund_amount, Decimal("0.00"))
             
-            process_refund_to_wallet(order=order,amount=refund_amount,source=f"item cancel:(product Id: {item.id}")
+            process_refund_to_wallet(order=order,amount=refund_amount,source=f"item cancel:(Item no: {item.id})")
 
             messages.success(
             request,f"Item cancelled. ₹{refund_amount} refunded to your wallet."

@@ -58,6 +58,15 @@
         <p>No addresses added yet.</p>
     {% endif %}
 </div>
+<div >
+    <button 
+                        hx-get="{% url 'add_address' %}"
+                        hx-target="#profile-content"
+                        hx-swap="innerHTML"
+                        class="mt-3 px-5 py-2 bg-[#A89289] text-white rounded ">
+                        Add New Address
+                    </button>
+</div>
  <script>
 function confirmDelete(id) {
     Swal.fire({
