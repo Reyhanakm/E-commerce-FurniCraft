@@ -936,58 +936,90 @@ def my_orders_page(request):
 
 @login_required
 def cancel_order_item(request,item_id):
+    logger.info(
+        "USER INFO | user_id=%s | is_google=%s",
+        request.user.id,request.user.socialaccount_set.exists()
+    )
+
     item=get_object_or_404(OrderItem.objects.select_related("order","product"),
                            id=item_id,
                            order__user=request.user)
     if item.status!='order_received':
         messages.error(request,"This item cannot be cancelled!")
         return redirect("user_order_detail",item.order.order_id)
-    
-    with transaction.atomic():
-        order=item.order
-        if order.is_payment_locked:
-            messages.error(
-                request,
-                "You cannot cancel items while Razorpay payment is pending. Please retry payment or create new order."
+    try:
+        with transaction.atomic():
+            order=item.order
+            logger.info(
+                "CANCEL START | user_id=%s | order_id=%s | item_id=%s",
+                request.user.id,order.id,item.id
             )
-            return redirect("user_order_detail", order.order_id)
-        if item.status == 'cancelled':
-            messages.error(request, "Item already cancelled.")
-            return redirect("user_order_detail", order.order_id)
-        item.status="cancelled"
-        item.save(update_fields=["status"])
 
-        item.product.stock+=item.quantity
-        item.product.save(update_fields=['stock'])
+            if order.is_payment_locked:
+                messages.error(
+                    request,"You cannot cancel items while Razorpay payment is pending. Please retry payment or create new order."
+                )
+                raise ValueError("Payment locked during cancellation")
+            if item.status == 'cancelled':
+                messages.error(request, "Item already cancelled.")
+                return redirect("user_order_detail", order.order_id)
+            item.status="cancelled"
+            item.save(update_fields=["status"])
 
-        if order.payment_status in ['paid','partially_refunded']:
+            item.product.stock+=item.quantity
+            item.product.save(update_fields=['stock'])
 
-            coupon_share = calculate_item_coupon_share(order, item)
+            if order.payment_status in ['paid','partially_refunded']:
 
-            refund_amount=item.price - coupon_share
-            refund_amount = max(refund_amount, Decimal("0.00"))
-            
-            process_refund_to_wallet(order=order,amount=refund_amount,source=f"item cancel:(Item no: {item.id})")
+                coupon_share = calculate_item_coupon_share(order, item)
+                logger.info(
+                    "COUPON INFO | order_id=%s | coupon=%s | discount=%s",order.id,order.coupon.code if order.coupon else "NO_COUPON",
+                    order.coupon.discount if order.coupon else 0
+                )
 
-            messages.success(
-            request,f"Item cancelled. ₹{refund_amount} refunded to your wallet."
+
+                refund_amount=item.price - coupon_share
+                refund_amount = max(refund_amount, Decimal("0.00"))
+                
+                logger.info(
+                    "REFUND CALC | item_price=%s | qty=%s | refund_amount=%s",item.price,
+                    item.quantity,refund_amount
+                )
+                wallet_exists = Wallet.objects.filter(user=request.user).exists()
+
+                logger.info(
+                    "WALLET CHECK | user_id=%s | wallet_exists=%s",request.user.id,wallet_exists
+                )
+
+                process_refund_to_wallet(order=order,amount=refund_amount,source=f"item cancel:(Item no: {item.id})")
+
+                messages.success(
+                request,f"Item cancelled. ₹{refund_amount} refunded to your wallet."
+                )
+            else:
+                messages.success(
+                request,f"Item cancelled.")
+            if not order.is_payment_locked:
+                remaining_items=order.items.exclude(status="cancelled")
+                new_total=sum(i.price for i in remaining_items)
+                if order.payment_status in ['paid', 'partially_refunded']:
+                    if new_total==0:
+                        order.payment_status='refunded'
+                    else:
+                        order.payment_status='partially_refunded'
+                    order.total_price=new_total+order.delivery_charge
+                    order.save(update_fields=['total_price','payment_status'])
+                elif order.payment_method!='razorpay':
+                    order.payment_status='failed'
+                    order.save(update_fields=['payment_status'])
+    except Exception as e:
+        logger.exception(
+            "CANCEL FAILED | user_id=%s | order_id=%s | item_id=%s",
+            request.user.id,
+            order.id if 'order' in locals() else "N/A",
+            item_id
         )
-        else:
-            messages.success(
-            request,f"Item cancelled.")
-        if not order.is_payment_locked:
-            remaining_items=order.items.exclude(status="cancelled")
-            new_total=sum(i.price for i in remaining_items)
-            if order.payment_status in ['paid', 'partially_refunded']:
-                if new_total==0:
-                    order.payment_status='refunded'
-                else:
-                    order.payment_status='partially_refunded'
-                order.total_price=new_total+order.delivery_charge
-                order.save(update_fields=['total_price','payment_status'])
-            elif order.payment_method!='razorpay':
-                order.payment_status='failed'
-                order.save(update_fields=['payment_status'])
+        messages.error(request, "Something went wrong while cancelling the item.")
     return redirect("user_order_detail",order.order_id)
 
 @login_required
