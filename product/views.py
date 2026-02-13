@@ -5,7 +5,7 @@ from django.db.models import Avg,Count
 from django.shortcuts import render, redirect,HttpResponse,get_object_or_404
 from product.forms import ReviewForm
 from product.models import Category,Product,ProductImage,ProductVariant, Review
-from django.db.models import Prefetch,Q,Min,Case,When,F,Value,DecimalField
+from django.db.models import OuterRef, Subquery,Prefetch,Q,Min,Case,When,F,Value,DecimalField
 from django.db.models.functions import Greatest, Least, Coalesce
 from django.core.paginator import Paginator
 from django.contrib import messages
@@ -93,41 +93,43 @@ def category_products(request, id):
 @login_required(login_url="/login")
 def products(request):    
     now = timezone.now()
-    p_offer_valid = Q(
-        variants__product__product_offers__is_active=True,
-        variants__product__product_offers__start_date__lte=now,
-        variants__product__product_offers__end_date__gte=now
-    )
-    c_offer_valid = Q(
-        category__category_offers__is_active=True,
-        category__category_offers__start_date__lte=now,
-        category__category_offers__end_date__gte=now
-    )
+    best_price_subquery = ProductVariant.objects.filter(
+        product=OuterRef('pk'),
+        is_deleted=False
+    ).annotate(
+        p_disc=Case(
+            When(product__product_offers__is_active=True,
+                 product__product_offers__start_date__lte=now,
+                 product__product_offers__end_date__gte=now,
+                 then=Least(
+                     F('sales_price') * F('product__product_offers__discount_percent') / 100,
+                     Coalesce(F('product__product_offers__max_discount_amount'), Value(999999))
+                 )),
+            default=Value(0),
+            output_field=DecimalField()
+        ),
+        c_disc=Case(
+            When(product__category__category_offers__is_active=True,
+                 product__category__category_offers__start_date__lte=now,
+                 product__category__category_offers__end_date__gte=now,
+                 then=Least(
+                     F('sales_price') * F('product__category__category_offers__discount_percent') / 100,
+                     Coalesce(F('product__category__category_offers__max_discount_amount'), Value(999999))
+                 )),
+            default=Value(0),
+            output_field=DecimalField()
+        )
+    ).annotate(
+        discounted_price=F('sales_price') - Greatest(F('p_disc'), F('c_disc'))
+    ).order_by('discounted_price').values('discounted_price')[:1]
+
+    #  THE MAIN QUERY ---
     products = Product.objects.filter(
         category__is_deleted=False,
         variants__isnull=False
     ).annotate(
-        p_disc_amt=Case(
-            When(p_offer_valid, then=Least(
-                F('variants__sales_price') * F('variants__product__product_offers__discount_percent') / 100,
-                Coalesce(F('variants__product__product_offers__max_discount_amount'), Value(999999))
-            )),
-            default=Value(0),
-            output_field=DecimalField()
-        ),
-        c_disc_amt=Case(
-            When(c_offer_valid, then=Least(
-                F('variants__sales_price') * F('category__category_offers__discount_percent') / 100,
-                Coalesce(F('category__category_offers__max_discount_amount'), Value(999999))
-            )),
-            default=Value(0),
-            output_field=DecimalField()
-        )
-        ).annotate(
-        final_min_price=Min(
-            F('variants__sales_price') - Greatest(F('p_disc_amt'), F('c_disc_amt')),
-            output_field=DecimalField()
-        ),
+        # Attach the single result from the subquery
+        final_min_price=Subquery(best_price_subquery, output_field=DecimalField()),
         average_rating=Avg('variants__reviews__rating'),
         review_count=Count('variants__reviews', distinct=True) 
     ).prefetch_related(
@@ -138,7 +140,7 @@ def products(request):
                 'product__product_offers',
                 'product__category__category_offers'
             ))
-    )
+    ).distinct()
     search_query = request.GET.get('search')
 
     if search_query:
