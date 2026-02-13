@@ -1,10 +1,12 @@
+from django.utils import timezone
 import logging
 from django.db import IntegrityError
 from django.db.models import Avg,Count
 from django.shortcuts import render, redirect,HttpResponse,get_object_or_404
 from product.forms import ReviewForm
 from product.models import Category,Product,ProductImage,ProductVariant, Review
-from django.db.models import Prefetch,Q,Min
+from django.db.models import Prefetch,Q,Min,Case,When,F,Value,DecimalField
+from django.db.models.functions import Greatest, Least, Coalesce
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -90,12 +92,42 @@ def category_products(request, id):
 @never_cache
 @login_required(login_url="/login")
 def products(request):    
-
+    now = timezone.now()
+    p_offer_valid = Q(
+        variants__product__product_offers__is_active=True,
+        variants__product__product_offers__start_date__lte=now,
+        variants__product__product_offers__end_date__gte=now
+    )
+    c_offer_valid = Q(
+        category__category_offers__is_active=True,
+        category__category_offers__start_date__lte=now,
+        category__category_offers__end_date__gte=now
+    )
     products = Product.objects.filter(
         category__is_deleted=False,
         variants__isnull=False
     ).annotate(
-        min_price=Min('variants__sales_price'),
+        p_disc_amt=Case(
+            When(p_offer_valid, then=Least(
+                F('variants__sales_price') * F('variants__product__product_offers__discount_percent') / 100,
+                Coalesce(F('variants__product__product_offers__max_discount_amount'), Value(999999))
+            )),
+            default=Value(0),
+            output_field=DecimalField()
+        ),
+        c_disc_amt=Case(
+            When(c_offer_valid, then=Least(
+                F('variants__sales_price') * F('category__category_offers__discount_percent') / 100,
+                Coalesce(F('category__category_offers__max_discount_amount'), Value(999999))
+            )),
+            default=Value(0),
+            output_field=DecimalField()
+        )
+        ).annotate(
+        final_min_price=Min(
+            F('variants__sales_price') - Greatest(F('p_disc_amt'), F('c_disc_amt')),
+            output_field=DecimalField()
+        ),
         average_rating=Avg('variants__reviews__rating'),
         review_count=Count('variants__reviews', distinct=True) 
     ).prefetch_related(
@@ -124,9 +156,9 @@ def products(request):
     price_max = request.GET.get('price_max')
 
     if price_min:
-        products = products.filter(min_price__gte=price_min)
+        products = products.filter(final_min_price__gte=price_min)
     if price_max:
-        products = products.filter(min_price__lte=price_max)
+        products = products.filter(final_min_price__lte=price_max)
 
     selected_price_ranges = request.GET.getlist('price_range')
     selected_price_ranges = [pr for pr in selected_price_ranges if pr and '-' in pr]
@@ -135,14 +167,14 @@ def products(request):
         price_query = Q()
         for pr in selected_price_ranges:
             low, high = pr.split('-')
-            price_query |= Q(min_price__gte=low, min_price__lte=high)
+            price_query |= Q(final_min_price__gte=low, final_min_price__lte=high)
         products = products.filter(price_query)
     # sorting
     sort = request.GET.get('sort')
     if sort == 'low_to_high':
-        products = products.order_by('min_price')
+        products = products.order_by('final_min_price')
     elif sort == 'high_to_low':
-        products = products.order_by('-min_price')
+        products = products.order_by('-final_min_price')
     elif sort == 'a_to_z':
         products = products.order_by('name')
     elif sort == 'z_to_a':
